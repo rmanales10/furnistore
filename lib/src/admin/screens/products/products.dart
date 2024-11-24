@@ -22,65 +22,64 @@ class _ProductPageState extends State<ProductPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 20),
-          const Padding(
-            padding: EdgeInsets.only(left: 20),
-            child: Text(
-              "Products",
-              style: TextStyle(
-                fontSize: 30,
-                fontWeight: FontWeight.bold,
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 20),
+            const Padding(
+              padding: EdgeInsets.only(left: 20),
+              child: Text(
+                "Products",
+                style: TextStyle(
+                  fontSize: 30,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-          ),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
-            padding: const EdgeInsets.all(30),
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.shade300,
-                  blurRadius: 10,
-                  spreadRadius: 5,
-                )
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 9, 66, 113),
-                        borderRadius: BorderRadius.circular(5)),
-                    child: TextButton(
-                      onPressed: () => Get.to(() => const AddProduct()),
-                      child: const Text(
-                        'Add Product',
-                        style: TextStyle(color: Colors.white),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+              padding: const EdgeInsets.all(30),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade300,
+                    blurRadius: 10,
+                    spreadRadius: 5,
+                  )
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                          color: const Color.fromARGB(255, 9, 66, 113),
+                          borderRadius: BorderRadius.circular(5)),
+                      child: TextButton(
+                        onPressed: () => Get.to(() => const AddProduct()),
+                        child: const Text(
+                          'Add Product',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Obx(() {
-                  productController.fetchProducts();
-                  if (productController.products.isEmpty) {
-                    return const Center(
-                      child: Text('No products available'),
-                    );
-                  }
-                  return SingleChildScrollView(
-                    scrollDirection: Axis.vertical,
-                    child: SizedBox(
+                  const SizedBox(height: 10),
+                  Obx(() {
+                    productController.fetchProducts();
+                    if (productController.products.isEmpty) {
+                      return const Center(
+                        child: Text('No products available'),
+                      );
+                    }
+                    return SizedBox(
                       width: double.infinity,
                       child: DataTable(
                         headingRowColor: WidgetStateProperty.all(
@@ -207,13 +206,13 @@ class _ProductPageState extends State<ProductPage> {
                           },
                         ),
                       ),
-                    ),
-                  );
-                }),
-              ],
+                    );
+                  }),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

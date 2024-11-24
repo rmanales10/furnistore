@@ -60,99 +60,106 @@ class _OrdersState extends State<Orders> {
 
                   return SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          minWidth: MediaQuery.of(context).size.width,
-                        ), // Constrain table to at least screen width
-                        child: DataTable(
-                          columnSpacing: 5, // Increase column spacing
-                          headingRowHeight: 50,
-                          columns: [
-                            myDataColumn('Order ID'),
-                            myDataColumn('Items'),
-                            myDataColumn('Status'),
-                            myDataColumn('Action'),
-                          ],
-                          rows: _firestore.orders.map((order) {
-                            return DataRow(
-                              cells: [
-                                DataCell(
-                                  GestureDetector(
-                                    onTap: () {
-                                      Get.to(() => OrderInformationPage(
-                                            orderId: order['order_id'],
-                                            orderStatus: order['status'],
-                                          ));
-                                    },
-                                    child: Text(
-                                      order['order_id'],
-                                      style: const TextStyle(
-                                        color: Colors.blue,
-                                        decoration: TextDecoration.underline,
+                    child: SingleChildScrollView(
+                      scrollDirection:
+                          Axis.vertical, // Allow vertical scrolling
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minWidth: MediaQuery.of(context).size.width,
+                          ), // Constrain table to at least screen width
+                          child: DataTable(
+                            columnSpacing: 5, // Increase column spacing
+                            headingRowHeight: 50,
+                            columns: [
+                              myDataColumn('Order ID'),
+                              myDataColumn('Items'),
+                              myDataColumn('Status'),
+                              myDataColumn('Action'),
+                            ],
+                            rows: _firestore.orders.map((order) {
+                              return DataRow(
+                                cells: [
+                                  DataCell(
+                                    GestureDetector(
+                                      onTap: () {
+                                        Get.to(() => OrderInformationPage(
+                                              orderId: order['order_id'],
+                                              orderStatus: order['status'],
+                                            ));
+                                      },
+                                      child: Text(
+                                        order['order_id'],
+                                        style: const TextStyle(
+                                          color: Colors.blue,
+                                          decoration: TextDecoration.underline,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                                DataCell(Text(order['total_items'].toString())),
-                                DataCell(
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10),
-                                    decoration: BoxDecoration(
-                                        color: Colors.blue,
-                                        borderRadius: BorderRadius.circular(5)),
-                                    child: Text(
-                                      order['status'],
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
+                                  DataCell(
+                                      Text(order['total_items'].toString())),
+                                  DataCell(
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10),
+                                      decoration: BoxDecoration(
+                                          color: Colors.blue,
+                                          borderRadius:
+                                              BorderRadius.circular(5)),
+                                      child: Text(
+                                        order['status'],
+                                        style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
+                                      ),
                                     ),
                                   ),
-                                ),
-                                DataCell(
-                                  Row(
-                                    children: [
-                                      IconButton(
-                                        onPressed: () =>
-                                            Get.to(() => OrderInformationPage(
-                                                  orderId: order['order_id'],
-                                                  orderStatus: order['status'],
-                                                )),
-                                        icon: const Icon(
-                                          Icons.remove_red_eye,
-                                          color: Colors.grey,
+                                  DataCell(
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          onPressed: () =>
+                                              Get.to(() => OrderInformationPage(
+                                                    orderId: order['order_id'],
+                                                    orderStatus:
+                                                        order['status'],
+                                                  )),
+                                          icon: const Icon(
+                                            Icons.remove_red_eye,
+                                            color: Colors.grey,
+                                          ),
                                         ),
-                                      ),
-                                      IconButton(
-                                        onPressed: () async {
-                                          bool confirmDelete =
-                                              await _showDeleteConfirmationDialog(
-                                                  context);
-                                          if (confirmDelete) {
-                                            await _firestore
-                                                .deleteOrder(order['order_id']);
-                                            await _firestore.getOrders();
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                  content: Text(
-                                                      'Order deleted successfully')),
-                                            );
-                                          }
-                                        },
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
+                                        IconButton(
+                                          onPressed: () async {
+                                            bool confirmDelete =
+                                                await _showDeleteConfirmationDialog(
+                                                    context);
+                                            if (confirmDelete) {
+                                              await _firestore.deleteOrder(
+                                                  order['order_id']);
+                                              await _firestore.getOrders();
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                    content: Text(
+                                                        'Order deleted successfully')),
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: Colors.red,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            );
-                          }).toList(),
+                                ],
+                              );
+                            }).toList(),
+                          ),
                         ),
                       ),
                     ),

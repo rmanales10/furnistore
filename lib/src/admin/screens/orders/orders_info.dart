@@ -44,63 +44,69 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
           },
         ),
       ),
-      body: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Obx(() {
-            _orderController.getOrderInfo(orderId: widget.orderId);
-            _orderController.getUserInfo(
-                userId: _orderController.orderInfo['user_id']);
-
-            if (_orderController.orderInfo.containsKey('user_id') &&
-                _orderController.orderInfo['user_id'] != null) {
+      body: SingleChildScrollView(
+        child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Obx(() {
+              _orderController.getOrderInfo(orderId: widget.orderId);
               _orderController.getUserInfo(
                   userId: _orderController.orderInfo['user_id']);
-            }
 
-            final orderInfo = _orderController.orderInfo;
-            final userInfo = _orderController.userInfo;
+              if (_orderController.orderInfo.containsKey('user_id') &&
+                  _orderController.orderInfo['user_id'] != null) {
+                _orderController.getUserInfo(
+                    userId: _orderController.orderInfo['user_id']);
+              }
 
-            Uint8List profilePic;
-            if (userInfo['image'] != null) {
-              profilePic = base64Decode(userInfo['image']);
-            } else {
-              profilePic = Uint8List.fromList([]);
-            }
-            Timestamp dateTimestamp =
-                orderInfo['date'] as Timestamp; // Firebase Timestamp
-            DateTime dateTime = dateTimestamp.toDate(); // Convert to DateTime
-            String formattedDate = DateFormat('MMMM dd, yyyy').format(dateTime);
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _orderInformationCard(context, formattedDate,
-                          orderInfo['total_items'], orderInfo['total']),
-                      const SizedBox(height: 20),
-                      _itemsCard(context),
-                      const SizedBox(height: 20),
-                      _transactionsCard(context),
-                    ],
+              final orderInfo = _orderController.orderInfo;
+              final userInfo = _orderController.userInfo;
+
+              Uint8List profilePic;
+              if (userInfo['image'] != null) {
+                profilePic = base64Decode(userInfo['image']);
+              } else {
+                profilePic = Uint8List.fromList([]);
+              }
+              Timestamp dateTimestamp =
+                  orderInfo['date'] as Timestamp; // Firebase Timestamp
+              DateTime dateTime = dateTimestamp.toDate(); // Convert to DateTime
+              String formattedDate =
+                  DateFormat('MMMM dd, yyyy').format(dateTime);
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: SingleChildScrollView(
+                      // Wrap here to make only this section scrollable
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _orderInformationCard(context, formattedDate,
+                              orderInfo['total_items'], orderInfo['total']),
+                          const SizedBox(height: 20),
+                          _itemsCard(context),
+                          const SizedBox(height: 20),
+                          _transactionsCard(context),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 20),
-                Expanded(
-                  flex: 1,
-                  child: _customerDetailsCard(
-                      context,
-                      userInfo['name'] ?? 'unknown',
-                      userInfo['email'] ?? 'unknown',
-                      userInfo['phone_number'] ?? 'unknown',
-                      '${userInfo['address']} ${userInfo['town_city']} ${userInfo['postcode']} ',
-                      profilePic),
-                ),
-              ],
-            );
-          })),
+                  const SizedBox(width: 20),
+                  Expanded(
+                    flex: 1,
+                    child: _customerDetailsCard(
+                        context,
+                        userInfo['name'] ?? 'unknown',
+                        userInfo['email'] ?? 'unknown',
+                        userInfo['phone_number'] ?? 'unknown',
+                        '${userInfo['address']} ${userInfo['town_city']} ${userInfo['postcode']} ',
+                        profilePic),
+                  ),
+                ],
+              );
+            })),
+      ),
     );
   }
 
@@ -215,6 +221,7 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
             );
           }
           final orderInfo = _orderController.orderInfo;
+
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -223,34 +230,36 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
               ),
               const SizedBox(height: 20),
-              // Use ListView.builder with correct length of allProducts
-              ListView.builder(
-                shrinkWrap: true, // Needed to make ListView work inside Column
-                physics:
-                    const NeverScrollableScrollPhysics(), // Prevent scrolling
-                itemCount: _orderController.allProducts.length,
-                itemBuilder: (context, index) {
-                  final product = _orderController.allProducts[index];
-                  Uint8List? imageBytes = base64Decode(product['image']);
+              // Added Expanded and ListView.builder for scrolling
+              SizedBox(
+                height:
+                    250, // Set an appropriate height for the scrollable list
+                child: ListView.builder(
+                  shrinkWrap:
+                      true, // Needed to make ListView work inside Column
+                  physics: const BouncingScrollPhysics(), // Enable scrolling
+                  itemCount: _orderController.allProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = _orderController.allProducts[index];
+                    Uint8List? imageBytes = base64Decode(product['image']);
 
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _itemDetail(
-                      context,
-                      '${product['name']} (x${product['quantity']})',
-                      "₱ ${product['price']}",
-                      imageBytes,
-                    ),
-                  );
-                },
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _itemDetail(
+                        context,
+                        '${product['name']} (x${product['quantity']})',
+                        "₱ ${product['price']}",
+                        imageBytes,
+                      ),
+                    );
+                  },
+                ),
               ),
               const SizedBox(height: 20),
-              _subtotalDetail("Subtotal",
-                  "₱ ${orderInfo['sub_total']}"), // This value should also be dynamic
+              _subtotalDetail("Subtotal", "₱ ${orderInfo['sub_total']}"),
               _subtotalDetail("Delivery Fee", "₱ ${orderInfo['delivery_fee']}"),
               const Divider(height: 30),
-              _subtotalDetail("Total",
-                  "₱ ${orderInfo['total']}"), // This value should also be dynamic
+              _subtotalDetail("Total", "₱ ${orderInfo['total']}"),
             ],
           );
         },
@@ -301,10 +310,10 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
       ),
       child: const Row(
         children: [
-          Icon(Icons.payment, color: Colors.blue),
+          Icon(Icons.money, color: Colors.blue),
           SizedBox(width: 10),
           Text(
-            "Paypal",
+            "Cash",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
         ],
