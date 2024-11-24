@@ -271,4 +271,35 @@ class FirestoreService extends GetxController {
       log('Error $e');
     }
   }
+
+  // Future<void> getAllProduct() async {
+  //   try {
+  //     var category = ['Chair', 'Table', 'Sofa', 'Bed'];
+  //     List<Map<String, dynamic>> allProductsList = [];
+
+  //     for (String cat in category) {
+  //       QuerySnapshot querySnapshot = await _firestore
+  //           .collection('products')
+  //           .where('category', isEqualTo: cat)
+  //           .get();
+
+  //       // Add each product from this category to the allProductsList
+  //       allProductsList.addAll(querySnapshot.docs.map((doc) {
+  //         return {
+  //           'id': doc.id,
+  //           'category': doc['category'],
+  //           'description': doc['description'],
+  //           'name': doc['name'],
+  //           'price': doc['price'],
+  //           'image': doc['image'],
+  //         };
+  //       }).toList());
+  //     }
+
+  //     // Assign the collected products to allProducts
+  //     allProducts.value = allProductsList;
+  //   } catch (e) {
+  //     log('Error $e');
+  //   }
+  // }
 }

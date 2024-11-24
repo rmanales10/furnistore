@@ -64,45 +64,45 @@ class Home extends StatelessWidget {
                     return const Center(child: Text('Products not Available'));
                   }
 
-                  return GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // Number of columns
-                      crossAxisSpacing: 12, // Horizontal space between items
-                      mainAxisSpacing: 12, // Vertical space between items
-                      childAspectRatio: 0.75, // Adjust the aspect ratio
+                  return SizedBox(
+                    height: MediaQuery.of(context).size.height *
+                        0.6, // Adjust this height as needed
+                    child: GridView.builder(
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2, // Number of columns
+                        crossAxisSpacing: 12, // Horizontal space between items
+                        mainAxisSpacing: 12, // Vertical space between items
+                        childAspectRatio: 0.75, // Adjust the aspect ratio
+                      ),
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _firestore.allProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = _firestore.allProducts[index];
+                        Uint8List imageBytes = base64Decode(product['image']);
+                        return _buildProductCard(
+                          context,
+                          product['name'],
+                          product['price'],
+                          imageBytes,
+                          product['description'],
+                          product['id'],
+                          () {
+                            _firestore.insertCart(
+                              productId: product['id'],
+                              quantity: 1,
+                              userId: _auth.currentUser!.uid,
+                            );
+                            Get.snackbar(
+                              'Success',
+                              'Added to cart ${product['name']}',
+                              snackPosition: SnackPosition.BOTTOM,
+                              duration: const Duration(milliseconds: 800),
+                            );
+                          },
+                        );
+                      },
                     ),
-                    padding: const EdgeInsets.all(16),
-                    shrinkWrap:
-                        true, // Ensure the GridView does not take infinite height
-                    physics:
-                        AlwaysScrollableScrollPhysics(), // Disable scrolling for GridView
-                    itemCount: _firestore.allProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = _firestore.allProducts[index];
-                      Uint8List imageBytes = base64Decode(product['image']);
-                      return _buildProductCard(
-                        context,
-                        product['name'],
-                        product['price'],
-                        imageBytes,
-                        product['description'],
-                        product['id'],
-                        () {
-                          _firestore.insertCart(
-                            productId: product['id'],
-                            quantity: 1,
-                            userId: _auth.currentUser!.uid,
-                          );
-                          Get.snackbar(
-                            'Success',
-                            'Added to cart ${product['name']}',
-                            snackPosition: SnackPosition.BOTTOM,
-                            duration: const Duration(milliseconds: 800),
-                          );
-                        },
-                      );
-                    },
                   );
                 }),
                 const SizedBox(height: 30),
