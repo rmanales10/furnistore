@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1083898171282",
+    "project_id": "furnistore-359e1",
+    "storage_bucket": "furnistore-359e1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1083898171282:android:ed7da5a4b2c66299a1bb4b",
+        "android_client_info": {
+          "package_name": "com.example.furnistore"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXPgbOjDmlRE_pIRDHnuWQ5ID2VDTeEOo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
