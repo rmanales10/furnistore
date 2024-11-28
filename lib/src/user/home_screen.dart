@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/cart/cart.dart';
+import 'package:furnistore/src/user/add_to_cart_review_rates/cart/cart_controller.dart';
 import 'package:furnistore/src/user/home/home.dart';
 import 'package:furnistore/src/user/profile/settings.dart';
+import 'package:get/get.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
     const CartScreen(),
     const ProfileSettingsScreen(),
   ];
+  final cartController = Get.put(CartController());
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,11 +37,24 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         selectedItemColor: Colors.blue,
         unselectedItemColor: Colors.grey,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+        items: [
+          const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
-              icon: Icon(Icons.shopping_cart), label: 'Cart'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+              icon: Stack(children: [
+                const Icon(Icons.shopping_cart),
+                cartController.carts.isEmpty
+                    ? SizedBox.shrink()
+                    : Positioned(
+                        left: 14,
+                        child: Icon(
+                          Icons.circle,
+                          color: Colors.red,
+                          size: 10,
+                        )),
+              ]),
+              label: 'Cart'),
+          const BottomNavigationBarItem(
+              icon: Icon(Icons.person), label: 'Profile'),
         ],
       ),
     );
