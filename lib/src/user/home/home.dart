@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:furnistore/src/user/add_to_cart_review_rates/add_to_cart.dart';
+import 'package:furnistore/src/user/add_to_cart_review_rates/cart/add_to_cart.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/firebase_service/firestore_service.dart';
 import 'package:get/get.dart';

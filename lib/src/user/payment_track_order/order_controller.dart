@@ -8,7 +8,6 @@ class OrderController extends GetxController {
   final _firestore = FirebaseFirestore.instance;
 
   RxMap<String, dynamic> userInfo = <String, dynamic>{}.obs;
-
   Future<void> getUserInfo() async {
     try {
       // Fetch the document
@@ -47,5 +46,35 @@ class OrderController extends GetxController {
               'products': doc['products'], // List of products in the order
             })
         .toList();
+  }
+
+  RxMap<String, dynamic> productList = <String, dynamic>{}.obs;
+  Future<void> getProductList({required String orderId}) async {
+    try {
+      DocumentSnapshot documentSnapshot =
+          await _firestore.collection('orders').doc(orderId).get();
+      if (documentSnapshot.exists) {
+        productList.value = documentSnapshot.data() as Map<String, dynamic>;
+      }
+      // log('Success $productList');
+    } catch (e) {
+      log('Error $e');
+    }
+  }
+
+  Future<void> submitReviews({
+    required String productId,
+    required String comment,
+    required int ratings,
+  }) async {
+    await _firestore.collection('products').doc(productId).update({
+      'reviews': FieldValue.arrayUnion([
+        {
+          'user_id': _auth.currentUser!.uid,
+          'comment': comment,
+          'ratings': ratings,
+        }
+      ]),
+    });
   }
 }

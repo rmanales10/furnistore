@@ -1,10 +1,21 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews_controller.dart';
+import 'package:get/get.dart';
 
 class ReviewsScreen extends StatelessWidget {
-  const ReviewsScreen({super.key});
+  String? productId;
+  ReviewsScreen({super.key, required this.productId});
+
+  final _controller = Get.put(ReviewsController());
 
   @override
   Widget build(BuildContext context) {
+    // Fetch reviews once during initialization
+    _controller.getAllReviews(productId: productId!);
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -12,7 +23,7 @@ class ReviewsScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop  (),
+          onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Text(
           'Reviews & Ratings',
@@ -39,8 +50,6 @@ class ReviewsScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Rating Section
               Row(
                 children: [
                   // Overall Rating
@@ -80,22 +89,68 @@ class ReviewsScreen extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
+              // Rating Section
+              Obx(() {
+                final List<Map<String, dynamic>> review =
+                    List<Map<String, dynamic>>.from(
+                        _controller.allReviews['reviews'] ?? []);
+                if (review.isEmpty) {
+                  return Center(
+                    child: Text('No Reviews Yet!'),
+                  );
+                }
+
+                return ListView.builder(
+                  shrinkWrap: true, // Prevent ListView from taking all space
+                  physics: NeverScrollableScrollPhysics(),
+                  itemCount: review.length,
+                  itemBuilder: (context, index) {
+                    final rev = review[index];
+
+                    return FutureBuilder(
+                      future: _controller.getUserInfo(
+                          userId:
+                              rev['user_id']), // Get user info asynchronously
+                      builder: (context, snapshot) {
+                        // While waiting for the user info to load, show a loading spinner
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return CircularProgressIndicator(); // You can customize this part
+                        }
+
+                        if (snapshot.hasError) {
+                          return Text(
+                              'Error: ${snapshot.error}'); // Handle any errors
+                        }
+
+                        // Once the user info is available, render the review card
+                        final userName =
+                            _controller.userInfo['name'] ?? 'Default Name';
+                        final userComment = rev['comment'] ?? 'No Comment';
+                        final userRating = rev['ratings'] ?? 0;
+                        Uint8List decodedImageBytes;
+                        if (_controller.userInfo['image'] != null) {
+                          decodedImageBytes =
+                              base64Decode(_controller.userInfo['image']);
+                        } else {
+                          decodedImageBytes = Uint8List.fromList([]);
+                        }
+
+                        return _buildReviewCard(
+                          userName,
+                          userComment,
+                          decodedImageBytes, // Replace with your avatar path
+                          userRating,
+                        );
+                      },
+                    );
+                  },
+                );
+              }),
 
               // Review Cards
-              _buildReviewCard(
-                'Dave John',
-                'Absolutely love this piece! The quality is top-notch, and it fits perfectly in my living room. The design is elegant, and the finish is flawless. Highly recommend for anyone looking to elevate their home decor!',
-                'assets/avatar1.png', // Replace with your avatar path
-                5,
-              ),
-              const SizedBox(height: 16),
-              _buildReviewCard(
-                'Dave John',
-                'Comfortable and stylish! The furniture arrived on time and looks even better in person. The customer service was also very helpful throughout the process.',
-                'assets/avatar2.png', // Replace with your avatar path
-                5,
-              ),
+
               const SizedBox(height: 30),
             ],
           ),
@@ -126,7 +181,7 @@ class ReviewsScreen extends StatelessWidget {
 
   // Helper Widget for Review Cards
   Widget _buildReviewCard(
-      String reviewerName, String reviewText, String avatarPath, int stars) {
+      String reviewerName, String reviewText, Uint8List avatarPath, int stars) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -139,7 +194,7 @@ class ReviewsScreen extends StatelessWidget {
                 // Reviewer Avatar
                 CircleAvatar(
                   radius: 20,
-                  backgroundImage: AssetImage(avatarPath),
+                  backgroundImage: MemoryImage(avatarPath),
                 ),
                 const SizedBox(width: 12),
 

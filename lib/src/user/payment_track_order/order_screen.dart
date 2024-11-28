@@ -68,7 +68,6 @@ class OrderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // Ensure `orderStatus` is not empty
       if (_controller.orderStatus.isEmpty) {
         return Center(child: CircularProgressIndicator());
       }
@@ -112,7 +111,6 @@ class OrderCard extends StatelessWidget {
                       ),
                     );
                   } catch (e) {
-                    // Handle missing/corrupt images with a default fallback
                     return ClipRRect(
                       borderRadius: BorderRadius.circular(6),
                       child: Image.asset(
@@ -210,10 +208,9 @@ class OrderCard extends StatelessWidget {
                               if (status != 'Delivered') {
                                 Navigator.pushNamed(context, '/track');
                               } else {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => OrdersScreen1(),
+                                Get.to(
+                                  () => OrdersScreen1(
+                                    orderId: orderId,
                                   ),
                                 );
                               }
@@ -245,6 +242,3 @@ class OrderCard extends StatelessWidget {
     });
   }
 }
-
-
-

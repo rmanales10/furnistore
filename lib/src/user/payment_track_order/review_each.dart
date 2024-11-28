@@ -6,7 +6,8 @@ import 'package:get/get.dart';
 
 // Order Screen
 class OrdersScreen1 extends StatelessWidget {
-  OrdersScreen1({super.key});
+  String orderId;
+  OrdersScreen1({super.key, required this.orderId});
   final _controller = Get.put(OrderController());
 
   @override
@@ -26,21 +27,32 @@ class OrdersScreen1 extends StatelessWidget {
         ),
       ),
       body: Obx(() {
-        _controller.getOrderStatus();
+        _controller.getProductList(orderId: orderId);
         return ListView.separated(
           padding: const EdgeInsets.only(top: 12),
-          itemCount: _controller.orderStatus.length,
+          itemCount: _controller.productList['products'].length,
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
-            final order = _controller.orderStatus[index];
+            final order = _controller.productList['products'][index];
+
+            Uint8List imageBytes;
+            if (order['image'] != null) {
+              imageBytes = base64Decode(order['image']);
+            } else {
+              imageBytes = Uint8List.fromList([]);
+            }
+
             return OrderCard(
               isFirstItem: index != _controller.orderStatus.length,
               status: order['status'] ?? 'Packed',
-              orderItems: '${order['total_items']} items', // Added items count
-              orderId: '${order['order_id']}', // Added items count
+              orderItems: '${order['quantity']} items', // Added items count
+              orderId: '${order['name']}', // Added items count
+              imageBytes: imageBytes,
+              price: order['price'], // Added items count
+              productId: order['product_id'], // Added items count
             );
           },
-        ); 
+        );
       }),
     );
   }
@@ -52,6 +64,9 @@ class OrderCard extends StatelessWidget {
   final String status;
   final String orderItems;
   final String orderId;
+  final Uint8List imageBytes;
+  final int price;
+  final String productId;
 
   final OrderController _controller = Get.find<OrderController>();
 
@@ -61,6 +76,9 @@ class OrderCard extends StatelessWidget {
     required this.status,
     required this.orderItems,
     required this.orderId,
+    required this.imageBytes,
+    required this.price,
+    required this.productId,
   });
 
   @override
@@ -87,14 +105,10 @@ class OrderCard extends StatelessWidget {
               child: Builder(
                 builder: (context) {
                   try {
-                    String base64Image =
-                        _controller.orderStatus.first['products'][0]['image'];
-                    Uint8List decodedBytes = base64Decode(base64Image);
-
                     return ClipRRect(
                       borderRadius: BorderRadius.circular(6),
                       child: Image.memory(
-                        decodedBytes,
+                        imageBytes,
                         fit: BoxFit.cover,
                         gaplessPlayback: true,
                       ),
@@ -162,22 +176,21 @@ class OrderCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            status,
+                            '₱ $price',
                             style: const TextStyle(
                               fontSize: 15,
                               color: Colors.black,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          if (status == 'Delivered')
-                            const Padding(
-                              padding: EdgeInsets.only(left: 4),
-                              child: Icon(
-                                Icons.check_circle,
-                                color: Colors.blue,
-                                size: 14,
-                              ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 4),
+                            child: Icon(
+                              Icons.money,
+                              color: Colors.blue,
+                              size: 14,
                             ),
+                          ),
                         ],
                       ),
                       Container(
@@ -194,14 +207,15 @@ class OrderCard extends StatelessWidget {
                         child: Center(
                           child: TextButton(
                             onPressed: () {
-                              if (status == 'Delivered') {
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  backgroundColor: Colors.transparent,
-                                  builder: (context) => ReviewBottomSheet(),
-                                );
-                              }
+                              showModalBottomSheet(
+                                context: context,
+                                isScrollControlled: true,
+                                backgroundColor: Colors.transparent,
+                                builder: (context) => ReviewBottomSheet(
+                                  imageBytes: imageBytes,
+                                  productId: productId,
+                                ),
+                              );
                             },
                             style: TextButton.styleFrom(
                               minimumSize: Size.zero,
@@ -234,7 +248,10 @@ class OrderCard extends StatelessWidget {
 // Review Bottom Sheet
 
 class ReviewBottomSheet extends StatefulWidget {
-  const ReviewBottomSheet({super.key});
+  String productId;
+  Uint8List imageBytes;
+  ReviewBottomSheet(
+      {super.key, required this.productId, required this.imageBytes});
 
   @override
   State<ReviewBottomSheet> createState() => _ReviewBottomSheetState();
@@ -243,9 +260,18 @@ class ReviewBottomSheet extends StatefulWidget {
 class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
   int rating = 0;
   bool showThankYou = false;
+  final _controller = Get.put(OrderController());
+  final _comment = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    _controller.getUserInfo();
+    Uint8List decodedImageBytes;
+    if (_controller.userInfo['image'] != null) {
+      decodedImageBytes = base64Decode(_controller.userInfo['image']);
+    } else {
+      decodedImageBytes = Uint8List.fromList([]);
+    }
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
@@ -348,16 +374,17 @@ class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
                               CircleAvatar(
                                 backgroundColor: Colors.grey,
                                 radius: 18,
-                                backgroundImage: const AssetImage(
-                                    'assets/no_profile.webp'), // Dummy image
+                                backgroundImage: MemoryImage(
+                                    decodedImageBytes), // Dummy image
                               ),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: const [
+                                  children: [
                                     Text(
-                                      'User Name', // Replace with dynamic data
+                                      _controller.userInfo['name'] ??
+                                          "Default", // Replace with dynamic data
                                       style: TextStyle(
                                         fontSize: 13,
                                         color: Colors.grey,
@@ -415,8 +442,8 @@ class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(color: Colors.grey, width: 2),
                           ),
-                          child: Image.asset(
-                            'assets/products/edmond_table.png',
+                          child: Image.memory(
+                            widget.imageBytes,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -430,6 +457,7 @@ class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: TextField(
+                  controller: _comment,
                   decoration: InputDecoration(
                     hintText: 'Your comment',
                     filled: true,
@@ -450,10 +478,15 @@ class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
                   setState(() {
                     showThankYou = true;
                   });
+                  await _controller.submitReviews(
+                      productId: widget.productId,
+                      comment: _comment.text,
+                      ratings: rating);
+                  Get.back();
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,

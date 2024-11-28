@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews&rating.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/firebase_service/firestore_service.dart';
 import 'package:get/get.dart';
@@ -161,9 +162,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                     ),
                   ),
                   GestureDetector(
-                      onTap: () {
-                        Navigator.pushNamed(context, '/review');
-                      },
+                      onTap: () => Get.to(() => ReviewsScreen(
+                            productId: widget.productId,
+                          )),
                       child: const Icon(Icons.arrow_forward_ios,
                           size: 16, color: Colors.grey)),
                 ],

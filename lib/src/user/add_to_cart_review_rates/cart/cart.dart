@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:furnistore/src/user/add_to_cart_review_rates/cart_controller.dart';
+import 'package:furnistore/src/user/add_to_cart_review_rates/cart/cart_controller.dart';
+
 import 'package:furnistore/src/user/payment_track_order/order_review.dart';
 import 'package:get/get.dart';
 
