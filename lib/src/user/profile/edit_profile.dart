@@ -23,14 +23,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   Uint8List? _imageBytes;
 
   @override
-  void initState() {
-    super.initState();
-    _controller.getUserInfo();
-    // Initialize the name controller with user info
-    nameController.text = _controller.userInfo['name'] ?? '';
-  }
-
-  @override
   Widget build(BuildContext context) {
     if (_controller.userInfo.isEmpty) {
       _controller.getUserInfo();
@@ -57,8 +49,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-          child: Obx(
-            () => Column(
+          child: Obx(() {
+            _controller.getUserInfo();
+            if (_controller.userInfo.isEmpty) {
+              nameController.text = _controller.userInfo['name'] ?? '';
+            }
+            return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
@@ -71,6 +67,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: 20),
                 // Profile Picture with Edit Icon
+                  
                 Stack(
                   children: [
                     CircleAvatar(
@@ -153,8 +150,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
               ],
-            ),
-          ),
+            );
+          }),
         ),
       ),
     );

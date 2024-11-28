@@ -29,16 +29,22 @@ class OrderController extends GetxController {
   }
 
   RxList<Map<String, dynamic>> orderStatus = <Map<String, dynamic>>[].obs;
+
   Future<void> getOrderStatus() async {
+    // Fetch orders from Firestore
     QuerySnapshot querySnapshot = await _firestore
         .collection('orders')
         .where('user_id', isEqualTo: _auth.currentUser!.uid)
         .get();
 
+    // Map orders to `orderStatus`
     orderStatus.value = querySnapshot.docs
         .map((doc) => {
-              'status': doc['status'],
-              'date': doc['date'],
+              'status': doc['status'], // Order status
+              'date': doc['date'], // Order date
+              'order_id': doc['order_id'], // Order ID
+              'total_items': doc['total_items'], // Total number of items
+              'products': doc['products'], // List of products in the order
             })
         .toList();
   }

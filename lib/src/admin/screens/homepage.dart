@@ -89,7 +89,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
           Sidebar(
             selectedIndex: selectedIndex,
             onItemSelected: (index) {
-              setState(() {
+              setState(() { 
                 selectedIndex = index;
               });
             },

@@ -26,7 +26,7 @@ class AboutFurniStoreScreen extends StatelessWidget {
             // Logo Section
             Center(
               child: Image.asset(
-                'assets/image 3.png', // Replace with your logo path
+                'assets/image_3.png', // Replace with your logo path
                 height: 100,
                 width: 100,
               ),

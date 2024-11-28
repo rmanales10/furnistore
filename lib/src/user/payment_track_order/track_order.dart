@@ -23,10 +23,6 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Get.off(() => const HomeScreen()),
-        ),
         title: const Text(
           'My Orders',
           style: TextStyle(
