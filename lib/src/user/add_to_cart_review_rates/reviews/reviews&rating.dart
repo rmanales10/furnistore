@@ -114,10 +114,10 @@ class ReviewsScreen extends StatelessWidget {
                               rev['user_id']), // Get user info asynchronously
                       builder: (context, snapshot) {
                         // While waiting for the user info to load, show a loading spinner
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return CircularProgressIndicator(); // You can customize this part
-                        }
+                        // if (snapshot.connectionState ==
+                        //     ConnectionState.waiting) {
+                        //   return CircularProgressIndicator(); // You can customize this part
+                        // }
 
                         if (snapshot.hasError) {
                           return Text(

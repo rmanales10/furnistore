@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews&rating.dart';
+import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews_controller.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/firebase_service/firestore_service.dart';
 import 'package:get/get.dart';
@@ -31,6 +32,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
   late Animation<double> _scaleAnimation;
   final _firestore = Get.put(FirestoreService());
   final _auth = Get.put(AuthService());
+  final _reviewsController = Get.put(ReviewsController());
 
   @override
   void initState() {
@@ -88,153 +90,162 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Product Image
-              Padding(
-                padding: const EdgeInsets.all(20),
-                child: Center(
-                  child: Image.memory(
-                    widget.imageBytes,
-                    height: 200,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Product Title, Price, and Rating
-              Text(
-                '₱ ${widget.price}',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                widget.nameProduct,
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: Colors.black,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Row(
-                children: [
-                  Icon(Icons.star, color: Colors.amber, size: 18),
-                  SizedBox(width: 4),
-                  Text(
-                    '4.5',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  SizedBox(width: 4),
-                  Text(
-                    '(500 Reviews)',
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Product Description
-              Text(
-                widget.description,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Reviews Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Reviews (3)',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+          child: Obx(() {
+            _reviewsController.getAllReviews(productId: widget.productId);
+            final List<Map<String, dynamic>> review =
+                List<Map<String, dynamic>>.from(
+                    _reviewsController.allReviews['reviews'] ?? []);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Product Image
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Center(
+                    child: Image.memory(
+                      widget.imageBytes,
+                      height: 200,
+                      fit: BoxFit.cover,
                     ),
                   ),
-                  GestureDetector(
-                      onTap: () => Get.to(() => ReviewsScreen(
-                            productId: widget.productId,
+                ),
+                const SizedBox(height: 20),
+
+                // Product Title, Price, and Rating
+                Text(
+                  '₱ ${widget.price}',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  widget.nameProduct,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.amber, size: 18),
+                    SizedBox(width: 4),
+                    Text(
+                      '4.5',
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      '(${review.length} Reviews)',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Product Description
+                Text(
+                  widget.description,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // Reviews Section
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Reviews (${review.length})',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    GestureDetector(
+                        onTap: () => Get.to(() => ReviewsScreen(
+                              productId: widget.productId,
+                            )),
+                        child: const Icon(Icons.arrow_forward_ios,
+                            size: 16, color: Colors.grey)),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // Quantity Selector and Add to Cart Button
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Quantity Selector
+                    Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Obx(() => Row(
+                            children: [
+                              IconButton(
+                                onPressed: () => _counter.value <= 1
+                                    ? null
+                                    : _counter.value--,
+                                icon: const Icon(Icons.remove, size: 18),
+                              ),
+                              Text(
+                                _counter.toString(),
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              IconButton(
+                                onPressed: () => _counter.value++,
+                                icon: const Icon(Icons.add, size: 18),
+                              ),
+                            ],
                           )),
-                      child: const Icon(Icons.arrow_forward_ios,
-                          size: 16, color: Colors.grey)),
-                ],
-              ),
-              const SizedBox(height: 20),
-
-              // Quantity Selector and Add to Cart Button
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Quantity Selector
-                  Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Obx(() => Row(
-                          children: [
-                            IconButton(
-                              onPressed: () =>
-                                  _counter.value <= 1 ? null : _counter.value--,
-                              icon: const Icon(Icons.remove, size: 18),
-                            ),
-                            Text(
-                              _counter.toString(),
-                              style: const TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            IconButton(
-                              onPressed: () => _counter.value++,
-                              icon: const Icon(Icons.add, size: 18),
-                            ),
-                          ],
-                        )),
-                  ),
 
-                  // Add to Cart Button with Animation
-                  ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        _addToCart();
-                        _firestore.insertCart(
-                            productId: widget.productId,
-                            quantity: _counter.value,
-                            userId: _auth.currentUser!.uid);
-                        // _firestore.insertCart(productId: widget.productId, quantity: _counter.value, userId: userId)
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 40, vertical: 16), // Adjust button size
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                    // Add to Cart Button with Animation
+                    ScaleTransition(
+                      scale: _scaleAnimation,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _addToCart();
+                          _firestore.insertCart(
+                              productId: widget.productId,
+                              quantity: _counter.value,
+                              userId: _auth.currentUser!.uid);
+                          // _firestore.insertCart(productId: widget.productId, quantity: _counter.value, userId: userId)
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 40,
+                              vertical: 16), // Adjust button size
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
-                      ),
-                      child: const Text(
-                        'Add to Cart',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        child: const Text(
+                          'Add to Cart',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                  ],
+                ),
+              ],
+            );
+          }),
         ),
       ),
     );
