@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews_controller.dart';
 import 'package:get/get.dart';
 
+// ignore: must_be_immutable
 class ReviewsScreen extends StatelessWidget {
   String? productId;
   ReviewsScreen({super.key, required this.productId});

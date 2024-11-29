@@ -69,8 +69,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                 _orderController.getUserInfo();
                 final userInfo = _orderController.userInfo;
                 return _buildEditableRow(
-                  '${userInfo['address']} ${userInfo['town_city']} ${userInfo['postcode']}' ??
-                      'Please enter your address',
+                  '${userInfo['address']} ${userInfo['town_city']} ${userInfo['postcode']}',
                   () => Get.to(() => const DeliveryAddressScreen()),
                 );
               }),
@@ -418,7 +417,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
 
     // Wait 1 second, then navigate to another screen
     Future.delayed(const Duration(seconds: 1), () {
-      Navigator.of(context).pop(); // Close the dialog
+      Get.back(); // Close the dialog
       Get.off(() => const PaymentSuccessScreen());
     });
   }

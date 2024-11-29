@@ -170,6 +170,7 @@ class CartItem extends StatelessWidget {
             onPressed: onDelete,
           ),
           const SizedBox(width: 8),
+          // ignore: unnecessary_null_comparison
           imageBytes != null
               ? Image.memory(
                   imageBytes,

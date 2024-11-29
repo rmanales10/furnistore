@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews&rating.dart';
+import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews_rating.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews_controller.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/firebase_service/firestore_service.dart';

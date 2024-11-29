@@ -2,7 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:furnistore/src/admin/screens/homepage.dart';
-import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews&rating.dart';
 import 'package:furnistore/src/user/categories/categories.dart';
 import 'package:furnistore/src/user/home_screen.dart';
 import 'package:furnistore/src/user/onboarding_and_registration/screens/forgot_pass.dart';
