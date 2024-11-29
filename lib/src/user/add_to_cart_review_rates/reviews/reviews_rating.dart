@@ -194,7 +194,10 @@ class ReviewsScreen extends StatelessWidget {
                 // Reviewer Avatar
                 CircleAvatar(
                   radius: 20,
-                  backgroundImage: MemoryImage(avatarPath),
+                  child: Image.memory(
+                    avatarPath,
+                    gaplessPlayback: true,
+                  ),
                 ),
                 const SizedBox(width: 12),
 

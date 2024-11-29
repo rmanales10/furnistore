@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:furnistore/src/user/profile/delivery_address_controller.dart';
-import 'package:furnistore/src/user/profile/settings.dart';
+
 import 'package:get/get.dart';
 
 class DeliveryAddressScreen extends StatefulWidget {
@@ -22,12 +22,7 @@ class _DeliveryAddressScreenState extends State<DeliveryAddressScreen> {
   @override
   void initState() {
     super.initState();
-    _controller.getDeliveryAddress();
-    // Initialize the TextEditingControllers with user info from the controller
-    address.text = _controller.deliveryAddress['address'] ?? '';
-    townCity.text = _controller.deliveryAddress['town_city'] ?? '';
-    postcode.text = _controller.deliveryAddress['postcode'] ?? '';
-    phoneNumber.text = _controller.deliveryAddress['phone_number'] ?? '';
+    initDelivery();
   }
 
   @override
@@ -101,7 +96,10 @@ class _DeliveryAddressScreenState extends State<DeliveryAddressScreen> {
               // Save Changes Button
               Center(
                 child: ElevatedButton(
-                  onPressed: saveChanges,
+                  onPressed: () {
+                    saveChanges();
+                    Get.back();
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
                     minimumSize: const Size(200, 50),
@@ -143,18 +141,24 @@ class _DeliveryAddressScreenState extends State<DeliveryAddressScreen> {
     );
   }
 
-  void saveChanges() {
+  void saveChanges() async {
     // Set updated delivery address in the controller
-    _controller.setDeliveryAddress(
+    await _controller.setDeliveryAddress(
         address: address.text,
         townCity: townCity.text,
         postcode: postcode.text,
         phoneNumber: phoneNumber.text);
-
-    // Show success message using Get.snackbar
     Get.snackbar('Success', 'Delivery address saved successfully!');
+  }
 
-    // Navigate to ProfileSettingsScreen
-    Get.to(() => const ProfileSettingsScreen());
+  Future<void> initDelivery() async {
+    await _controller.getDeliveryAddress();
+    // Initialize the TextEditingControllers with user info from the controller
+    setState(() {
+      address.text = _controller.deliveryAddress['address'] ?? '';
+      townCity.text = _controller.deliveryAddress['town_city'] ?? '';
+      postcode.text = _controller.deliveryAddress['postcode'] ?? '';
+      phoneNumber.text = _controller.deliveryAddress['phone_number'] ?? '';
+    });
   }
 }

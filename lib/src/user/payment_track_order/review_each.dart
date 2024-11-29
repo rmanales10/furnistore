@@ -31,7 +31,7 @@ class OrdersScreen1 extends StatelessWidget {
         _controller.getProductList(orderId: orderId);
         return ListView.separated(
           padding: const EdgeInsets.only(top: 12),
-          itemCount: _controller.productList['products'].length,
+          itemCount: _controller.productList['products'].length ?? 1,
           separatorBuilder: (context, index) => const Divider(height: 1),
           itemBuilder: (context, index) {
             final order = _controller.productList['products'][index];

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:furnistore/src/user/payment_track_order/order_screen.dart';
+import 'package:get/get.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
   const PaymentSuccessScreen({super.key});
@@ -81,7 +83,7 @@ class PaymentSuccessScreen extends StatelessWidget {
 
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/track');
+                          Get.to(() => OrdersScreen());
                         },
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(

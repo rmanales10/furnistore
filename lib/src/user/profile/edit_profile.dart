@@ -18,25 +18,23 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final ProfileController _controller = Get.put(ProfileController());
   final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
 
   String? base64Image;
   Uint8List? _imageBytes;
 
   @override
+  void initState() {
+    super.initState();
+    initProfile();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    if (_controller.userInfo.isEmpty) {
-      _controller.getUserInfo();
-    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
         title: const Text(
           'Profile',
           style: TextStyle(
@@ -50,10 +48,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
           child: Obx(() {
-            _controller.getUserInfo();
-            if (_controller.userInfo.isEmpty) {
-              nameController.text = _controller.userInfo['name'] ?? '';
-            }
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -67,7 +61,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: 20),
                 // Profile Picture with Edit Icon
-                  
+
                 Stack(
                   children: [
                     CircleAvatar(
@@ -117,7 +111,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   enabled: false,
-                  initialValue: _controller.userInfo['email'],
+                  controller: emailController,
                   decoration: InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(
@@ -198,7 +192,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       image: base64Image ?? _controller.userInfo['image'],
     );
     Get.snackbar('Success', 'Profile saved successfully!');
-    Get.off(() => const ProfileSettingsScreen());
+    Get.back();
     _controller.getUserInfo();
   }
 
@@ -207,5 +201,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     // Dispose the controller to avoid memory leaks
     nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> initProfile() async {
+    await _controller.getUserInfo();
+    setState(() {
+      nameController.text = _controller.userInfo['name'] ?? 'Default';
+      emailController.text = _controller.userInfo['email'] ?? 'Default';
+    });
   }
 }
