@@ -5,12 +5,26 @@ import 'package:flutter/material.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/cart/add_to_cart.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/firebase_service/firestore_service.dart';
+import 'package:furnistore/src/user/profile/profile_controller.dart';
 import 'package:get/get.dart';
 
-class Home extends StatelessWidget {
+class Home extends StatefulWidget {
   Home({super.key});
+
+  @override
+  State<Home> createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
   final _firestore = Get.put(FirestoreService());
   final _auth = Get.put(AuthService());
+  final _profileController = Get.put(ProfileController());
+
+  @override
+  void initState() {
+    super.initState();
+    initProfile();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +40,43 @@ class Home extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SizedBox(height: 50),
+                Obx(() {
+                  initProfile();
+                  final userInfo = _profileController.userInfo;
+                  var image = userInfo['image'];
+                  Uint8List imageBytes = base64Decode(image);
+
+                  return Row(
+                    children: [
+                      ClipOval(
+                        child: imageBytes.isEmpty
+                            ? Image.asset('assets/no_profile.webp')
+                            : Image.memory(
+                                imageBytes,
+                                width: 50,
+                                gaplessPlayback: true,
+                              ),
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'Hi, ${userInfo['name'] ?? 'No name'}\nStart Shopping Today!',
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    ],
+                  );
+                }),
+                SizedBox(height: 30),
+                RichText(
+                    text: TextSpan(
+                  text: 'Make Your ',
+                  style: TextStyle(fontSize: 20, color: Colors.black),
+                  children: [
+                    TextSpan(
+                        text: 'Space Sense',
+                        style: TextStyle(fontWeight: FontWeight.bold)),
+                  ],
+                )),
                 const SizedBox(height: 50),
                 const Text(
                   'Categories',
@@ -223,5 +274,9 @@ class Home extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> initProfile() async {
+    await _profileController.getUserInfo();
   }
 }

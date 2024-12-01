@@ -382,11 +382,12 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
-              'Pay',
+            child: Text(
+              'Place Order',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 16,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),

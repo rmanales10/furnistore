@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class AboutFurniStoreScreen extends StatelessWidget {
-  const AboutFurniStoreScreen({super.key});
+class Terms extends StatelessWidget {
+  const Terms({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class AboutFurniStoreScreen extends StatelessWidget {
         ),
       ),
       backgroundColor: Colors.white,
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -36,7 +36,7 @@ class AboutFurniStoreScreen extends StatelessWidget {
 
             // Title
             const Text(
-              'About FurniStore',
+              'Terms and Conditions',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -47,16 +47,40 @@ class AboutFurniStoreScreen extends StatelessWidget {
 
             // Description
             const Text(
-              'FurniStore - Furniture E-commerce UI Kit is a comprehensive user interface (UI) kit crafted specifically for building sleek and modern furniture shopping apps. '
-              'This UI kit offers a cohesive set of pre-designed components, templates, and elements, allowing developers and designers to create visually stunning and user-friendly interfaces quickly and efficiently. '
-              'It includes features like product showcases, a streamlined checkout process, profile management, and review sections to deliver an exceptional shopping experience tailored for furniture enthusiasts.',
+              'Welcome to FurniStore! These Terms and Conditions ("Terms") govern your access and use of our e-commerce platform, including any related services provided through our mobile app and website (collectively, the "Service"). By accessing or using the Service, you agree to be bound by these Terms. If you do not agree, please refrain from using the Service.',
+              style: TextStyle(fontSize: 14, color: Colors.black, height: 1.5),
+            ),
+            const SizedBox(height: 20),
+
+            // Eligibility Section
+            const Text(
+              'Eligibility',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '• You must be at least 18 years old or have parental/guardian consent to use our Service.\n'
+              '• By using the Service, you represent and warrant that you have the legal right and authority to enter into these Terms.',
               style: TextStyle(fontSize: 14, color: Colors.black, height: 1.5),
             ),
             const SizedBox(height: 20),
 
             // Contact Section
             const Text(
-              'If you need help or you have any questions, feel free to contact me by email.',
+              'Contact Us',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'If you have any questions about these Terms, feel free to reach us at:',
               style: TextStyle(fontSize: 14, color: Colors.black, height: 1.5),
             ),
             const SizedBox(height: 8),

@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:furnistore/src/user/profile/profile_controller.dart';
-import 'package:furnistore/src/user/profile/settings.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -194,9 +193,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     Get.snackbar('Success', 'Profile saved successfully!');
     Get.back();
     _controller.getUserInfo();
-  }
+    }
 
-  @override
+    @override
   void dispose() {
     // Dispose the controller to avoid memory leaks
     nameController.dispose();
