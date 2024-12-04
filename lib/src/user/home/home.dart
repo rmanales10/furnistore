@@ -9,7 +9,7 @@ import 'package:furnistore/src/user/profile/profile_controller.dart';
 import 'package:get/get.dart';
 
 class Home extends StatefulWidget {
-  Home({super.key});
+  const Home({super.key});
 
   @override
   State<Home> createState() => _HomeState();
@@ -40,43 +40,46 @@ class _HomeState extends State<Home> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 50),
+                const SizedBox(height: 50),
                 Obx(() {
-                  initProfile();
                   final userInfo = _profileController.userInfo;
-                  var image = userInfo['image'];
-                  Uint8List imageBytes = base64Decode(image);
+                  final image = userInfo['image'] ?? '';
+                  Uint8List imageBytes =
+                      image.isNotEmpty ? base64Decode(image) : Uint8List(0);
 
                   return Row(
                     children: [
                       ClipOval(
                         child: imageBytes.isEmpty
-                            ? Image.asset('assets/no_profile.webp')
+                            ? Image.asset('assets/no_profile.webp',
+                                width: 50, height: 50)
                             : Image.memory(
                                 imageBytes,
                                 width: 50,
+                                height: 50,
                                 gaplessPlayback: true,
                               ),
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       Text(
                         'Hi, ${userInfo['name'] ?? 'No name'}\nStart Shopping Today!',
-                        style: TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14),
                       ),
                     ],
                   );
                 }),
-                SizedBox(height: 30),
+                const SizedBox(height: 30),
                 RichText(
-                    text: TextSpan(
-                  text: 'Make Your ',
-                  style: TextStyle(fontSize: 20, color: Colors.black),
-                  children: [
-                    TextSpan(
-                        text: 'Space Sense',
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-                  ],
-                )),
+                  text: const TextSpan(
+                    text: 'Make Your ',
+                    style: TextStyle(fontSize: 20, color: Colors.black),
+                    children: [
+                      TextSpan(
+                          text: 'Space Sense',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 50),
                 const Text(
                   'Categories',
@@ -109,44 +112,55 @@ class _HomeState extends State<Home> {
                 ),
                 const SizedBox(height: 10),
                 Obx(() {
-                  // Fetch the products from Firestore
-                  _firestore.getAllProduct();
                   if (_firestore.allProducts.isEmpty) {
                     return const Center(child: Text('Products not Available'));
                   }
 
                   return SizedBox(
-                    height: MediaQuery.of(context).size.height *
-                        0.6, // Adjust this height as needed
+                    height: MediaQuery.of(context).size.height * 0.6,
                     child: GridView.builder(
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2, // Number of columns
-                        crossAxisSpacing: 12, // Horizontal space between items
-                        mainAxisSpacing: 12, // Vertical space between items
-                        childAspectRatio: 0.75, // Adjust the aspect ratio
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                        childAspectRatio: 0.75,
                       ),
                       padding: const EdgeInsets.all(16),
                       itemCount: _firestore.allProducts.length,
                       itemBuilder: (context, index) {
                         final product = _firestore.allProducts[index];
-                        Uint8List imageBytes = base64Decode(product['image']);
+                        final productName =
+                            product['name'] ?? 'Unnamed Product';
+                        final productPrice = product['price'] ?? 0;
+                        final productDescription =
+                            product['description'] ?? 'No description';
+                        final productImage = product['image'] ?? '';
+                        final productId = product['id'] ?? '';
+
+                        Uint8List imageBytes;
+                        try {
+                          imageBytes = base64Decode(productImage);
+                        } catch (e) {
+                          imageBytes = Uint8List(0);
+                        }
+
                         return _buildProductCard(
                           context,
-                          product['name'],
-                          product['price'],
+                          productName,
+                          productPrice,
                           imageBytes,
-                          product['description'],
-                          product['id'],
+                          productDescription,
+                          productId,
                           () {
                             _firestore.insertCart(
-                              productId: product['id'],
+                              productId: productId,
                               quantity: 1,
                               userId: _auth.currentUser!.uid,
                             );
                             Get.snackbar(
                               'Success',
-                              'Added to cart ${product['name']}',
+                              'Added to cart $productName',
                               snackPosition: SnackPosition.BOTTOM,
                               duration: const Duration(milliseconds: 800),
                             );
@@ -199,7 +213,7 @@ class _HomeState extends State<Home> {
       BuildContext context,
       String name,
       int price,
-      Uint8List imagePath,
+      Uint8List imageBytes,
       String description,
       String productId,
       VoidCallback onTap) {
@@ -208,7 +222,7 @@ class _HomeState extends State<Home> {
             nameProduct: name,
             description: description,
             price: price,
-            imageBytes: imagePath,
+            imageBytes: imageBytes,
             productId: productId,
           )),
       child: Card(
@@ -224,7 +238,7 @@ class _HomeState extends State<Home> {
                 children: [
                   Center(
                     child: Image.memory(
-                      imagePath,
+                      imageBytes,
                       height: 100,
                       fit: BoxFit.cover,
                       gaplessPlayback: true,

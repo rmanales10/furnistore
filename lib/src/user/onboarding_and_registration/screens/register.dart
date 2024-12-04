@@ -126,8 +126,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 children: [
                   Checkbox(
                     value: agree,
-                    activeColor:
-                        const Color(0xFF3E6BE0), // Set the checkbox color here
+                    activeColor: const Color(0xFF3E6BE0),
                     onChanged: (bool? newValue) {
                       setState(() {
                         agree = newValue!;
@@ -137,10 +136,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const Text('Agree with '),
                   GestureDetector(
                     onTap: () {
-                      // Navigate to Terms and Conditions
+                      _showTermsAndConditionsDialog(
+                          context); // Show Terms and Conditions dialog
                     },
                     child: const Text(
-                      'Terms & Condition',
+                      'Terms & Conditions',
                       style: TextStyle(
                         color: Color(0xFF3E6BE0),
                         fontWeight: FontWeight.bold,
@@ -162,16 +162,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: TextButton(
-                  onPressed: () {
-                    _auth.createEmailAndPassword(
-                        name: _name.text,
-                        email: _email.text,
-                        phoneNumber: _phoneNumber.text,
-                        password: _password.text);
-                    Get.to(() => EmailVerificationScreen(
-                          email: _email.text,
-                        ));
-                  },
+                  onPressed: agree
+                      ? () {
+                          _auth.createEmailAndPassword(
+                              name: _name.text,
+                              email: _email.text,
+                              phoneNumber: _phoneNumber.text,
+                              password: _password.text);
+                          Get.to(() => EmailVerificationScreen(
+                                email: _email.text,
+                              ));
+                        }
+                      : null,
                   child: const Text(
                     'SIGN UP',
                     style: TextStyle(
@@ -208,6 +210,37 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  void _showTermsAndConditionsDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            'Terms & Conditions',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: SingleChildScrollView(
+            child: const Text(
+              'By creating an account, you agree to the following:\n\n'
+              '1. You will provide accurate information.\n'
+              '2. You are responsible for maintaining the confidentiality of your account.\n'
+              '3. You agree not to misuse the app in any way.\n'
+              '4. You accept that the app may update its terms and conditions at any time.\n\n'
+              'If you do not agree with these terms, please do not use this service.',
+              textAlign: TextAlign.justify,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
