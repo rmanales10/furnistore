@@ -77,7 +77,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     fit: BoxFit.contain,
                   ),
                   const Spacer(),
-                  const Icon(CupertinoIcons.bell, color: Colors.black),
+                  // const Icon(CupertinoIcons.bell, color: Colors.black),
                   const SizedBox(width: 20),
                   Row(
                     children: [

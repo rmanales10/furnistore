@@ -20,6 +20,40 @@ class _HomeState extends State<Home> {
   final _firestore = Get.put(FirestoreService());
   final _auth = Get.put(AuthService());
   final _profileController = Get.put(ProfileController());
+  final _search = TextEditingController();
+
+  // Variable to store search results
+  RxList<Map<String, dynamic>> filteredProducts =
+      RxList<Map<String, dynamic>>();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Initialize filteredProducts with all products
+    _firestore.getAllProduct();
+    filteredProducts.value = _firestore.allProducts;
+
+    // Add listener to search text field
+    _search.addListener(() {
+      filterProducts(_search.text);
+    });
+  }
+
+  void filterProducts(String query) {
+    if (query.isEmpty) {
+      // If search query is empty, show all products
+      filteredProducts.value = _firestore.allProducts;
+    } else {
+      // Filter products by name
+      filteredProducts.value = _firestore.allProducts
+          .where((product) => (product['name'] ?? '')
+              .toString()
+              .toLowerCase()
+              .contains(query.toLowerCase()))
+          .toList();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +101,7 @@ class _HomeState extends State<Home> {
                 }),
                 const SizedBox(height: 30),
                 TextField(
+                  controller: _search,
                   decoration: InputDecoration(
                     hintText: 'Search for Furniture',
                     hintStyle: TextStyle(
@@ -117,8 +152,8 @@ class _HomeState extends State<Home> {
                 ),
                 const SizedBox(height: 10),
                 Obx(() {
-                  _firestore.getAllProduct();
-                  if (_firestore.allProducts.isEmpty) {
+                  // Listen to filtered products
+                  if (filteredProducts.isEmpty) {
                     return const Center(child: Text('Products not Available'));
                   }
 
@@ -133,9 +168,9 @@ class _HomeState extends State<Home> {
                         childAspectRatio: 0.75,
                       ),
                       padding: const EdgeInsets.all(16),
-                      itemCount: _firestore.allProducts.length,
+                      itemCount: filteredProducts.length,
                       itemBuilder: (context, index) {
-                        final product = _firestore.allProducts[index];
+                        final product = filteredProducts[index];
                         final productName =
                             product['name'] ?? 'Unnamed Product';
                         final productPrice = product['price'] ?? 0;
@@ -184,115 +219,115 @@ class _HomeState extends State<Home> {
       ),
     );
   }
+}
 
-  Widget _buildCategoryIcon(
-      BuildContext context, String imagePath, String label, String route) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.pushNamed(context, route);
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+Widget _buildCategoryIcon(
+    BuildContext context, String imagePath, String label, String route) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.pushNamed(context, route);
+    },
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(6),
+          decoration: BoxDecoration(
+            color: Colors.grey[100],
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Image.asset(imagePath, width: 35, height: 35),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            color: Color(0xFF9E9E9E),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _buildProductCard(
+    BuildContext context,
+    String name,
+    int price,
+    Uint8List imageBytes,
+    String description,
+    String productId,
+    VoidCallback onTap) {
+  return GestureDetector(
+    onTap: () => Get.to(() => ProductDetailsScreen(
+          nameProduct: name,
+          description: description,
+          price: price,
+          imageBytes: imageBytes,
+          productId: productId,
+        )),
+    child: Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 10,
+      color: Colors.white,
+      child: Stack(
         children: [
-          Container(
-            padding: const EdgeInsets.all(6),
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              borderRadius: BorderRadius.circular(10),
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Image.memory(
+                    imageBytes,
+                    height: 100,
+                    fit: BoxFit.cover,
+                    gaplessPlayback: true,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  '₱ $price',
+                  style: const TextStyle(color: Colors.black, fontSize: 15),
+                ),
+              ],
             ),
-            child: Image.asset(imagePath, width: 35, height: 35),
           ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Color(0xFF9E9E9E),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProductCard(
-      BuildContext context,
-      String name,
-      int price,
-      Uint8List imageBytes,
-      String description,
-      String productId,
-      VoidCallback onTap) {
-    return GestureDetector(
-      onTap: () => Get.to(() => ProductDetailsScreen(
-            nameProduct: name,
-            description: description,
-            price: price,
-            imageBytes: imageBytes,
-            productId: productId,
-          )),
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 10,
-        color: Colors.white,
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Center(
-                    child: Image.memory(
-                      imageBytes,
-                      height: 100,
-                      fit: BoxFit.cover,
-                      gaplessPlayback: true,
-                    ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: GestureDetector(
+              onTap: onTap,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: Colors.blue,
+                  borderRadius: BorderRadius.only(
+                    bottomRight: Radius.circular(12),
+                    topLeft: Radius.circular(8),
                   ),
-                  const SizedBox(height: 15),
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    '₱ $price',
-                    style: const TextStyle(color: Colors.black, fontSize: 15),
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: onTap,
-                child: Container(
-                  width: 36,
-                  height: 36,
-                  decoration: const BoxDecoration(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.only(
-                      bottomRight: Radius.circular(12),
-                      topLeft: Radius.circular(8),
-                    ),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      '+',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
+                ),
+                child: const Center(
+                  child: Text(
+                    '+',
+                    style: TextStyle(color: Colors.white, fontSize: 18),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
