@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:furnistore/src/admin/auth_screen/login.dart';
+import 'package:furnistore/src/admin/screens/activity_log/activitylog.dart';
 import 'package:furnistore/src/admin/screens/dashboard/dashboard.dart';
 import 'package:furnistore/src/admin/screens/orders/orders.dart';
 import 'package:furnistore/src/admin/screens/products/products.dart';
@@ -49,6 +50,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
     DashboardContent(),
     const ProductPage(),
     const Orders(),
+    ActivityLogScreen(),
     const Center(
         child: Text("Other Content")), // Placeholder for additional pages
   ];
@@ -56,40 +58,69 @@ class _AdminDashboardState extends State<AdminDashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: Icon(Icons.search, color: Colors.black),
-        title: const TextField(
-          decoration: InputDecoration(
-            hintText: 'Search',
-            border: InputBorder.none,
-          ),
-        ),
-        actions: const [
-          Icon(CupertinoIcons.bell, color: Colors.black),
-          SizedBox(width: 20),
-          CircleAvatar(
-            backgroundColor: Colors.blue,
-            child: Text("A"),
-          ),
-          SizedBox(width: 10),
-          Padding(
-            padding: EdgeInsets.only(right: 20.0),
-            child: Text(
-              "elsiemry@gmail.com",
-              style: TextStyle(color: Colors.black),
-            ),
-          ),
-        ],
-      ),
+          backgroundColor: Colors.white,
+          elevation: 0,
+          toolbarHeight: 120, // Set height for AppBar
+          titleSpacing: 0, // Remove default spacing
+          flexibleSpace: Padding(
+            padding: const EdgeInsets.only(
+                left: 30, right: 100), // Add 100px padding on both sides
+            child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Logo
+                  Image.asset(
+                    'assets/image_3.png',
+                    height: 70,
+                    fit: BoxFit.contain,
+                  ),
+                  const Spacer(),
+                  const Icon(CupertinoIcons.bell, color: Colors.black),
+                  const SizedBox(width: 20),
+                  Row(
+                    children: [
+                      ClipOval(
+                        child: Image.asset(
+                          'assets/no_profile.webp',
+                          height: 50,
+                          width: 50,
+                        ), // Status dot color
+                      ),
+                      const SizedBox(width: 10),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          Text(
+                            "Admin",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
+                          ),
+                          Text(
+                            "elsiemry@gmail.com",
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ]),
+          )),
       body: Row(
         children: [
           // Sidebar
           Sidebar(
             selectedIndex: selectedIndex,
             onItemSelected: (index) {
-              setState(() { 
+              setState(() {
                 selectedIndex = index;
               });
             },
@@ -123,12 +154,10 @@ class Sidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: 200,
-      color: Colors.grey.shade200,
+      color: Colors.white,
       child: Column(
         children: [
           const SizedBox(height: 40),
-          const Icon(Icons.shopping_bag, size: 50, color: Colors.blue),
-          const SizedBox(height: 20),
           SidebarItem(
             title: "Dashboard",
             icon: Icons.dashboard,
@@ -146,6 +175,12 @@ class Sidebar extends StatelessWidget {
             icon: Icons.shopping_cart,
             isSelected: selectedIndex == 2,
             onTap: () => onItemSelected(2),
+          ),
+          SidebarItem(
+            title: "Activity Log",
+            icon: Icons.event_note_sharp,
+            isSelected: selectedIndex == 3,
+            onTap: () => onItemSelected(3),
           ),
           const Spacer(),
           SidebarItem(
@@ -169,23 +204,53 @@ class Sidebar extends StatelessWidget {
           title: const Text("Logout Confirmation"),
           content: const Text("Are you sure you want to log out?"),
           actions: [
-            TextButton(
-              child: const Text("Cancel"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text("Logout"),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const MyLogin(),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 80,
+                  decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: TextButton(
+                    child: const Text(
+                      "Cancel",
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
-                ); // Navigate to the login screen
-              },
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                Container(
+                  width: 80,
+                  decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(10)),
+                  child: TextButton(
+                    child: const Text(
+                      "Logout",
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Close the dialog
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const MyLogin(),
+                        ),
+                      ); // Navigate to the login screen
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         );

@@ -20,8 +20,8 @@ class OrderReviewScreen extends StatefulWidget {
 }
 
 class _OrderReviewScreenState extends State<OrderReviewScreen> {
-  String selectedDeliveryOption = 'Pick Up'; // Default delivery option
-  String paymentMethod = 'Paypal'; // Default payment method
+  String selectedDeliveryOption = 'Base Fee'; // Default delivery option
+  String paymentMethod = 'COD'; // Default payment method
   int additionalFee = 0;
   final _orderController = Get.put(OrderController());
   final _firestore = Get.put(FirestoreService());
@@ -69,7 +69,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                 _orderController.getUserInfo();
                 final userInfo = _orderController.userInfo;
                 return _buildEditableRow(
-                  '${userInfo['address']} ${userInfo['town_city']} ${userInfo['postcode']}',
+                  '${userInfo['address'] ?? 'Please click edit to enter details '} \n${userInfo['town_city'] ?? ''} \n${userInfo['postcode'] ?? ''} \n${userInfo['phone_number']}',
                   () => Get.to(() => const DeliveryAddressScreen()),
                 );
               }),
@@ -83,8 +83,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                 if (_orderController.userInfo.isNotEmpty) {
                   final user =
                       _orderController.userInfo; // Access the user data
-                  return _buildEditableRow(
-                      '${user['phone_number'] ?? 'Please enter you contact number'}\n${user['email'] ?? 'Not Set'}',
+                  return _buildEditableRow('${user['email'] ?? 'Not Set'}',
                       () => Get.to(() => const EditProfileScreen()));
                 } else {
                   return _buildEditableRow('Loading user information...',
@@ -204,7 +203,6 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
   Widget _buildDeliveryOptions() {
     return Column(
       children: [
-        _buildRadioOption('Pick Up', 'FREE'),
         _buildRadioOption('Base Fee', '₱50 for the first 5 km'),
         _buildRadioOption('Additional Fee', '₱20 per km beyond 5 km'),
       ],
@@ -248,7 +246,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
         height: 1,
         color: Colors.grey,
       ),
-      items: ['Paypal', 'Gcash', 'COD'].map((String method) {
+      items: ['COD'].map((String method) {
         return DropdownMenuItem<String>(
           value: method,
           child: Text(
@@ -351,26 +349,51 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                 title: const Text('Place Order'),
                 content: const Text('Are you sure you want to proceed?'),
                 actions: [
-                  ElevatedButton(
-                      onPressed: () {
-                        _firestore.storeOrderData(
-                            date: DateTime.now(),
-                            modeOfPayment: paymentMethod,
-                            orderId: generateOrderId(),
-                            product: widget.productList,
-                            status: 'Pending',
-                            subTotal: subtotal.value,
-                            total: total,
-                            totalItems: totalItem.value,
-                            userId: _auth.currentUser!.uid,
-                            deliveryFee: additionalFee);
-                        _firestore.deleteCartForCheckout();
-                        Get.back();
-                        _showSuccessDialog(context);
-                      },
-                      child: const Text('Yes')),
-                  ElevatedButton(
-                      onPressed: () => Get.back(), child: const Text('No')),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 100,
+                        decoration: BoxDecoration(
+                            color: Colors.blue,
+                            borderRadius: BorderRadius.circular(15)),
+                        child: TextButton(
+                            onPressed: () => Get.back(),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(color: Colors.white),
+                            )),
+                      ),
+                      SizedBox(width: 10),
+                      Container(
+                        width: 100,
+                        decoration: BoxDecoration(
+                            color: Colors.black,
+                            borderRadius: BorderRadius.circular(15)),
+                        child: TextButton(
+                            onPressed: () {
+                              _firestore.storeOrderData(
+                                  date: DateTime.now(),
+                                  modeOfPayment: paymentMethod,
+                                  orderId: generateOrderId(),
+                                  product: widget.productList,
+                                  status: 'Pending',
+                                  subTotal: subtotal.value,
+                                  total: total,
+                                  totalItems: totalItem.value,
+                                  userId: _auth.currentUser!.uid,
+                                  deliveryFee: additionalFee);
+                              _firestore.deleteCartForCheckout();
+                              Get.back();
+                              _showSuccessDialog(context);
+                            },
+                            child: const Text(
+                              'Continue',
+                              style: TextStyle(color: Colors.white),
+                            )),
+                      ),
+                    ],
+                  ),
                 ],
               ));
             },
@@ -408,7 +431,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
             Center(
               child: Icon(
                 Icons.check_circle_outlined,
-                color: Colors.green,
+                color: Colors.blue,
               ),
             ),
           ],

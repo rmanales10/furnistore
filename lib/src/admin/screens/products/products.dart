@@ -22,6 +22,7 @@ class _ProductPageState extends State<ProductPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,13 +45,7 @@ class _ProductPageState extends State<ProductPage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.shade300,
-                    blurRadius: 10,
-                    spreadRadius: 5,
-                  )
-                ],
+               
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -60,7 +55,7 @@ class _ProductPageState extends State<ProductPage> {
                     child: Container(
                       padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 9, 66, 113),
+                          color: Colors.blue,
                           borderRadius: BorderRadius.circular(5)),
                       child: TextButton(
                         onPressed: () => Get.to(() => const AddProduct()),
@@ -114,7 +109,7 @@ class _ProductPageState extends State<ProductPage> {
                             Uint8List imageBytes =
                                 base64Decode(product['image']);
                             bool isEditing = editingIndex == index;
-
+                      
                             return DataRow(cells: [
                               DataCell(Row(
                                 children: [

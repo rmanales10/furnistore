@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/home_screen.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore import
+import 'package:firebase_auth/firebase_auth.dart'; // FirebaseAuth import
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -11,10 +13,11 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _auth = Get.put(AuthService());
-  final _email = TextEditingController();
-  final _password = TextEditingController();
+  final AuthService _auth = Get.put(AuthService());
+  final TextEditingController _email = TextEditingController();
+  final TextEditingController _password = TextEditingController();
   bool obs = true;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +30,6 @@ class _LoginScreenState extends State<LoginScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 100),
-              // Logo
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -39,8 +41,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // Welcome Text
               const Text(
                 'Welcome back,',
                 style: TextStyle(
@@ -56,10 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.grey[600],
                 ),
               ),
-
               const SizedBox(height: 40),
-
-              // Email TextField
               TextFormField(
                 controller: _email,
                 decoration: InputDecoration(
@@ -73,7 +70,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
               TextFormField(
                 controller: _password,
                 obscureText: obs,
@@ -97,9 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 8),
-
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
@@ -124,20 +118,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: TextButton(
                   onPressed: () async {
                     try {
-                      // Await the result of the login method
-                      final isLogin = await _auth.loginWithEmailAndPassword(
+                      // Login and set status to online
+                      final userId = await loginWithEmailAndPassword(
                         email: _email.text,
                         password: _password.text,
                       );
 
-                      if (isLogin) {
-                        // Navigate to the home screen and show success snackbar
+                      if (userId != null) {
                         Get.snackbar('Success', 'Login Successfully');
                         Get.offAll(() => const HomeScreen());
                       }
                     } catch (e) {
-                      // Handle unexpected errors
-                      Get.snackbar('Error', 'An error occurred: $e');
+                      Get.snackbar(
+                        'Error',
+                        'Login failed: ${e.toString()}',
+                        snackPosition: SnackPosition.BOTTOM,
+                      );
                     }
                   },
                   child: const Center(
@@ -153,8 +149,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Sign Up Prompt
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
@@ -169,7 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         'SIGN UP',
                         style: TextStyle(
                           color: Color(0xFF3E6BE0),
-                          // Sign up link color
                         ),
                       ),
                     ),
@@ -181,5 +174,33 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
+  }
+
+  // Login function with Firebase authentication and status update
+  Future<String?> loginWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
+    try {
+      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final userId = userCredential.user?.uid;
+
+      // Set user status to online
+      if (userId != null) {
+        await FirebaseFirestore.instance.collection('users').doc(userId).update({
+          'status': 'online',
+        });
+      }
+
+      return userId;
+    } catch (e) {
+      throw Exception('Login failed: $e');
+    }
   }
 }

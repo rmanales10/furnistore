@@ -4,6 +4,8 @@ import 'package:furnistore/src/user/onboarding_and_registration/screens/login.da
 import 'package:furnistore/src/user/payment_track_order/order_screen.dart';
 import 'package:furnistore/src/user/profile/terms.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore import
+import 'package:firebase_auth/firebase_auth.dart'; // FirebaseAuth import
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -13,7 +15,9 @@ class ProfileSettingsScreen extends StatefulWidget {
 }
 
 class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
-  final _auth = Get.put(AuthService());
+  final AuthService _auth = Get.put(AuthService());
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,7 +35,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 fontSize: 18,
               ),
             ),
-            // Personal Section
             const SizedBox(height: 20),
             const Text(
               'Personal',
@@ -42,28 +45,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               ),
             ),
             const SizedBox(height: 10),
-
-            // Profile Tile
             _buildListTile(() {
-              Navigator.pushNamed(
-                  context, '/editprof'); // Navigate to Edit Profile Screen
+              Navigator.pushNamed(context, '/editprof');
             }, 'Profile'),
             const Divider(),
-
-            // Delivery Address Tile
             _buildListTile(() {
-              Navigator.pushNamed(
-                  context, '/adrress'); // Navigate to Delivery Address
+              Navigator.pushNamed(context, '/adrress');
             }, 'Delivery Address'),
             const Divider(),
-
-            // My Orders Tile
             _buildListTile(() {
               Get.to(() => OrdersScreen());
             }, 'My Orders'),
             const Divider(),
-
-            // Account Section
             const SizedBox(height: 20),
             const Text(
               'Account',
@@ -74,21 +67,15 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               ),
             ),
             const SizedBox(height: 10),
-
-            // About FurniStore Tile
             _buildListTile(() {
-              Navigator.pushNamed(
-                  context, '/about'); // Navigate to About FurniStore
+              Navigator.pushNamed(context, '/about');
             }, 'About FurniStore'),
             const Divider(),
             _buildListTile(() {
               Get.to(() => Terms());
             }, 'Terms and Conditions'),
             const Divider(),
-
             const Spacer(),
-
-            // Logout Button
             Center(
               child: ElevatedButton(
                 onPressed: () {
@@ -114,7 +101,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
   }
 
-  // Helper method for list tiles
   Widget _buildListTile(VoidCallback onTap, String title) {
     return ListTile(
       title: Text(
@@ -123,11 +109,35 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       ),
       trailing:
           const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.black),
-      onTap: onTap, // Use the passed onTap function
+      onTap: onTap,
     );
   }
 
-  // Logout Confirmation Dialog
+  Future<void> _logoutUser() async {
+    try {
+      final userId = _firebaseAuth.currentUser?.uid;
+
+      // Update user's status to offline
+      if (userId != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update({
+          'status': 'offline',
+        });
+      }
+
+      // Sign out the user
+      await _firebaseAuth.signOut(); // FirebaseAuth instance used for sign-out
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Logout failed: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+  }
+
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -137,13 +147,12 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           titlePadding: const EdgeInsets.all(16),
           contentPadding: const EdgeInsets.all(16),
-          insetPadding: const EdgeInsets.symmetric(
-              horizontal: 40), // Controls the overall width
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40),
           title: const Text(
             'Are you sure you want to Logout?',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          actionsAlignment: MainAxisAlignment.spaceBetween, // Aligns buttons
+          actionsAlignment: MainAxisAlignment.spaceBetween,
           actions: [
             SizedBox(
               width: double.infinity,
@@ -153,10 +162,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   Expanded(
                     child: TextButton(
                       onPressed: () {
-                        Navigator.pop(context); // Close the dialog
+                        Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Colors.black,
                         foregroundColor: Colors.white,
                       ),
                       child: const Text('No'),
@@ -165,12 +174,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: TextButton(
-                      onPressed: () {
-                        _auth.signOut();
-                        Get.offAll(() => LoginScreen());
+                      onPressed: () async {
+                        Navigator.pop(context); // Close the dialog
+                        await _logoutUser(); // Logout user
+                        Get.offAll(() =>
+                            const LoginScreen()); // Navigate to LoginScreen
                       },
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
                       ),
                       child: const Text('Yes'),

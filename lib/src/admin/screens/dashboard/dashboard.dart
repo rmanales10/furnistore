@@ -11,39 +11,72 @@ class DashboardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(20.0),
+      padding: EdgeInsets.symmetric(horizontal: 100, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Dashboard",
+            "General Dashboard",
             style: TextStyle(
               fontSize: 30,
               fontWeight: FontWeight.bold,
             ),
           ),
           SizedBox(height: 20),
-          Obx(() {
-            _controller.fetchDataFromFirestore();
-
-            return Row(
-              children: [
-                Expanded(
-                  child: InfoCard(
-                    title: "Total Revenue",
-                    value: "₱ ${_controller.totalRevenue}",
-                  ),
-                ),
-                SizedBox(width: 20),
-                Expanded(
-                  child: InfoCard(
-                    title: "Total Orders",
-                    value: "${_controller.totalOrders}",
-                  ),
-                ),
-              ],
-            );
-          }),
+          Container(
+            decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadiusDirectional.circular(15),
+                border: Border.all(width: 1, color: Colors.grey)),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Obx(() {
+                _controller.fetchDataFromFirestore();
+                        
+                return Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 100, left: 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Performance',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Overview',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: InfoCard(
+                        icon: Icons.bar_chart_outlined,
+                        title: "Total Revenue",
+                        value: "₱ ${_controller.totalRevenue}",
+                      ),
+                    ),
+                    SizedBox(width: 20),
+                    Expanded(
+                      child: InfoCard(
+                        icon: Icons.shopping_cart_outlined,
+                        title: "Total Orders",
+                        value: "${_controller.totalOrders}",
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
           SizedBox(height: 20),
           TotalIncomeChart(),
         ],
@@ -56,11 +89,13 @@ class DashboardContent extends StatelessWidget {
 class InfoCard extends StatelessWidget {
   final String title;
   final String value;
+  final IconData icon;
 
   const InfoCard({
     super.key,
     required this.title,
     required this.value,
+    required this.icon,
   });
 
   @override
@@ -69,24 +104,27 @@ class InfoCard extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade300,
-            blurRadius: 10,
-            spreadRadius: 5,
-          )
-        ],
+        borderRadius: BorderRadius.circular(15),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Icon(
+            icon,
+            size: 50,
+          ),
+          const SizedBox(height: 10),
+          Text(title,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              )),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(value, style: const TextStyle(fontSize: 24)),
+              Text(value,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 45)),
             ],
           ),
         ],

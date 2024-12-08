@@ -13,7 +13,7 @@ class AuthService extends GetxController {
     required String name,
     required String email,
     required String phoneNumber,
-    required String password,
+    required String password, required String idNumber, required String ipAddress,
   }) async {
     try {
       // Create user with email and password

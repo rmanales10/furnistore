@@ -190,12 +190,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       name: nameController.text,
       image: base64Image ?? _controller.userInfo['image'],
     );
-    Get.snackbar('Success', 'Profile saved successfully!');
-    Get.back();
-    _controller.getUserInfo();
-    }
 
-    @override
+    Get.back(closeOverlays: true);
+    Get.snackbar('Success', 'Profile saved successfully!');
+    _controller.getUserInfo();
+  }
+
+  @override
   void dispose() {
     // Dispose the controller to avoid memory leaks
     nameController.dispose();

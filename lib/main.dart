@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:furnistore/src/admin/auth_screen/login.dart';
 import 'package:furnistore/src/admin/screens/homepage.dart';
 import 'package:furnistore/src/user/categories/categories.dart';
 import 'package:furnistore/src/user/home_screen.dart';
@@ -44,7 +45,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Furnistore',
+      title: 'FurniStore',
       initialRoute: '/',
       routes: {
         '/': (context) => const Onboard1(),
@@ -81,8 +82,9 @@ class MyAdmin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const GetMaterialApp(
+      title: 'FurniStore',
       debugShowCheckedModeBanner: false,
-      home: AdminDashboard(),
+      home: MyLogin(),
     );
   }
 }

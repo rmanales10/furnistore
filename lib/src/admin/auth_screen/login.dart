@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:furnistore/src/admin/screens/homepage.dart';
+import 'package:get/get.dart';
 
 class MyLogin extends StatelessWidget {
   const MyLogin({super.key});
@@ -8,7 +9,7 @@ class MyLogin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200],
+      backgroundColor: Colors.grey[100],
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -26,20 +27,28 @@ class MyLogin extends StatelessWidget {
                 ),
               ],
             ),
-            width: 400, // Adjust as needed
+            width: 500, // Adjust width as needed
             child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.fingerprint, size: 48, color: Colors.black),
+                const LogoWidget(), // Custom logo widget to match design
                 const SizedBox(height: 16),
                 const Text(
                   'Welcome back,',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
+                const SizedBox(height: 8),
                 Text(
                   'Discover Limitless Choices and Unmatched Convenience',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
                 ),
                 const SizedBox(height: 32),
                 const LoginForm(),
@@ -48,6 +57,25 @@ class MyLogin extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class LogoWidget extends StatelessWidget {
+  const LogoWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const SizedBox(
+          width: 20,
+        ),
+        Image.asset(
+          'assets/image_3.png',
+          height: 60,
+        ),
+      ],
     );
   }
 }
@@ -64,32 +92,15 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool isRememberMeChecked = false;
 
-  Future<void> loginUser() async {
-    try {
-      // Log in the user with email and password
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login successful!')),
-      );
-
-      // Navigate to another widget upon successful login
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) =>
-              const AdminDashboard(), // Replace with your target widget
-        ),
-      );
-    } on FirebaseAuthException catch (e) {
-      String errorMessage = e.message ?? 'Login failed';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('An unexpected error occurred')),
-      );
+  void loginUser() {
+    if (_emailController.text == 'admin' &&
+        _passwordController.text == 'admin') {
+      Get.offAll(() => AdminDashboard());
+      Get.snackbar('Success', 'Admin Logged in successfully!');
+    } else {
+      Get.snackbar('Error', 'Wrong username or password!');
     }
   }
 
@@ -102,21 +113,19 @@ class _LoginFormState extends State<LoginForm> {
           TextFormField(
             controller: _emailController,
             decoration: const InputDecoration(
-              labelText: 'E-Mail',
+              labelText: 'Username',
               border: OutlineInputBorder(),
             ),
-            keyboardType: TextInputType.emailAddress,
+            keyboardType: TextInputType.text,
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter your email';
+                return 'Please enter your username';
               }
-              if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                return 'Please enter a valid email';
-              }
+
               return null;
             },
           ),
-          const SizedBox(height: 16.0),
+          const SizedBox(height: 16),
           TextFormField(
             controller: _passwordController,
             decoration: InputDecoration(
@@ -141,39 +150,28 @@ class _LoginFormState extends State<LoginForm> {
               return null;
             },
           ),
-          const SizedBox(height: 16.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Checkbox(value: false, onChanged: (value) {}),
-                  const Text('Remember Me'),
-                ],
+          const SizedBox(height: 30),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 100),
+            child: ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  loginUser();
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                minimumSize:
+                    const Size(double.infinity, 50), // Full width button
+                backgroundColor: Colors.blue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
               ),
-              TextButton(
-                onPressed: () {
-                  // Handle forgot password logic
-                },
-                child: const Text('Forgot Password?'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32.0),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                loginUser();
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size(double.infinity, 50), // Full width button
-              backgroundColor: Colors.blue,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8.0),
+              child: const Text(
+                'Sign in',
+                style: TextStyle(fontSize: 16, color: Colors.white),
               ),
             ),
-            child: const Text('Sign in', style: TextStyle(fontSize: 16)),
           ),
         ],
       ),

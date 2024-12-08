@@ -46,7 +46,7 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-            padding: const EdgeInsets.all(20.0),
+            padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 50),
             child: Obx(() {
               _orderController.getOrderInfo(orderId: widget.orderId);
               _orderController.getUserInfo(
@@ -274,10 +274,19 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
       children: [
         Row(
           children: [
-            CircleAvatar(
-              radius: 20,
-              backgroundColor: Colors.grey.shade200,
-              backgroundImage: MemoryImage(image),
+            // CircleAvatar(
+            //   radius: 20,
+            //   backgroundColor: Colors.grey.shade200,
+            //   backgroundImage: MemoryImage(image),
+            // ),
+            ClipOval(
+              child: Image.memory(
+                image,
+                height: 50,
+                width: 50,
+                gaplessPlayback: true,
+                fit: BoxFit.cover,
+              ),
             ),
             const SizedBox(width: 10),
             Text(
@@ -340,10 +349,14 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
-            child: CircleAvatar(
-              radius: 40,
-              backgroundColor: Colors.grey,
-              backgroundImage: MemoryImage(profilePic),
+            child: ClipOval(
+              child: Image.memory(
+                profilePic,
+                height: 100,
+                width: 100,
+                gaplessPlayback: true,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const SizedBox(height: 15),
@@ -354,7 +367,7 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
             ),
           ),
           const SizedBox(height: 5),
-          Center(
+          Center( 
             child: Text(email,
                 style: const TextStyle(color: Colors.grey, fontSize: 14)),
           ),

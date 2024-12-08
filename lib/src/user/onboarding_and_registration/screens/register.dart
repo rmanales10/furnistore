@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/onboarding_and_registration/screens/verification.dart';
 import 'package:get/get.dart';
+import 'dart:math';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _RegisterScreenState createState() => _RegisterScreenState();
 }
 
@@ -20,6 +23,107 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _phoneNumber = TextEditingController();
   final _auth = Get.put(AuthService());
 
+  // Firestore instance
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  Future<String> _fetchIpAddress() async {
+    try {
+      final response = await http.get(Uri.parse('https://api.ipify.org?format=json'));
+      if (response.statusCode == 200) {
+        final json = jsonDecode(response.body);
+        return json['ip'];
+      }
+      return 'Unknown';
+    } catch (e) {
+      return 'Error';
+    }
+  }
+
+  String _generateUserId() {
+    final random = Random();
+    return 'UID-${random.nextInt(1000000).toString().padLeft(6, '0')}';
+  }
+
+  Future<void> _saveToFirestore({
+    required String name,
+    required String email,
+    required String phoneNumber,
+    required String idNumber,
+    required String ipAddress,
+    required String status,
+  }) async {
+    try {
+      final emailKey = base64Url.encode(utf8.encode(email));
+      await _firestore.collection('users').doc(emailKey).set({
+        'name': name,
+        'email': email,
+        'phoneNumber': phoneNumber,
+        'idNumber': idNumber,
+        'ipAddress': ipAddress,
+        'status': status,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+      print('User data saved successfully.');
+    } catch (e) {
+      print('Error saving user data to Firestore: $e');
+      throw e;
+    }
+  }
+
+  Future<void> _handleSignUp() async {
+    if (_name.text.isEmpty ||
+        _email.text.isEmpty ||
+        _phoneNumber.text.isEmpty ||
+        _password.text.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'All fields are required',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    try {
+      final ipAddress = await _fetchIpAddress();
+      final idNumber = _generateUserId();
+
+      // Save to Firestore with "online" status
+      await _saveToFirestore(
+        name: _name.text,
+        email: _email.text,
+        phoneNumber: _phoneNumber.text,
+        idNumber: idNumber,
+        ipAddress: ipAddress,
+        status: 'online',
+      );
+
+      // Create user in authentication
+      await _auth.createEmailAndPassword(
+        name: _name.text,
+        email: _email.text,
+        phoneNumber: _phoneNumber.text,
+        password: _password.text,
+        idNumber: idNumber,
+        ipAddress: ipAddress,
+      );
+
+      // Navigate to email verification screen
+      if (mounted) {
+        Get.to(() => EmailVerificationScreen(
+              email: _email.text,
+            ));
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Failed to register: $e',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,7 +134,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () {
-            Navigator.pop(context); // Handles back navigation
+            Navigator.pop(context);
           },
         ),
       ),
@@ -49,8 +153,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Name TextField
               TextFormField(
                 controller: _name,
                 decoration: InputDecoration(
@@ -64,8 +166,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Email TextField
               TextFormField(
                 controller: _email,
                 decoration: InputDecoration(
@@ -79,8 +179,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Phone Number TextField
               TextFormField(
                 controller: _phoneNumber,
                 decoration: InputDecoration(
@@ -94,8 +192,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Password TextField
               TextFormField(
                 controller: _password,
                 obscureText: obs,
@@ -120,24 +216,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Terms and Conditions Checkbox
               Row(
                 children: [
                   Checkbox(
                     value: agree,
                     activeColor: const Color(0xFF3E6BE0),
                     onChanged: (bool? newValue) {
-                      setState(() {
-                        agree = newValue!;
-                      });
+                      if (newValue != null) {
+                        setState(() {
+                          agree = newValue;
+                        });
+                      }
                     },
                   ),
                   const Text('Agree with '),
                   GestureDetector(
                     onTap: () {
-                      _showTermsAndConditionsDialog(
-                          context); // Show Terms and Conditions dialog
+                      _showTermsAndConditionsDialog(context);
                     },
                     child: const Text(
                       'Terms & Conditions',
@@ -152,8 +247,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // Sign Up Button
               Container(
                 height: 45,
                 width: double.infinity,
@@ -162,18 +255,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: TextButton(
-                  onPressed: agree
-                      ? () {
-                          _auth.createEmailAndPassword(
-                              name: _name.text,
-                              email: _email.text,
-                              phoneNumber: _phoneNumber.text,
-                              password: _password.text);
-                          Get.to(() => EmailVerificationScreen(
-                                email: _email.text,
-                              ));
-                        }
-                      : null,
+                  onPressed: agree ? _handleSignUp : null,
                   child: const Text(
                     'SIGN UP',
                     style: TextStyle(
@@ -185,8 +267,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              // Sign In Prompt
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

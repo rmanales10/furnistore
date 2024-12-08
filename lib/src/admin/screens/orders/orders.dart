@@ -18,12 +18,11 @@ class _OrdersState extends State<Orders> {
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5), // Light background
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(30),
         child: Column(
           crossAxisAlignment:
               CrossAxisAlignment.stretch, // Ensure full-width usage
           children: [
-            
             const Text(
               'Orders',
               style: TextStyle(
@@ -40,13 +39,6 @@ class _OrdersState extends State<Orders> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.shade300,
-                      blurRadius: 10,
-                      spreadRadius: 5,
-                    ),
-                  ],
                 ),
                 child: Obx(() {
                   _firestore.getOrders();

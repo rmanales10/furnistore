@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/cart/add_to_cart.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
@@ -21,12 +22,6 @@ class _HomeState extends State<Home> {
   final _profileController = Get.put(ProfileController());
 
   @override
-  void initState() {
-    super.initState();
-    initProfile();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -42,6 +37,7 @@ class _HomeState extends State<Home> {
               children: [
                 const SizedBox(height: 50),
                 Obx(() {
+                  _profileController.getUserInfo();
                   final userInfo = _profileController.userInfo;
                   final image = userInfo['image'] ?? '';
                   Uint8List imageBytes =
@@ -52,11 +48,12 @@ class _HomeState extends State<Home> {
                       ClipOval(
                         child: imageBytes.isEmpty
                             ? Image.asset('assets/no_profile.webp',
-                                width: 50, height: 50)
+                                fit: BoxFit.cover, width: 50, height: 50)
                             : Image.memory(
                                 imageBytes,
                                 width: 50,
                                 height: 50,
+                                fit: BoxFit.cover,
                                 gaplessPlayback: true,
                               ),
                       ),
@@ -69,18 +66,26 @@ class _HomeState extends State<Home> {
                   );
                 }),
                 const SizedBox(height: 30),
-                RichText(
-                  text: const TextSpan(
-                    text: 'Make Your ',
-                    style: TextStyle(fontSize: 20, color: Colors.black),
-                    children: [
-                      TextSpan(
-                          text: 'Space Sense',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                    ],
+                TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search for Furniture',
+                    hintStyle: TextStyle(
+                      color: Color.fromARGB(255, 114, 114, 114),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                    ),
+                    prefixIcon: Icon(
+                      CupertinoIcons.search,
+                      color: Color.fromARGB(255, 114, 114, 114),
+                    ),
+                    filled: true,
+                    fillColor: Color.fromARGB(255, 242, 241, 241),
+                    border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(15)),
                   ),
                 ),
-                const SizedBox(height: 50),
+                const SizedBox(height: 20),
                 const Text(
                   'Categories',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
@@ -107,11 +112,12 @@ class _HomeState extends State<Home> {
                 ),
                 const SizedBox(height: 15),
                 const Text(
-                  'Popular Products',
+                  'All Products',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 const SizedBox(height: 10),
                 Obx(() {
+                  _firestore.getAllProduct();
                   if (_firestore.allProducts.isEmpty) {
                     return const Center(child: Text('Products not Available'));
                   }
@@ -288,9 +294,5 @@ class _HomeState extends State<Home> {
         ),
       ),
     );
-  }
-
-  Future<void> initProfile() async {
-    await _profileController.getUserInfo();
   }
 }
