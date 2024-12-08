@@ -181,10 +181,10 @@ class _LoginScreenState extends State<LoginScreen> {
     required String email,
     required String password,
   }) async {
-    final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+    final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
     try {
-      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+      final userCredential = await firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -193,7 +193,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Set user status to online
       if (userId != null) {
-        await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update({
           'status': 'online',
         });
       }

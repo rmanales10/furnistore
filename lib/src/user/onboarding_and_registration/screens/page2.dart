@@ -7,45 +7,66 @@ class Onboard2 extends StatefulWidget {
   State<Onboard2> createState() => _Onboard2State();
 }
 
-class _Onboard2State extends State<Onboard2> {    
+class _Onboard2State extends State<Onboard2> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        height: double.infinity,
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: Colors.grey[200],
-          image: const DecorationImage(
-            image: AssetImage('assets/page2.png'),
-            fit: BoxFit.fitWidth,
-          ),
-        ),
-        child: Center(
-          child: Column(
-            children: [
-              const SizedBox(height: 100),
-              const Row(
-                children: [
-                  Text(
-                    'We Design\n    Furniture For\n     Your Comfort',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
+      body: Stack(
+        children: [
+          Container(
+            height: double.infinity,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              image: const DecorationImage(
+                image: AssetImage('assets/iPhone 16 Pro Max - 91.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+            child: Column(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 50),
+                    child: Column(
+                      children: [
+                        SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.55),
+                        const Text(
+                          'We Design Furniture For Your Comfort',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF3E6BE0),
+                            fontSize: 25,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 20,
+                        ),
+                        const Text(
+                          'Explore all the existing design based on your taste and interest',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 30,
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
-              const SizedBox(height: 435),
-              Column(
-                children: [
-                  Container(
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 30),
+                  child: Container(
                     height: 50,
-                    width: 300,
+                    width: double.infinity,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF202020),
+                      color: Colors.black,
                       borderRadius: BorderRadius.circular(
                           10), // Adjust the border radius as needed
                     ),
@@ -61,12 +82,12 @@ class _Onboard2State extends State<Onboard2> {
                         ),
                       ),
                     ),
-                  )
-                ],
-              ),
-            ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

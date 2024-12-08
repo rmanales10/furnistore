@@ -25,8 +25,8 @@ class _Onboard1State extends State<Onboard1> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              height: 200,
-              width: 100,
+              height: 150,
+              width: 75,
               decoration: const BoxDecoration(
                 image: DecorationImage(
                   image: AssetImage('assets/image_3.png'),
