@@ -28,9 +28,9 @@ class OrderController extends GetxController {
           'user_id': doc['user_id'],
         };
       }).toList();
-      log('Success $orders');
+      // log('Success $orders');
     } catch (e) {
-      log('Error fetching orders: $e');
+      // log('Error fetching orders: $e');
     }
   }
 
@@ -60,12 +60,12 @@ class OrderController extends GetxController {
           'total_items': doc['total_items'],
           'user_id': doc['user_id'],
         };
-        log('Success $orderInfo');
+        // log('Success $orderInfo');
       } else {
-        log('Order with ID $orderId not found.');
+        // log('Order with ID $orderId not found.');
       }
     } catch (e) {
-      log('Error fetching orders: $e');
+      // log('Error fetching orders: $e');
     }
   }
 
@@ -88,9 +88,9 @@ class OrderController extends GetxController {
         allProducts.value = products.cast<Map<String, dynamic>>();
       }
 
-      log('Success quantityAndProductId $allProducts');
+      // log('Success quantityAndProductId $allProducts');
     } catch (e) {
-      log('Error $e');
+      // log('Error $e');
     }
   }
 
@@ -101,7 +101,7 @@ class OrderController extends GetxController {
       // Remove the order from the local state as well
       orders.removeWhere((order) => order['order_id'] == orderId);
     } catch (e) {
-      log('Error deleting order: $e');
+      // log('Error deleting order: $e');
     }
   }
 
@@ -113,9 +113,9 @@ class OrderController extends GetxController {
       if (documentSnapshot.exists) {
         userInfo.value = documentSnapshot.data() as Map<String, dynamic>;
       }
-      log('Sucess userInfo : $userInfo');
+      // log('Sucess userInfo : $userInfo');
     } catch (e) {
-      log('Error $e');
+      // log('Error $e');
     }
   }
 
@@ -141,12 +141,12 @@ class OrderController extends GetxController {
             await _firestore.collection('orders').doc(docId).get();
         orderStatus.value = documentSnapshot.get('status');
 
-        log('docId : $docId status : $status ');
+        // log('docId : $docId status : $status ');
       } else {
-        log('No documents found for orderId: $orderId');
+        // log('No documents found for orderId: $orderId');
       }
     } catch (e) {
-      log('Error $e');
+      // log('Error $e');
     }
   }
 }

@@ -29,7 +29,7 @@ class FirestoreService extends GetxController {
         };
       }).toList();
 
-      log('Successfully fetched products: ${products.length} items');
+      // log('Successfully fetched products: ${products.length} items');
     } catch (e) {
       // Log the error message
       log('Error fetching products: $e');
@@ -115,7 +115,7 @@ class FirestoreService extends GetxController {
         };
       }).toList();
 
-      log('Successfully fetched products: ${products.length} items');
+      // log('Successfully fetched products: ${products.length} items');
     } catch (e) {
       log('Error fetching products: $e');
     }
@@ -200,7 +200,7 @@ class FirestoreService extends GetxController {
 
       await _firestore.collection('orders').doc(orderId).set(orderData);
 
-      log("Order data stored successfully.");
+      // log("Order data stored successfully.");
     } catch (e) {
       log("Failed to store order data: $e");
     }
@@ -223,7 +223,7 @@ class FirestoreService extends GetxController {
               })
           .toList();
 
-      log('Product IDs: $userCartInfo');
+      // log('Product IDs: $userCartInfo');
     } catch (e) {
       log('Error fetching product IDs: $e');
     }

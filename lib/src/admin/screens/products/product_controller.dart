@@ -24,9 +24,9 @@ class ProductController extends GetxController {
         };
       }).toList();
 
-      log('Successfully fetched ${products.length} products from Firestore');
+      // log('Successfully fetched ${products.length} products from Firestore');
     } catch (e) {
-      log('Error fetching products: $e');
+      // log('Error fetching products: $e');
     }
   }
 
@@ -35,9 +35,9 @@ class ProductController extends GetxController {
     try {
       await _firestore.collection('products').doc(productId).delete();
       products.removeWhere((product) => product['id'] == productId);
-      log('Product $productId deleted successfully');
+      // log('Product $productId deleted successfully');
     } catch (e) {
-      log('Error deleting product: $e');
+      // log('Error deleting product: $e');
     }
   }
 
@@ -61,9 +61,9 @@ class ProductController extends GetxController {
         products.refresh(); // Notify observers about the update
       }
 
-      log('Product $productId updated successfully with data: $updatedData');
+      // log('Product $productId updated successfully with data: $updatedData');
     } catch (e) {
-      log('Error updating product: $e');
+      // log('Error updating product: $e');
     }
   }
 }

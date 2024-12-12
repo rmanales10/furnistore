@@ -57,6 +57,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
@@ -187,26 +188,24 @@ class _HomeState extends State<Home> {
                         }
 
                         return _buildProductCard(
-                          context,
-                          productName,
-                          productPrice,
-                          imageBytes,
-                          productDescription,
-                          productId,
-                          () {
-                            _firestore.insertCart(
-                              productId: productId,
-                              quantity: 1,
-                              userId: _auth.currentUser!.uid,
-                            );
-                            Get.snackbar(
-                              'Success',
-                              'Added to cart $productName',
-                              snackPosition: SnackPosition.BOTTOM,
-                              duration: const Duration(milliseconds: 800),
-                            );
-                          },
-                        );
+                            context,
+                            productName,
+                            productPrice,
+                            imageBytes,
+                            productDescription,
+                            productId, () {
+                          _firestore.insertCart(
+                            productId: productId,
+                            quantity: 1,
+                            userId: _auth.currentUser!.uid,
+                          );
+                          Get.snackbar(
+                            'Success',
+                            'Added to cart $productName',
+                            snackPosition: SnackPosition.BOTTOM,
+                            duration: const Duration(milliseconds: 800),
+                          );
+                        }, size);
                       },
                     ),
                   );
@@ -252,13 +251,15 @@ Widget _buildCategoryIcon(
 }
 
 Widget _buildProductCard(
-    BuildContext context,
-    String name,
-    int price,
-    Uint8List imageBytes,
-    String description,
-    String productId,
-    VoidCallback onTap) {
+  BuildContext context,
+  String name,
+  int price,
+  Uint8List imageBytes,
+  String description,
+  String productId,
+  VoidCallback onTap,
+  Size size,
+) {
   return GestureDetector(
     onTap: () => Get.to(() => ProductDetailsScreen(
           nameProduct: name,
@@ -277,11 +278,13 @@ Widget _buildProductCard(
             padding: const EdgeInsets.all(14),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Center(
                   child: Image.memory(
                     imageBytes,
-                    height: 100,
+                    height: size.height * 0.25,
+                    width: size.width * 0.25,
                     fit: BoxFit.cover,
                     gaplessPlayback: true,
                   ),

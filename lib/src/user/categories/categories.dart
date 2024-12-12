@@ -20,6 +20,7 @@ class _ChairsScreenState extends State<ChairsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -72,7 +73,7 @@ class _ChairsScreenState extends State<ChairsScreen> {
               Get.snackbar('Success', 'added to cart ${product['name']}',
                   snackPosition: SnackPosition.BOTTOM,
                   duration: const Duration(milliseconds: 800));
-            });
+            }, size);
           },
         );
       }),
@@ -88,6 +89,7 @@ class TablesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -140,7 +142,7 @@ class TablesScreen extends StatelessWidget {
               Get.snackbar('Success', 'added to cart ${product['name']}',
                   snackPosition: SnackPosition.BOTTOM,
                   duration: const Duration(milliseconds: 800));
-            });
+            }, size);
           },
         );
       }),
@@ -155,6 +157,7 @@ class SofasScreen extends StatelessWidget {
   final _auth = Get.put(AuthService());
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -207,7 +210,7 @@ class SofasScreen extends StatelessWidget {
               Get.snackbar('Success', 'added to cart ${product['name']}',
                   snackPosition: SnackPosition.BOTTOM,
                   duration: const Duration(milliseconds: 800));
-            });
+            }, size);
           },
         );
       }),
@@ -223,6 +226,7 @@ class BedsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -275,7 +279,7 @@ class BedsScreen extends StatelessWidget {
               Get.snackbar('Success', 'added to cart ${product['name']}',
                   snackPosition: SnackPosition.BOTTOM,
                   duration: const Duration(milliseconds: 800));
-            });
+            }, size);
           },
         );
       }),
@@ -291,6 +295,7 @@ class LampsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: PreferredSize(
@@ -344,7 +349,7 @@ class LampsScreen extends StatelessWidget {
               Get.snackbar('Success', 'added to cart ${product['name']}',
                   snackPosition: SnackPosition.BOTTOM,
                   duration: const Duration(milliseconds: 800));
-            });
+            }, size);
           },
         );
       }),
@@ -359,7 +364,8 @@ Widget _buildProductCard(
     Uint8List imagePath,
     String description,
     String productId,
-    VoidCallback onTap) {
+    VoidCallback onTap,
+    Size size) {
   return GestureDetector(
     onTap: () => Get.to(() => ProductDetailsScreen(
           nameProduct: name,
@@ -382,7 +388,8 @@ Widget _buildProductCard(
                 Center(
                   child: Image.memory(
                     imagePath,
-                    height: 100,
+                    height: size.height * 0.25,
+                    width: size.width * 0.25,
                     fit: BoxFit.cover,
                     gaplessPlayback: true,
                   ),

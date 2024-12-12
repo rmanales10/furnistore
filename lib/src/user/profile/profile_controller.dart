@@ -18,7 +18,7 @@ class ProfileController extends GetxController {
 
       if (documentSnapshot.exists) {
         userInfo.value = documentSnapshot.data() as Map<String, dynamic>;
-        log('Data fetched successfully $userInfo');
+        // log('Data fetched successfully $userInfo');
       }
     } catch (e) {
       log('Error fetching data $e');

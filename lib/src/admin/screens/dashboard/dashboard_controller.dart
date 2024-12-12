@@ -21,9 +21,9 @@ class DashboardController extends GetxController {
         revenue += (data['total'] ?? 0).toDouble();
       }
       totalRevenue.value = revenue;
-      log('totalRevenue $totalRevenue totalOrders $totalOrders');
+      // log('totalRevenue $totalRevenue totalOrders $totalOrders');
     } catch (e) {
-      log("Failed to fetch data: $e");
+      // log("Failed to fetch data: $e");
     }
   }
 }
