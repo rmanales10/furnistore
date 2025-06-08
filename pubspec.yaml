@@ -43,6 +43,7 @@ dependencies:
   get: ^4.6.6
   intl: ^0.20.1
   http: ^1.2.2
+  model_viewer_plus: ^1.9.3
   
   
 

@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'package:furnistore/src/user/add_to_cart_review_rates/cart/model_viewer_screen.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews_rating.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/reviews/reviews_controller.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
@@ -113,20 +114,44 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                 const SizedBox(height: 20),
 
                 // Product Title, Price, and Rating
+
+                Row(
+                  children: [
+                    Text(
+                      widget.nameProduct,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Spacer(),
+                    ElevatedButton(
+                      onPressed: () => Get.to(() => ModelViewerScreen()),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3E6BE0),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 30, vertical: 10), // Adjust button size
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                      child: const Text(
+                        'View in AR',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
                 Text(
                   '₱ ${widget.price}',
                   style: const TextStyle(
                     fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.nameProduct,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    color: Colors.black,
-                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 12),

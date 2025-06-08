@@ -9,50 +9,66 @@ class MyLogin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: const Color(0xFFF5F5F5),
       body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24.0, vertical: 36.0),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12.0),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            width: 500, // Adjust width as needed
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const LogoWidget(), // Custom logo widget to match design
-                const SizedBox(height: 16),
-                const Text(
-                  'Welcome back,',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+        child: TweenAnimationBuilder(
+          duration: const Duration(milliseconds: 600),
+          tween: Tween<double>(begin: 0, end: 1),
+          builder: (context, double value, child) {
+            return Transform.scale(
+              scale: value,
+              child: Opacity(
+                opacity: value,
+                child: child,
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 40.0, vertical: 48.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(24.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Discover Limitless Choices and Unmatched Convenience',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
+                ],
+              ),
+              width: 520,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const LogoWidget(),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Welcome Back Admin',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2C3E50),
+                      letterSpacing: 0.5,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
-                const LoginForm(),
-              ],
+                  const SizedBox(height: 12),
+                  Text(
+                    'Discover Limitless Choices and Unmatched Convenience',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.grey[600],
+                      letterSpacing: 0.2,
+                    ),
+                  ),
+                  const SizedBox(height: 48),
+                  const LoginForm(),
+                ],
+              ),
             ),
           ),
         ),
@@ -66,16 +82,16 @@ class LogoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const SizedBox(
-          width: 20,
-        ),
-        Image.asset(
-          'assets/image_3.png',
-          height: 60,
-        ),
-      ],
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: Colors.blue.withOpacity(0.1),
+      ),
+      child: Image.asset(
+        'assets/image_3.png',
+        height: 80,
+      ),
     );
   }
 }
@@ -98,10 +114,45 @@ class _LoginFormState extends State<LoginForm> {
     if (_emailController.text == 'admin' &&
         _passwordController.text == 'admin') {
       Get.offAll(() => AdminDashboard());
-      Get.snackbar('Success', 'Admin Logged in successfully!');
+      Get.snackbar(
+        'Success',
+        'Admin Logged in successfully!',
+        backgroundColor: Colors.green[100],
+        colorText: Colors.green[800],
+        snackPosition: SnackPosition.TOP,
+      );
     } else {
-      Get.snackbar('Error', 'Wrong username or password!');
+      Get.snackbar(
+        'Error',
+        'Wrong username or password!',
+        backgroundColor: Colors.red[100],
+        colorText: Colors.red[800],
+        snackPosition: SnackPosition.TOP,
+      );
     }
+  }
+
+  InputDecoration _getInputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(color: Colors.grey[600]),
+      prefixIcon: Icon(icon, color: Colors.blue),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.grey, width: 1),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.blue, width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.grey[50],
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+    );
   }
 
   @override
@@ -109,31 +160,28 @@ class _LoginFormState extends State<LoginForm> {
     return Form(
       key: _formKey,
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           TextFormField(
             controller: _emailController,
-            decoration: const InputDecoration(
-              labelText: 'Username',
-              border: OutlineInputBorder(),
-            ),
+            decoration: _getInputDecoration('Username', Icons.person_outline),
             keyboardType: TextInputType.text,
             validator: (value) {
               if (value == null || value.isEmpty) {
                 return 'Please enter your username';
               }
-
               return null;
             },
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           TextFormField(
             controller: _passwordController,
-            decoration: InputDecoration(
-              labelText: 'Password',
-              border: const OutlineInputBorder(),
+            decoration:
+                _getInputDecoration('Password', Icons.lock_outline).copyWith(
               suffixIcon: IconButton(
                 icon: Icon(
                   _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey[600],
                 ),
                 onPressed: () {
                   setState(() {
@@ -150,26 +198,28 @@ class _LoginFormState extends State<LoginForm> {
               return null;
             },
           ),
-          const SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 100),
-            child: ElevatedButton(
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  loginUser();
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                minimumSize:
-                    const Size(double.infinity, 50), // Full width button
-                backgroundColor: Colors.blue,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
+          const SizedBox(height: 32),
+          ElevatedButton(
+            onPressed: () {
+              if (_formKey.currentState!.validate()) {
+                loginUser();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size(double.infinity, 56),
+              backgroundColor: Colors.blue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
               ),
-              child: const Text(
-                'Sign in',
-                style: TextStyle(fontSize: 16, color: Colors.white),
+              elevation: 2,
+            ),
+            child: const Text(
+              'Sign in',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
               ),
             ),
           ),

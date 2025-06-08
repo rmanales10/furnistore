@@ -3,6 +3,7 @@ import 'package:furnistore/src/user/add_to_cart_review_rates/cart/cart.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/cart/cart_controller.dart';
 import 'package:furnistore/src/user/home/home.dart';
 import 'package:furnistore/src/user/profile/settings.dart';
+import 'package:furnistore/src/user/store/store_screen.dart';
 import 'package:get/get.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   List<Widget> body = [
     Home(),
+    const StoreScreen(),
     const CartScreen(),
     const ProfileSettingsScreen(),
   ];
@@ -39,6 +41,8 @@ class _HomeScreenState extends State<HomeScreen> {
         unselectedItemColor: Colors.grey,
         items: [
           const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          const BottomNavigationBarItem(
+              icon: Icon(Icons.store), label: 'Store'),
           BottomNavigationBarItem(
               icon: Stack(children: [
                 const Icon(Icons.shopping_cart),

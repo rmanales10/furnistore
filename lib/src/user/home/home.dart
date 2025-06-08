@@ -16,12 +16,12 @@ class Home extends StatefulWidget {
   State<Home> createState() => _HomeState();
 }
 
-class _HomeState extends State<Home> {
+class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   final _firestore = Get.put(FirestoreService());
   final _auth = Get.put(AuthService());
   final _profileController = Get.put(ProfileController());
   final _search = TextEditingController();
-
+  late AnimationController _animationController;
   // Variable to store search results
   RxList<Map<String, dynamic>> filteredProducts =
       RxList<Map<String, dynamic>>();
@@ -38,6 +38,10 @@ class _HomeState extends State<Home> {
     _search.addListener(() {
       filterProducts(_search.text);
     });
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
   }
 
   void filterProducts(String query) {
@@ -199,12 +203,7 @@ class _HomeState extends State<Home> {
                             quantity: 1,
                             userId: _auth.currentUser!.uid,
                           );
-                          Get.snackbar(
-                            'Success',
-                            'Added to cart $productName',
-                            snackPosition: SnackPosition.BOTTOM,
-                            duration: const Duration(milliseconds: 800),
-                          );
+                          _addToCart(productName);
                         }, size);
                       },
                     ),
@@ -215,6 +214,23 @@ class _HomeState extends State<Home> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _addToCart(String productName) async {
+    // Trigger the animation
+    await _animationController.forward();
+    _animationController.reverse();
+
+    // Show snackbar notification
+    // ignore: use_build_context_synchronously
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('$productName added to cart!'),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.black,
+        duration: const Duration(seconds: 2),
       ),
     );
   }
@@ -283,7 +299,7 @@ Widget _buildProductCard(
                 Center(
                   child: Image.memory(
                     imageBytes,
-                    height: size.height * 0.25,
+                    height: size.height * 0.1,
                     width: size.width * 0.25,
                     fit: BoxFit.cover,
                     gaplessPlayback: true,
@@ -314,7 +330,7 @@ Widget _buildProductCard(
                 width: 36,
                 height: 36,
                 decoration: const BoxDecoration(
-                  color: Colors.blue,
+                  color: Color(0xFF3E6BE0),
                   borderRadius: BorderRadius.only(
                     bottomRight: Radius.circular(12),
                     topLeft: Radius.circular(8),
