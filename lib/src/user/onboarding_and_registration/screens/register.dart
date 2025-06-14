@@ -1,9 +1,11 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/onboarding_and_registration/screens/verification.dart';
 import 'package:get/get.dart';
-import 'dart:math';
+import 'dart:math' as math;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -40,7 +42,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   String _generateUserId() {
-    final random = Random();
+    final random = math.Random();
     return 'UID-${random.nextInt(1000000).toString().padLeft(6, '0')}';
   }
 
@@ -63,10 +65,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
         'status': status,
         'createdAt': FieldValue.serverTimestamp(),
       });
-      print('User data saved successfully.');
+      log('User data saved successfully.');
     } catch (e) {
-      print('Error saving user data to Firestore: $e');
-      throw e;
+      log('Error saving user data to Firestore: $e');
+      rethrow;
     }
   }
 

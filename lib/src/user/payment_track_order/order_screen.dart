@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:furnistore/src/user/payment_track_order/order_controller.dart';
 import 'package:furnistore/src/user/payment_track_order/review_each.dart';
-import 'package:furnistore/src/user/profile/settings.dart';
 import 'package:get/get.dart';
 
 // Order Screen

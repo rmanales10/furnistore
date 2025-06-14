@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/home_screen.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore import
@@ -13,7 +12,6 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final AuthService _auth = Get.put(AuthService());
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   bool obs = true;

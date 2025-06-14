@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/onboarding_and_registration/screens/login.dart';
 import 'package:furnistore/src/user/payment_track_order/order_screen.dart';
 import 'package:furnistore/src/user/profile/terms.dart';
@@ -15,7 +14,6 @@ class ProfileSettingsScreen extends StatefulWidget {
 }
 
 class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
-  final AuthService _auth = Get.put(AuthService());
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   @override

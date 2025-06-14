@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/firebase_service/firestore_service.dart';
 import 'package:get/get.dart';
@@ -66,6 +67,7 @@ class _BrandScreenState extends State<BrandScreen> {
                   ),
                   SizedBox(width: 20),
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Wilkris',
@@ -216,10 +218,10 @@ class _BrandScreenState extends State<BrandScreen> {
                     ),
                   ),
                   const SizedBox(height: 5),
-                  Text(
-                    '₱ $price',
-                    style: const TextStyle(color: Colors.black, fontSize: 15),
-                  ),
+                 Row(children: [ Icon(FontAwesomeIcons.pesoSign,size: 12,),Text(
+                  ' $price',
+                  style: const TextStyle(color: Colors.black, fontSize: 15),
+                ),],)
                 ],
               ),
             ),

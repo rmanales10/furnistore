@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -6,6 +8,7 @@ class ActivityLogScreen extends StatefulWidget {
   const ActivityLogScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _ActivityLogScreenState createState() => _ActivityLogScreenState();
 }
 
@@ -32,7 +35,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
             .toList();
       });
     } catch (e) {
-      print("Error fetching activity data: $e");
+      log("Error fetching activity data: $e");
     }
   }
 

@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/cart/add_to_cart.dart';
 import 'package:furnistore/src/user/firebase_service/auth_service.dart';
 import 'package:furnistore/src/user/firebase_service/firestore_service.dart';
@@ -314,10 +315,11 @@ Widget _buildProductCard(
                   ),
                 ),
                 const SizedBox(height: 5),
-                Text(
-                  '₱ $price',
+               Row(children: [ Icon(FontAwesomeIcons.pesoSign,size: 12,),Text(
+                  ' $price',
                   style: const TextStyle(color: Colors.black, fontSize: 15),
-                ),
+                ),],)
+                
               ],
             ),
           ),

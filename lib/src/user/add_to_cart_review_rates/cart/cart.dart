@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:furnistore/src/user/add_to_cart_review_rates/cart/cart_controller.dart';
 
 import 'package:furnistore/src/user/payment_track_order/order_review.dart';
@@ -90,13 +91,16 @@ class _CartScreenState extends State<CartScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Obx(() => Text(
-                          'Total ₱ ${cartController.totalPrice.value}',
+                    Obx(() => Row(children: [
+                      Icon(FontAwesomeIcons.pesoSign,size: 16,),
+                      Text(
+                          ' ${cartController.totalPrice.value}',
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
-                        )),
+                        )
+                    ],)),
                     ElevatedButton(
                       onPressed: () {
                         Get.to(() => OrderReviewScreen(
@@ -198,13 +202,11 @@ class CartItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  '₱ ${price.toString()}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
+                Row(children: [ Icon(FontAwesomeIcons.pesoSign,size: 12,),Text(
+                  ' $price',
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
+                ),],)
+               
               ],
             ),
           ),
