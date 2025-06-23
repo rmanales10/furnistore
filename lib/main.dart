@@ -1,22 +1,24 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:furnistore/src/admin/auth_screen/login.dart';
+import 'package:furnistore/src/web/auth_screen/login.dart';
+import 'package:furnistore/src/web/screens/activity_log/activitylog.dart';
+import 'package:furnistore/src/web/screens/sidebar.dart';
 import 'firebase_options.dart';
-import 'package:furnistore/src/user/categories/categories.dart';
-import 'package:furnistore/src/user/home_screen.dart';
-import 'package:furnistore/src/user/onboarding_and_registration/screens/forgot_pass.dart';
-import 'package:furnistore/src/user/onboarding_and_registration/screens/login.dart';
-import 'package:furnistore/src/user/onboarding_and_registration/screens/new_pass.dart';
-import 'package:furnistore/src/user/onboarding_and_registration/screens/page1.dart';
-import 'package:furnistore/src/user/onboarding_and_registration/screens/page2.dart';
-import 'package:furnistore/src/user/onboarding_and_registration/screens/register.dart';
-import 'package:furnistore/src/user/payment_track_order/payment_successful.dart';
-import 'package:furnistore/src/user/payment_track_order/track_order.dart';
-import 'package:furnistore/src/user/profile/about.dart';
-import 'package:furnistore/src/user/profile/delivery_address.dart';
-import 'package:furnistore/src/user/profile/edit_profile.dart';
-import 'package:furnistore/src/user/profile/settings.dart';
+import 'package:furnistore/src/app/categories/categories.dart';
+import 'package:furnistore/src/app/home_screen.dart';
+import 'package:furnistore/src/app/auth/forgot/forgot_pass.dart';
+import 'package:furnistore/src/app/auth/login/login.dart';
+import 'package:furnistore/src/app/auth/forgot/new_pass.dart';
+import 'package:furnistore/src/app/auth/splash/page1.dart';
+import 'package:furnistore/src/app/auth/splash/page2.dart';
+import 'package:furnistore/src/app/auth/register/register.dart';
+import 'package:furnistore/src/app/payment_track_order/payment_successful.dart';
+import 'package:furnistore/src/app/payment_track_order/track_order.dart';
+import 'package:furnistore/src/app/profile/about.dart';
+import 'package:furnistore/src/app/profile/delivery/delivery_address.dart';
+import 'package:furnistore/src/app/profile/edit_profile/edit_profile.dart';
+import 'package:furnistore/src/app/profile/profile_settings.dart';
 import 'package:get/get.dart';
 
 void main() async {
@@ -73,10 +75,20 @@ class MyAdmin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const GetMaterialApp(
+    return GetMaterialApp(
       title: 'FurniStore',
+      theme: ThemeData(
+        fontFamily: 'Poppins',
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(backgroundColor: Colors.white, elevation: 0),
+      ),
       debugShowCheckedModeBanner: false,
-      home: MyLogin(),
+      initialRoute: '/',
+      getPages: [
+        GetPage(name: '/', page: () => MyLogin()),
+        GetPage(name: '/activitylog', page: () => ActivityLogScreen()),
+        GetPage(name: '/dashboard', page: () => Sidebar(role: 'admin')),
+      ],
     );
   }
 }
