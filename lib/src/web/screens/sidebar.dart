@@ -1,11 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:furnistore/src/web/auth_screen/login.dart';
 import 'package:furnistore/src/web/screens/activity_log/activitylog.dart';
 import 'package:furnistore/src/web/screens/dashboard/admin_dashboard.dart';
 import 'package:furnistore/src/web/screens/dashboard/seller_dashboard.dart';
 import 'package:furnistore/src/web/screens/orders/orders.dart';
-import 'package:furnistore/src/web/screens/orders/orders_info.dart';
+import 'package:furnistore/src/web/screens/orders/orders_information.dart';
 import 'package:furnistore/src/web/screens/products/add.dart';
 import 'package:furnistore/src/web/screens/products/products.dart';
 import 'package:furnistore/src/web/screens/sellers/seller_screen.dart';
@@ -16,14 +15,12 @@ class Sidebar extends StatefulWidget {
   final int initialIndex;
   final String id;
   final String orderId;
-  final String orderStatus;
   const Sidebar(
       {super.key,
       this.role = '',
       this.initialIndex = 0,
       this.id = '',
-      this.orderId = '',
-      this.orderStatus = ''});
+      this.orderId = ''});
 
   @override
   State<Sidebar> createState() => _SidebarState();
@@ -51,10 +48,7 @@ class _SidebarState extends State<Sidebar> {
         Orders(),
         ActivityLogScreen(),
         AddProductPage(),
-        OrderInformationPage(
-          orderId: widget.orderId,
-          orderStatus: widget.orderStatus,
-        ),
+        OrdersInformation(orderId: widget.orderId),
       ];
 
   @override

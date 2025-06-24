@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:furnistore/src/web/screens/orders/order_controller.dart';
-import 'package:furnistore/src/web/screens/orders/orders_info.dart';
 import 'package:furnistore/src/web/screens/sidebar.dart';
 import 'package:get/get.dart';
 
@@ -125,12 +124,7 @@ class _OrdersState extends State<Orders> {
                                       ),
                                       _bodyCell(
                                         GestureDetector(
-                                          onTap: () {
-                                            Get.to(() => OrderInformationPage(
-                                                  orderId: order['order_id'],
-                                                  orderStatus: order['status'],
-                                                ));
-                                          },
+                                          onTap: () {},
                                           child: Text(
                                             '#${order['order_id']}',
                                             style: const TextStyle(
@@ -175,21 +169,16 @@ class _OrdersState extends State<Orders> {
                                         Row(
                                           children: [
                                             IconButton(
-                                              onPressed:
-                                                  () =>
-                                                      Navigator.pushReplacement(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                              builder:
-                                                                  (context) =>
-                                                                      Sidebar(
-                                                                        orderId:
-                                                                            order['order_id'],
-                                                                        orderStatus:
-                                                                            order['status'],
-                                                                        initialIndex:
-                                                                            10,
-                                                                      ))),
+                                              onPressed: () =>
+                                                  Navigator.pushReplacement(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                          builder: (context) =>
+                                                              Sidebar(
+                                                                orderId: order[
+                                                                    'order_id'],
+                                                                initialIndex: 8,
+                                                              ))),
                                               icon: const Icon(
                                                   Icons.remove_red_eye,
                                                   color: Color(0xFFB0B0B0)),
