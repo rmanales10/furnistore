@@ -36,6 +36,8 @@ class OrderController extends GetxController {
   RxMap<String, dynamic> orderInfo = <String, dynamic>{}.obs;
 
   Future<void> getOrderInfo({required String orderId}) async {
+    
+    
     try {
       QuerySnapshot querySnapshot = await _firestore
           .collection('orders')

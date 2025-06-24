@@ -40,8 +40,8 @@ class DashboardController extends GetxController {
   Future<void> fetchTotalSellers() async {
     try {
       QuerySnapshot querySnapshot = await _firestore
-          .collection('users')
-          .where('status', isEqualTo: 'approved')
+          .collection('sellersApplication')
+          .where('status', isEqualTo: 'Approved')
           .get();
       totalSellers.value = querySnapshot.size;
     } catch (e) {

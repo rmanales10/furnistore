@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:furnistore/src/web/auth_screen/login_controller.dart';
 import 'package:furnistore/src/web/screens/sidebar.dart';
 import 'package:get/get.dart';
 
-class MyLogin extends StatelessWidget {
+class MyLogin extends StatefulWidget {
   const MyLogin({super.key});
 
+  @override
+  State<MyLogin> createState() => _MyLoginState();
+}
+
+class _MyLoginState extends State<MyLogin> {
+  final LoginController _controller = Get.put(LoginController());
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,28 +113,23 @@ class _LoginFormState extends State<LoginForm> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final LoginController _controller = Get.put(LoginController());
   bool _isPasswordVisible = false;
   bool isRememberMeChecked = false;
 
-  void loginUser() {
+  void loginUser() async {
+    await _controller.login(_emailController.text, _passwordController.text);
+    if (_controller.isSuccess.value) {
+      Get.offAllNamed('/seller-dashboard');
+      Get.snackbar('Success', 'Seller Logged in successfully!');
+      return;
+    }
+
     if (_emailController.text == 'admin' &&
         _passwordController.text == 'admin') {
-      Get.offAllNamed('/dashboard');
-      Get.snackbar(
-        'Success',
-        'Admin Logged in successfully!',
-        backgroundColor: Colors.green[100],
-        colorText: Colors.green[800],
-        snackPosition: SnackPosition.TOP,
-      );
-    } else {
-      Get.snackbar(
-        'Error',
-        'Wrong username or password!',
-        backgroundColor: Colors.red[100],
-        colorText: Colors.red[800],
-        snackPosition: SnackPosition.TOP,
-      );
+      Get.offAllNamed('/admin-dashboard');
+      Get.snackbar('Success', 'Admin Logged in successfully!');
+      return;
     }
   }
 

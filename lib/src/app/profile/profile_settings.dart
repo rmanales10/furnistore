@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:furnistore/src/app/auth/login/login.dart';
 import 'package:furnistore/src/app/payment_track_order/order_screen.dart';
 import 'package:furnistore/src/app/profile/apply/apply.dart';
+import 'package:furnistore/src/app/profile/apply/apply_controller.dart';
+import 'package:furnistore/src/app/profile/apply/seller_status.dart';
 import 'package:furnistore/src/app/profile/terms.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Firestore import
@@ -16,6 +18,12 @@ class ProfileSettingsScreen extends StatefulWidget {
 
 class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final ApplyController controller = Get.put(ApplyController());
+  @override
+  void initState() {
+    super.initState();
+    controller.getSellerStatus();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +65,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             }, 'My Orders'),
             const Divider(),
             _buildListTile(() {
-              Get.to(() => ApplyAsSellerScreen());
+              Get.to(() => controller.sellerStatus.value?['status'] != null
+                  ? SellerStatusScreen()
+                  : ApplyAsSellerScreen());
             }, 'Apply as a Seller'),
             const Divider(),
             const SizedBox(height: 20),

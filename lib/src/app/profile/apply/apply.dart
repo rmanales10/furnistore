@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:furnistore/src/app/profile/apply/apply_controller.dart';
+import 'package:furnistore/src/app/profile/apply/seller_status.dart';
 import 'package:get/get.dart';
 
 class ApplyAsSellerScreen extends StatefulWidget {
@@ -11,10 +12,10 @@ class ApplyAsSellerScreen extends StatefulWidget {
 
 class _ApplyAsSellerScreenState extends State<ApplyAsSellerScreen> {
   final ApplyController controller = Get.put(ApplyController());
-  final storeName = TextEditingController().obs;
-  final ownersName = TextEditingController().obs;
-  final ownersEmail = TextEditingController().obs;
-  final businessDescription = TextEditingController().obs;
+  final storeName = TextEditingController();
+  final ownersName = TextEditingController();
+  final ownersEmail = TextEditingController();
+  final businessDescription = TextEditingController();
   bool isSubmitting = false;
   @override
   Widget build(BuildContext context) {
@@ -27,26 +28,9 @@ class _ApplyAsSellerScreenState extends State<ApplyAsSellerScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.2),
-                          spreadRadius: 1,
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child:
-                        const Icon(Icons.arrow_back_ios, color: Colors.black),
-                  ),
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(Icons.arrow_back_ios, color: Colors.black),
                 ),
               ),
               Padding(
@@ -83,23 +67,23 @@ class _ApplyAsSellerScreenState extends State<ApplyAsSellerScreen> {
                         _buildTextField(
                             label: 'Store Name',
                             hint: 'Enter your store name',
-                            controller: storeName.value),
+                            controller: storeName),
                         const SizedBox(height: 20),
                         _buildTextField(
                             label: "Owner's Name",
                             hint: 'Enter your name',
-                            controller: ownersName.value),
+                            controller: ownersName),
                         const SizedBox(height: 20),
                         _buildTextField(
                             label: 'Email/Contact',
                             hint: 'Enter email or phone number',
-                            controller: ownersEmail.value),
+                            controller: ownersEmail),
                         const SizedBox(height: 20),
                         _buildTextField(
                             label: 'Business Description',
                             hint: 'Describe your business',
                             maxLines: 2,
-                            controller: businessDescription.value),
+                            controller: businessDescription),
                         const SizedBox(height: 20),
                         _buildFileUploadField(context),
                         const SizedBox(height: 15),
@@ -164,6 +148,7 @@ class _ApplyAsSellerScreenState extends State<ApplyAsSellerScreen> {
         ),
         const SizedBox(height: 8),
         TextFormField(
+          controller: controller,
           maxLines: maxLines,
           decoration: InputDecoration(
             hintText: hint,
@@ -207,15 +192,26 @@ class _ApplyAsSellerScreenState extends State<ApplyAsSellerScreen> {
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Text(
-              'Upload File',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
-                fontFamily: 'Poppins',
-              ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.file_present, color: Colors.grey[700]),
+                const SizedBox(width: 10),
+                Obx(() {
+                  return Text(
+                    controller.fileName.value.isEmpty
+                        ? 'Upload File'
+                        : controller.fileName.value,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[700],
+                      fontFamily: 'Poppins',
+                    ),
+                  );
+                }),
+              ],
             ),
           ),
         ),
@@ -224,23 +220,47 @@ class _ApplyAsSellerScreenState extends State<ApplyAsSellerScreen> {
   }
 
   Future<void> _submitApplication() async {
+    if (controller.fileName.value.isEmpty ||
+        storeName.text.isEmpty ||
+        ownersName.text.isEmpty ||
+        ownersEmail.text.isEmpty ||
+        businessDescription.text.isEmpty) {
+      Get.snackbar('Error', 'Please fill all the fields');
+      setState(() {
+        isSubmitting = false;
+      });
+      return;
+    }
     await controller.applyAsSeller(
-        storeName: storeName.value.text,
-        ownersName: ownersName.value.text,
-        ownersEmail: ownersEmail.value.text,
-        businessDescription: businessDescription.value.text);
+        storeName: storeName.text,
+        ownersName: ownersName.text,
+        ownersEmail: ownersEmail.text,
+        businessDescription: businessDescription.text);
 
     if (controller.isSuccess) {
-      Get.snackbar('Success', 'Application submitted successfully');
+      Get.to(() => SellerStatusScreen());
     } else {
       Get.snackbar('Error', 'Application submission failed');
     }
     setState(() {
       isSubmitting = false;
     });
-    storeName.value.clear();
-    ownersName.value.clear();
-    ownersEmail.value.clear();
-    businessDescription.value.clear();
+    storeName.clear();
+    ownersName.clear();
+    ownersEmail.clear();
+    businessDescription.clear();
+    controller.fileName.value = '';
+    controller.file.value = null;
+  }
+
+  @override
+  void dispose() {
+    storeName.dispose();
+    ownersName.dispose();
+    ownersEmail.dispose();
+    businessDescription.dispose();
+    controller.fileName.value = '';
+    controller.file.value = null;
+    super.dispose();
   }
 }

@@ -87,7 +87,8 @@ class MyAdmin extends StatelessWidget {
       getPages: [
         GetPage(name: '/', page: () => MyLogin()),
         GetPage(name: '/activitylog', page: () => ActivityLogScreen()),
-        GetPage(name: '/dashboard', page: () => Sidebar(role: 'admin')),
+        GetPage(name: '/admin-dashboard', page: () => Sidebar(role: 'admin')),
+        GetPage(name: '/seller-dashboard', page: () => Sidebar(role: 'seller', initialIndex: 1)),
       ],
     );
   }

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:furnistore/src/web/screens/products/add_product.dart';
 import 'package:furnistore/src/web/screens/products/product_controller.dart';
+import 'package:furnistore/src/web/screens/sidebar.dart';
 import 'package:get/get.dart';
 
 class ProductPage extends StatefulWidget {
@@ -54,10 +54,15 @@ class _ProductPageState extends State<ProductPage> {
                     child: Container(
                       padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
-                          color: Colors.blue,
+                          color: const Color(0xFF3E6BE0),
                           borderRadius: BorderRadius.circular(5)),
                       child: TextButton(
-                        onPressed: () => Get.to(() => const AddProduct()),
+                        onPressed: () => Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => Sidebar(
+                                      initialIndex: 7,
+                                    ))),
                         child: const Text(
                           'Add Product',
                           style: TextStyle(color: Colors.white),
@@ -75,130 +80,173 @@ class _ProductPageState extends State<ProductPage> {
                     }
                     return SizedBox(
                       width: double.infinity,
-                      child: DataTable(
-                        headingRowColor: WidgetStateProperty.all(
-                            Colors.grey.withOpacity(.5)),
-                        border: TableBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                        dividerThickness: 0,
-                        columnSpacing: 20.0,
-                        columns: const [
-                          DataColumn(
-                              label: Text(
-                            'Product',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          )),
-                          DataColumn(
-                              label: Text('Category',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(
-                              label: Text('Price',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                          DataColumn(
-                              label: Text('Action',
-                                  style:
-                                      TextStyle(fontWeight: FontWeight.bold))),
-                        ],
-                        rows: List<DataRow>.generate(
-                          productController.products.length,
-                          (index) {
+                      child: Column(
+                        children: [
+                          // Table header
+                          Container(
+                            padding: const EdgeInsets.only(
+                                left: 100, top: 15, bottom: 15),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                    flex: 3,
+                                    child: Text('Product',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                Expanded(
+                                    flex: 2,
+                                    child: Text('Stock',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                Expanded(
+                                    flex: 2,
+                                    child: Text('Price',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                                Expanded(
+                                    flex: 2,
+                                    child: Text('Action',
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.bold))),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          // Table rows
+                          ...List.generate(productController.products.length,
+                              (index) {
                             var product = productController.products[index];
                             Uint8List imageBytes =
                                 base64Decode(product['image']);
                             bool isEditing = editingIndex == index;
 
-                            return DataRow(cells: [
-                              DataCell(Row(
-                                children: [
-                                  Image.memory(
-                                    imageBytes,
-                                    width: 40,
-                                    height: 40,
-                                    gaplessPlayback: true,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  isEditing
-                                      ? SizedBox(
-                                          width: 100,
-                                          child: TextFormField(
-                                            initialValue: editedProducts[index]
-                                                    ?['name'] ??
-                                                product['name'],
-                                            onChanged: (value) {
-                                              editedProducts[index] ??=
-                                                  Map.from(product);
-                                              editedProducts[index]!['name'] =
-                                                  value;
-                                            },
-                                          ),
-                                        )
-                                      : Text(product['name']),
-                                ],
-                              )),
-                              DataCell(Row(
-                                children: [Text('${product['category']}')],
-                              )),
-                              DataCell(isEditing
-                                  ? SizedBox(
-                                      width: 100,
-                                      child: TextFormField(
-                                        initialValue: editedProducts[index]
-                                                    ?['price']
-                                                ?.toString() ??
-                                            product['price'].toString(),
-                                        onChanged: (value) {
-                                          editedProducts[index] ??=
-                                              Map.from(product);
-                                          editedProducts[index]!['price'] =
-                                              double.tryParse(value) ?? 0.0;
-                                        },
-                                      ),
-                                    )
-                                  : Text('₱ ${product['price']}')),
-                              DataCell(Row(
-                                children: [
-                                  isEditing
-                                      ? IconButton(
-                                          icon: const Icon(Icons.save,
-                                              color: Colors.green),
-                                          onPressed: () {
-                                            // Save the updated product
-                                            if (editedProducts[index] != null) {
-                                              productController.updateProduct(
-                                                  product['id'],
-                                                  editedProducts[index]!);
-                                            }
-                                            setState(() {
-                                              editingIndex = null;
-                                            });
-                                          },
-                                        )
-                                      : IconButton(
-                                          icon: const Icon(Icons.edit,
-                                              color: Colors.blue),
-                                          onPressed: () {
-                                            setState(() {
-                                              editingIndex = index;
-                                              editedProducts[index] = Map.from(
-                                                  product); // Initialize edited product details
-                                            });
-                                          },
+                            return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8.0),
+                                child: Container(
+                                  padding: const EdgeInsets.only(left: 100),
+                                  child: Row(
+                                    children: [
+                                      // Product image and name
+                                      Expanded(
+                                        flex: 3,
+                                        child: Row(
+                                          children: [
+                                            Image.memory(imageBytes,
+                                                width: 50,
+                                                height: 50,
+                                                gaplessPlayback: true,
+                                                fit: BoxFit.cover),
+                                            const SizedBox(width: 10),
+                                            isEditing
+                                                ? SizedBox(
+                                                    width: 100,
+                                                    child: TextFormField(
+                                                      initialValue:
+                                                          editedProducts[index]
+                                                                  ?['name'] ??
+                                                              product['name'],
+                                                      onChanged: (value) {
+                                                        editedProducts[
+                                                                index] ??=
+                                                            Map.from(product);
+                                                        editedProducts[index]![
+                                                            'name'] = value;
+                                                      },
+                                                    ),
+                                                  )
+                                                : Text(product['name']),
+                                          ],
                                         ),
-                                  IconButton(
-                                    icon: const Icon(Icons.delete,
-                                        color: Colors.red),
-                                    onPressed: () {
-                                      productController
-                                          .deleteProduct(product['id']);
-                                    },
+                                      ),
+
+                                      Expanded(
+                                        flex: 2,
+                                        child: Text(
+                                          '${product['stock'] ?? '0'}',
+                                        ),
+                                      ),
+                                      // Price
+                                      Expanded(
+                                        flex: 2,
+                                        child: isEditing
+                                            ? SizedBox(
+                                                width: 100,
+                                                child: TextFormField(
+                                                  initialValue:
+                                                      editedProducts[index]
+                                                                  ?['price']
+                                                              ?.toString() ??
+                                                          product['price']
+                                                              .toString(),
+                                                  onChanged: (value) {
+                                                    editedProducts[index] ??=
+                                                        Map.from(product);
+                                                    editedProducts[index]![
+                                                            'price'] =
+                                                        double.tryParse(
+                                                                value) ??
+                                                            0.0;
+                                                  },
+                                                ),
+                                              )
+                                            : Text('₱ ${product['price']}'),
+                                      ),
+                                      // Actions
+                                      Expanded(
+                                        flex: 2,
+                                        child: Row(
+                                          children: [
+                                            isEditing
+                                                ? IconButton(
+                                                    icon: const Icon(Icons.save,
+                                                        color: Colors.green),
+                                                    onPressed: () {
+                                                      if (editedProducts[
+                                                              index] !=
+                                                          null) {
+                                                        productController
+                                                            .updateProduct(
+                                                                product['id'],
+                                                                editedProducts[
+                                                                    index]!);
+                                                      }
+                                                      setState(() {
+                                                        editingIndex = null;
+                                                      });
+                                                    },
+                                                  )
+                                                : IconButton(
+                                                    icon: const Icon(Icons.edit,
+                                                        color: Colors.blue),
+                                                    onPressed: () {
+                                                      setState(() {
+                                                        editingIndex = index;
+                                                        editedProducts[index] =
+                                                            Map.from(product);
+                                                      });
+                                                    },
+                                                  ),
+                                            IconButton(
+                                              icon: const Icon(Icons.delete,
+                                                  color: Colors.red),
+                                              onPressed: () {
+                                                productController.deleteProduct(
+                                                    product['id']);
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              )),
-                            ]);
-                          },
-                        ),
+                                ));
+                          }),
+                        ],
                       ),
                     );
                   }),

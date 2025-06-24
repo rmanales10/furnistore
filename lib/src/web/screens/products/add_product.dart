@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:furnistore/src/web/screens/products/product_controller.dart';
+import 'package:furnistore/src/web/screens/sidebar.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddProduct extends StatefulWidget {
@@ -112,7 +113,14 @@ class _AddProductState extends State<AddProduct> {
                 IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.black),
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => Sidebar(
+                                  role: 'seller',
+                                  id: '',
+                                  initialIndex: 4,
+                                )));
                   },
                 ),
                 const SizedBox(width: 20),

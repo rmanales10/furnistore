@@ -3,8 +3,8 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:furnistore/src/web/chart/income_controller.dart';
 import 'package:get/get.dart';
 
-class TotalIncomeChart extends StatelessWidget {
-  TotalIncomeChart({super.key});
+class UserChart extends StatelessWidget {
+  UserChart({super.key});
 
   final IncomeController incomeController = Get.put(IncomeController());
 
@@ -30,7 +30,7 @@ class TotalIncomeChart extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Total Income',
+                'Total Users',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,

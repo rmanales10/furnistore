@@ -14,16 +14,6 @@ class _SellerScreenState extends State<SellerScreen> {
   final _controller = Get.put(SellerController());
 
   @override
-  void initState() {
-    super.initState();
-    fetchData();
-  }
-
-  Future<void> fetchData() async {
-    await _controller.fetchSellers();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(horizontal: 100, vertical: 20),
@@ -116,13 +106,17 @@ class _SellerScreenState extends State<SellerScreen> {
                       SizedBox(height: 10),
                       Divider(),
                       Obx(() {
+                        _controller.fetchSellers();
                         return Column(
                           children:
                               _controller.sellers.asMap().entries.map((entry) {
                             var seller = entry.value;
-                            bool isApproved = seller['status'] == 'approved';
-                            bool isPending = seller['status'] == 'pending';
-                            bool isRejected = seller['status'] == 'rejected';
+                            bool isApproved =
+                                seller['status'].toLowerCase() == 'approved';
+                            bool isPending =
+                                seller['status'].toLowerCase() == 'pending';
+                            bool isRejected =
+                                seller['status'].toLowerCase() == 'rejected';
                             return Column(
                               children: [
                                 Container(

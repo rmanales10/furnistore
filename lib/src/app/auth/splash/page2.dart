@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:furnistore/src/app/home_screen.dart';
 
 class Onboard2 extends StatefulWidget {
   const Onboard2({super.key});
@@ -8,6 +10,18 @@ class Onboard2 extends StatefulWidget {
 }
 
 class _Onboard2State extends State<Onboard2> {
+  final _auth = FirebaseAuth.instance;
+  @override
+  void initState() {
+    super.initState();
+    _auth.authStateChanges().listen((User? user) {
+      if (user != null) {
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => HomeScreen()));
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

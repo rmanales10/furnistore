@@ -20,6 +20,9 @@ class SellerController extends GetxController {
   }
 
   Future<void> fetchSellersStatus(String id) async {
+    if (id.isEmpty) {
+      return;
+    }
     try {
       final snapshot =
           await _firebase.collection('sellersApplication').doc(id).get();
@@ -29,12 +32,13 @@ class SellerController extends GetxController {
     }
   }
 
-  Future<void> updateSellerStatus(String id, String status) async {
+  Future<void> updateSellerStatus(
+      String id, String status, String reason) async {
     try {
       await _firebase
           .collection('sellersApplication')
           .doc(id)
-          .update({'status': status});
+          .update({'status': status, 'reason': reason});
       fetchSellersStatus(id);
     } catch (e) {
       print(e);

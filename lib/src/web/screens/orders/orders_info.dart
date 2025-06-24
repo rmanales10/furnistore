@@ -62,16 +62,20 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
               final userInfo = _orderController.userInfo;
 
               Uint8List profilePic;
-              if (userInfo['image'] != null) {
-                profilePic = base64Decode(userInfo['image']);
-              } else {
+              bool hasProfilePic = false;
+              try {
+                if (userInfo['image'] != null && userInfo['image'] is String && (userInfo['image'] as String).isNotEmpty) {
+                  profilePic = base64Decode(userInfo['image']);
+                  hasProfilePic = profilePic.isNotEmpty;
+                } else {
+                  profilePic = Uint8List.fromList([]);
+                }
+              } catch (e) {
                 profilePic = Uint8List.fromList([]);
               }
-              Timestamp dateTimestamp =
-                  orderInfo['date'] as Timestamp; // Firebase Timestamp
-              DateTime dateTime = dateTimestamp.toDate(); // Convert to DateTime
-              String formattedDate =
-                  DateFormat('MMMM dd, yyyy').format(dateTime);
+              Timestamp? dateTimestamp = orderInfo['date'] is Timestamp ? orderInfo['date'] as Timestamp : null;
+              DateTime? dateTime = dateTimestamp?.toDate();
+              String formattedDate = dateTime != null ? DateFormat('MMMM dd, yyyy').format(dateTime) : 'Unknown';
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -111,7 +115,7 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
   }
 
   Widget _orderInformationCard(
-      BuildContext context, String date, int items, int total) {
+      BuildContext context, String date, int? items, int? total) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -137,7 +141,7 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _orderInformationDetail("Date", date),
-              _orderInformationDetail("Items", "$items Items"),
+              _orderInformationDetail("Items", items != null ? "$items Items" : "Unknown"),
               Obx(() {
                 return Row(
                   children: [
@@ -168,7 +172,7 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
                   ],
                 );
               }),
-              _orderInformationDetail("Total", "₱ $total"),
+              _orderInformationDetail("Total", total != null ? "₱ $total" : "Unknown"),
             ],
           ),
         ],
@@ -241,25 +245,35 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
                   itemCount: _orderController.allProducts.length,
                   itemBuilder: (context, index) {
                     final product = _orderController.allProducts[index];
-                    Uint8List? imageBytes = base64Decode(product['image']);
+                    Uint8List imageBytes = Uint8List.fromList([]);
+                    bool hasImage = false;
+                    try {
+                      if (product['image'] != null && product['image'] is String && (product['image'] as String).isNotEmpty) {
+                        imageBytes = base64Decode(product['image']);
+                        hasImage = imageBytes.isNotEmpty;
+                      }
+                    } catch (e) {
+                      imageBytes = Uint8List.fromList([]);
+                    }
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 10),
                       child: _itemDetail(
                         context,
-                        '${product['name']} (x${product['quantity']})',
-                        "₱ ${product['price']}",
+                        '${product['name'] ?? 'Unknown'} (x${product['quantity'] ?? '?'} )',
+                        "₱ "+(product['price']?.toString() ?? '?'),
                         imageBytes,
+                        hasImage,
                       ),
                     );
                   },
                 ),
               ),
               const SizedBox(height: 20),
-              _subtotalDetail("Subtotal", "₱ ${orderInfo['sub_total']}"),
-              _subtotalDetail("Delivery Fee", "₱ ${orderInfo['delivery_fee']}"),
+              _subtotalDetail("Subtotal", "₱ "+(orderInfo['sub_total']?.toString() ?? '?')),
+              _subtotalDetail("Delivery Fee", "₱ "+(orderInfo['delivery_fee']?.toString() ?? '?')),
               const Divider(height: 30),
-              _subtotalDetail("Total", "₱ ${orderInfo['total']}"),
+              _subtotalDetail("Total", "₱ "+(orderInfo['total']?.toString() ?? '?')),
             ],
           );
         },
@@ -268,26 +282,26 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
   }
 
   Widget _itemDetail(
-      BuildContext context, String itemName, String price, Uint8List image) {
+      BuildContext context, String itemName, String price, Uint8List image, bool hasImage) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            // CircleAvatar(
-            //   radius: 20,
-            //   backgroundColor: Colors.grey.shade200,
-            //   backgroundImage: MemoryImage(image),
-            // ),
-            ClipOval(
-              child: Image.memory(
-                image,
-                height: 50,
-                width: 50,
-                gaplessPlayback: true,
-                fit: BoxFit.cover,
-              ),
-            ),
+            hasImage && image.isNotEmpty
+                ? ClipOval(
+                    child: Image.memory(
+                      image,
+                      height: 50,
+                      width: 50,
+                      gaplessPlayback: true,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : const CircleAvatar(
+                    radius: 25,
+                    child: Icon(Icons.image_not_supported),
+                  ),
             const SizedBox(width: 10),
             Text(
               itemName,
@@ -349,15 +363,20 @@ class _OrderInformationPageState extends State<OrderInformationPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
-            child: ClipOval(
-              child: Image.memory(
-                profilePic,
-                height: 100,
-                width: 100,
-                gaplessPlayback: true,
-                fit: BoxFit.cover,
-              ),
-            ),
+            child: profilePic.isNotEmpty
+                ? ClipOval(
+                    child: Image.memory(
+                      profilePic,
+                      height: 100,
+                      width: 100,
+                      gaplessPlayback: true,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                : const CircleAvatar(
+                    radius: 50,
+                    child: Icon(Icons.person),
+                  ),
           ),
           const SizedBox(height: 15),
           Center(

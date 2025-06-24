@@ -19,6 +19,7 @@ class _StoreProfileState extends State<StoreProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 100, vertical: 20),
         child: Obx(() {
@@ -153,13 +154,15 @@ class _StoreProfileState extends State<StoreProfile> {
                               ),
                               icon: Icon(Icons.check, size: 18),
                               label: Text('Approved'),
-                              onPressed: seller['status'] == 'pending' ||
-                                      seller['status'] == 'rejected'
-                                  ? () async {
-                                      await _controller.updateSellerStatus(
-                                          widget.id, 'approved');
-                                    }
-                                  : null, // Disabled
+                              onPressed:
+                                  seller['status'].toLowerCase() == 'pending' ||
+                                          seller['status'].toLowerCase() ==
+                                              'rejected'
+                                      ? () async {
+                                          await _controller.updateSellerStatus(
+                                              widget.id, 'Approved', '');
+                                        }
+                                      : null, // Disabled
                             ),
                           ),
                           SizedBox(width: 16),
@@ -176,13 +179,14 @@ class _StoreProfileState extends State<StoreProfile> {
                               ),
                               icon: Icon(Icons.close, size: 18),
                               label: Text('Reject Application'),
-                              onPressed: seller['status'] == 'pending' ||
-                                      seller['status'] == 'approved'
-                                  ? () async {
-                                      await _controller.updateSellerStatus(
-                                          widget.id, 'rejected');
-                                    }
-                                  : null,
+                              onPressed:
+                                  seller['status'].toLowerCase() == 'pending' ||
+                                          seller['status'].toLowerCase() ==
+                                              'approved'
+                                      ? () async {
+                                          _showRejectDialog(context, widget.id);
+                                        }
+                                      : null,
                             ),
                           ),
                           SizedBox(width: 16),
@@ -213,6 +217,127 @@ class _StoreProfileState extends State<StoreProfile> {
           );
         }),
       ),
+    );
+  }
+
+  void _showRejectDialog(BuildContext context, String id) {
+    final TextEditingController reasonController = TextEditingController();
+    bool notifyByEmail = true;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              contentPadding:
+                  EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              title: Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.red.shade100,
+                    radius: 24,
+                    child: Icon(Icons.close, color: Colors.red, size: 28),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Reject Seller Application',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(Icons.close),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                      'Please provide a reason for rejecting this application.'),
+                  SizedBox(height: 18),
+                  Text('Reason for Rejection',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  SizedBox(height: 8),
+                  TextField(
+                    controller: reasonController,
+                    decoration: InputDecoration(
+                      hintText: 'Enter reason...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide.none,
+                      ),
+                      fillColor: Colors.grey[100],
+                      filled: true,
+                    ),
+                    maxLines: 2,
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: notifyByEmail,
+                        onChanged: (val) =>
+                            setState(() => notifyByEmail = val ?? true),
+                      ),
+                      Expanded(
+                          child: Text(
+                              'Notify the seller via email about this reason')),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.black,
+                    minimumSize: const Size(100, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    await _controller.updateSellerStatus(
+                        id, 'Rejected', reasonController.text);
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    minimumSize: const Size(100, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text(
+                    'Reject Seller',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

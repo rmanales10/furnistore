@@ -15,6 +15,7 @@ class ApplyController extends GetxController {
   Rx<File?> file = Rx<File?>(null);
   RxString fileName = RxString('');
   bool isSuccess = false;
+  Rx<Map<String, dynamic>?> sellerStatus = Rx<Map<String, dynamic>?>(null);
 
   Future<void> applyAsSeller(
       {required String storeName,
@@ -49,7 +50,7 @@ class ApplyController extends GetxController {
       'ownersEmail': ownersEmail,
       'businessDescription': businessDescription,
       'file': response.body['secure_url'],
-      'status': 'pending',
+      'status': 'Pending',
       'createdAt': DateTime.now(),
       'updatedAt': DateTime.now(),
     });
@@ -65,5 +66,12 @@ class ApplyController extends GetxController {
 
     file.value = File(result.files.single.path!);
     fileName.value = result.files.single.name;
+  }
+
+  Future<void> getSellerStatus() async {
+    final user = _auth.currentUser;
+    final seller =
+        await _firestore.collection('sellersApplication').doc(user!.uid).get();
+    sellerStatus.value = seller.data();
   }
 }
