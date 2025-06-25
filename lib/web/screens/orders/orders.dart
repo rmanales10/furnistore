@@ -82,8 +82,8 @@ class _OrdersState extends State<Orders> {
                               itemCount: _firestore.orders.length,
                               itemBuilder: (context, index) {
                                 final order = _firestore.orders[index];
-                                final isSelected =
-                                    _selectedOrders.contains(order['order_id']);
+
+                                _selectedOrders.contains(order['order_id']);
                                 return Container(
                                   height: 56,
                                   decoration: BoxDecoration(

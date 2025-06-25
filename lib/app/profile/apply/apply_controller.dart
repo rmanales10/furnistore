@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'dart:developer';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -80,8 +79,6 @@ class ApplyController extends GetxController {
     // Log or process the file
     log('✅ File selected: $fileName');
     log('📦 File size: ${fileBytes.length} bytes');
-
-    // TODO: Upload fileBytes to server or cloud service
   }
 
   Future<void> getSellerStatus() async {

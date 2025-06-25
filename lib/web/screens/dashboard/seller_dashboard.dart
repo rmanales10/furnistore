@@ -4,7 +4,7 @@ import 'package:furnistore/web/screens/dashboard/dashboard_controller.dart';
 import 'package:get/get.dart';
 
 class SellerDashboard extends StatefulWidget {
-  SellerDashboard({super.key});
+  const SellerDashboard({super.key});
 
   @override
   State<SellerDashboard> createState() => _SellerDashboardState();

@@ -156,9 +156,7 @@ class _SellerStatusScreenState extends State<SellerStatusScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                         ),
-                        onPressed: () {
-                          // TODO: Navigate to Seller Dashboard
-                        },
+                        onPressed: () {},
                         child: Text(
                           'Go to Seller Dashboard',
                           style: TextStyle(

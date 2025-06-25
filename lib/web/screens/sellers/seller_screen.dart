@@ -113,8 +113,7 @@ class _SellerScreenState extends State<SellerScreen> {
                             var seller = entry.value;
                             bool isApproved =
                                 seller['status'].toLowerCase() == 'approved';
-                            bool isPending =
-                                seller['status'].toLowerCase() == 'pending';
+
                             bool isRejected =
                                 seller['status'].toLowerCase() == 'rejected';
                             return Column(

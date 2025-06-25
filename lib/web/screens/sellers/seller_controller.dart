@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 
@@ -15,7 +17,7 @@ class SellerController extends GetxController {
         return data;
       }).toList();
     } catch (e) {
-      print(e);
+      log(e.toString());
     }
   }
 
@@ -28,7 +30,7 @@ class SellerController extends GetxController {
           await _firebase.collection('sellersApplication').doc(id).get();
       sellersStatus.value = snapshot.data() ?? {};
     } catch (e) {
-      print(e);
+      log(e.toString());
     }
   }
 
@@ -44,7 +46,7 @@ class SellerController extends GetxController {
       }
       fetchSellersStatus(id);
     } catch (e) {
-      print(e);
+      log(e.toString());
     }
   }
 }

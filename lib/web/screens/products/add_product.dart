@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -289,9 +287,7 @@ class _AddProductPageState extends State<AddProductPage> {
                                     const SizedBox(height: 16),
                                     Center(
                                       child: OutlinedButton(
-                                        onPressed: () {
-                                          // TODO: Add 3D model upload logic
-                                        },
+                                        onPressed: () {},
                                         child: const Text('Add 3D Model'),
                                       ),
                                     ),
@@ -308,9 +304,7 @@ class _AddProductPageState extends State<AddProductPage> {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         OutlinedButton(
-                          onPressed: () {
-                            // TODO: Discard logic
-                          },
+                          onPressed: () {},
                           child: const Text('Discard'),
                         ),
                         const SizedBox(width: 16),

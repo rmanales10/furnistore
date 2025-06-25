@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -41,7 +42,7 @@ class _OrdersInformationState extends State<OrdersInformation> {
             if (orderController.userInfo.isEmpty) {
               orderController.getUserInfo(
                   userId: orderController.orderInfo['user_id']);
-              print(orderController.userInfo);
+              log(orderController.userInfo.toString());
             }
 
             return Column(
