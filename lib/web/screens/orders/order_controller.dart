@@ -65,4 +65,34 @@ class OrderController extends GetxController {
       log('Error $e');
     }
   }
+
+  Future<void> updateOrderStatus({
+    required String orderId,
+    required String newStatus,
+  }) async {
+    try {
+      await _firestore.collection('orders').doc(orderId).update({
+        'status': newStatus,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+
+      // Update local order info
+      if (orderInfo.isNotEmpty) {
+        orderInfo['status'] = newStatus;
+        orderInfo.refresh();
+      }
+
+      // Update local orders list
+      int index = orders.indexWhere((order) => order['order_id'] == orderId);
+      if (index != -1) {
+        orders[index]['status'] = newStatus;
+        orders.refresh();
+      }
+
+      log('Order status updated to: $newStatus');
+    } catch (e) {
+      log('Error updating order status: $e');
+      rethrow;
+    }
+  }
 }

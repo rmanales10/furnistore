@@ -9,6 +9,27 @@ import 'package:furnistore/web/screens/sidebar.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 
+Color _getStatusColor(String status) {
+  switch (status.toLowerCase()) {
+    case 'pending':
+      return const Color(0xFFF59E0B); // Amber
+    case 'processing':
+      return const Color(0xFF3B82F6); // Blue
+    case 'shipped':
+      return const Color(0xFF8B5CF6); // Violet
+    case 'out for delivery':
+      return const Color(0xFF6366F1); // Indigo
+    case 'delivered':
+      return const Color(0xFF10B981); // Emerald
+    case 'cancelled':
+      return const Color(0xFFEF4444); // Red
+    case 'returned':
+      return const Color(0xFF6B7280); // Gray
+    default:
+      return const Color(0xFF6B7280); // Default gray
+  }
+}
+
 class OrdersInformation extends StatefulWidget {
   final String orderId;
   const OrdersInformation({super.key, required this.orderId});
@@ -87,10 +108,76 @@ class _OrdersInformationState extends State<OrdersInformation> {
                               status: orderController.orderInfo['status'] ?? '',
                               statusOptions: [
                                 'Pending',
+                                'Processing',
                                 'Shipped',
-                                'Delivered'
+                                'Out for Delivery',
+                                'Delivered',
+                                'Cancelled',
+                                'Returned'
                               ],
-                              onStatusChanged: (value) {},
+                              onStatusChanged: (value) async {
+                                if (value != null &&
+                                    value !=
+                                        orderController.orderInfo['status']) {
+                                  // Show confirmation for important status changes
+                                  if (value == 'Delivered' ||
+                                      value == 'Cancelled') {
+                                    final confirmed = await showDialog<bool>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: Text('Confirm Status Change'),
+                                        content: Text(
+                                            'Are you sure you want to change the order status to "$value"?'),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, false),
+                                            child: const Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () =>
+                                                Navigator.pop(context, true),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  value == 'Delivered'
+                                                      ? Colors.green
+                                                      : Colors.red,
+                                            ),
+                                            child: Text('Confirm'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (confirmed != true) return;
+                                  }
+
+                                  try {
+                                    await orderController.updateOrderStatus(
+                                      orderId: widget.orderId,
+                                      newStatus: value,
+                                    );
+
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            'Order status updated to $value'),
+                                        backgroundColor: Colors.green,
+                                        duration: const Duration(seconds: 2),
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text('Error updating status: $e'),
+                                        backgroundColor: Colors.red,
+                                        duration: const Duration(seconds: 3),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
                               total:
                                   orderController.orderInfo['total'].toString(),
                             ),
@@ -200,22 +287,68 @@ Widget orderInfoCard({
                 const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
-                    color: const Color(0xFF7B9EFF),
-                    borderRadius: BorderRadius.circular(8),
+                    color: _getStatusColor(status).withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _getStatusColor(status).withOpacity(0.3),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _getStatusColor(status).withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: status,
-                      dropdownColor: const Color(0xFFF7F8FA),
-                      iconEnabledColor: Colors.white,
-                      style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w500),
+                      dropdownColor: Colors.white,
+                      iconEnabledColor: _getStatusColor(status),
+                      iconSize: 20,
+                      style: TextStyle(
+                        color: _getStatusColor(status),
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
                       items: statusOptions.map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
-                          child: Text(value,
-                              style: const TextStyle(color: Colors.black)),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 10,
+                                  height: 10,
+                                  decoration: BoxDecoration(
+                                    color: _getStatusColor(value),
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: _getStatusColor(value)
+                                            .withOpacity(0.3),
+                                        blurRadius: 3,
+                                        offset: const Offset(0, 1),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  value,
+                                  style: TextStyle(
+                                    color: _getStatusColor(value),
+                                    fontWeight: FontWeight.w500,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         );
                       }).toList(),
                       onChanged: onStatusChanged,

@@ -38,7 +38,7 @@ class _SellerDashboardState extends State<SellerDashboard> {
             decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadiusDirectional.circular(15),
-                border: Border.all(width: 1, color: Colors.grey)),
+                border: Border.all(width: 1, color: Colors.grey.withOpacity(0.5))),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Obx(() {

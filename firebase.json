@@ -1,1 +1,10 @@
-{"hosting":{"public":"build/web","ignore":["firebase.json","**/.*","**/node_modules/**"],"rewrites":[{"source":"**","destination":"/index.html"}]},"flutter":{"platforms":{"android":{"default":{"projectId":"furnistore-335e2","appId":"1:339779111783:android:6af2c580ee67f3427ffdc2","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"furnistore-335e2","configurations":{"android":"1:339779111783:android:6af2c580ee67f3427ffdc2","web":"1:339779111783:web:ad1eb3365b63908e7ffdc2"}}}}}}
+{
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

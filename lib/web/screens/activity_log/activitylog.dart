@@ -30,9 +30,12 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
     try {
       QuerySnapshot snapshot = await _firestore.collection('users').get();
       setState(() {
-        activityData = snapshot.docs
-            .map((doc) => doc.data() as Map<String, dynamic>)
-            .toList();
+        activityData = snapshot.docs.map((doc) {
+          return {
+            'id': doc.id,
+            ...doc.data() as Map<String, dynamic>,
+          };
+        }).toList();
       });
     } catch (e) {
       log("Error fetching activity data: $e");
@@ -141,7 +144,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                         columns: const [
                           DataColumn(label: Text("ID")),
                           DataColumn(label: Text("Email")),
-                          DataColumn(label: Text("IP Address")),
+                          DataColumn(label: Text("Country")),
                           DataColumn(label: Text("Date")),
                           DataColumn(label: Text("Time")),
                           DataColumn(label: Text("Action")),
@@ -157,9 +160,9 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                               : 'N/A';
 
                           return DataRow(cells: [
-                            DataCell(Text(row['idNumber'] ?? 'N/A')),
+                            DataCell(Text(row['id'] ?? 'N/A')),
                             DataCell(Text(row['email'] ?? 'N/A')),
-                            DataCell(Text(row['ipAddress'] ?? 'N/A')),
+                            DataCell(Text(row['country'] ?? 'N/A')),
                             DataCell(Text(formattedDate)),
                             DataCell(Text(formattedTime)),
                             DataCell(
@@ -167,7 +170,7 @@ class _ActivityLogScreenState extends State<ActivityLogScreen> {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 8.0, vertical: 4.0),
                                 decoration: BoxDecoration(
-                                  color: row['status'] == "online"
+                                  color: row['status'] == "active"
                                       ? Colors.green
                                       : Colors.red,
                                   borderRadius: BorderRadius.circular(4.0),

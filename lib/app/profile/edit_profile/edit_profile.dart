@@ -43,6 +43,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           ),
         ),
       ),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
@@ -87,7 +88,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           onPressed: pickImageAndProcess,
                           icon: const Icon(Icons.edit),
                           color: Colors.white,
-                          iconSize: 18,
+                          iconSize: 16,
                         ),
                       ),
                     ),

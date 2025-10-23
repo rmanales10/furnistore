@@ -26,6 +26,8 @@ class FirestoreService extends GetxController {
           'name': doc['name'],
           'price': doc['price'],
           'image': doc['image'],
+          'seller_id': doc['seller_id'],
+          'stock': doc['stock'],
         };
       }).toList();
 
@@ -112,6 +114,8 @@ class FirestoreService extends GetxController {
           'name': doc['name'],
           'price': doc['price'],
           'image': doc['image'],
+          'seller_id': doc['seller_id'],
+          'stock': doc['stock'],
         };
       }).toList();
 
@@ -196,6 +200,8 @@ class FirestoreService extends GetxController {
         'total_items': totalItems,
         'user_id': userId,
         'delivery_fee': deliveryFee,
+        'created_at': FieldValue.serverTimestamp(),
+        'updated_at': FieldValue.serverTimestamp(),
       };
 
       await _firestore.collection('orders').doc(orderId).set(orderData);
@@ -203,6 +209,119 @@ class FirestoreService extends GetxController {
       // log("Order data stored successfully.");
     } catch (e) {
       log("Failed to store order data: $e");
+    }
+  }
+
+  // Get detailed order information
+  Future<Map<String, dynamic>?> getOrderDetails(
+      {required String orderId}) async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('orders')
+          .where('order_id', isEqualTo: orderId)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        Map<String, dynamic> orderData =
+            querySnapshot.docs.first.data() as Map<String, dynamic>;
+
+        log('🔍 FirestoreService - Raw order data: $orderData');
+        log('🔍 FirestoreService - Products field: ${orderData['products']}');
+        log('🔍 FirestoreService - Products type: ${orderData['products'].runtimeType}');
+
+        // Get user information for delivery details
+        String userId = orderData['user_id'] ?? '';
+        Map<String, dynamic> userData = {};
+
+        if (userId.isNotEmpty) {
+          try {
+            DocumentSnapshot userDoc =
+                await _firestore.collection('users').doc(userId).get();
+
+            if (userDoc.exists) {
+              userData = userDoc.data() as Map<String, dynamic>;
+            }
+          } catch (e) {
+            log('Error fetching user data: $e');
+          }
+        }
+
+        Map<String, dynamic> result = {
+          ...orderData,
+          'user_name':
+              userData['name'] ?? userData['username'] ?? 'Unknown User',
+          'user_email': userData['email'] ?? 'No email provided',
+          'delivery_address': userData['address'] ?? 'No address provided',
+          'town_city': userData['town_city'] ?? '',
+          'postcode': userData['postcode'] ?? '',
+          'phone_number':
+              userData['phone_number'] ?? userData['phoneNumber'] ?? '',
+        };
+
+        log('🔍 FirestoreService - Final result products: ${result['products']}');
+        log('🔍 FirestoreService - Final result products type: ${result['products'].runtimeType}');
+
+        return result;
+      }
+      return null;
+    } catch (e) {
+      log('Error fetching order details: $e');
+      return null;
+    }
+  }
+
+  // Update order status
+  Future<bool> updateOrderStatus({
+    required String orderId,
+    required String newStatus,
+  }) async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('orders')
+          .where('order_id', isEqualTo: orderId)
+          .limit(1)
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        await querySnapshot.docs.first.reference.update({
+          'status': newStatus,
+          'updated_at': FieldValue.serverTimestamp(),
+        });
+        return true;
+      }
+      return false;
+    } catch (e) {
+      log('Error updating order status: $e');
+      return false;
+    }
+  }
+
+  // Get user orders
+  Future<List<Map<String, dynamic>>> getUserOrders(
+      {required String userId}) async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('orders')
+          .where('user_id', isEqualTo: userId)
+          .orderBy('created_at', descending: true)
+          .get();
+
+      return querySnapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        return {
+          'id': doc.id,
+          'order_id': data['order_id'],
+          'status': data['status'],
+          'date': data['date'],
+          'total': data['total'],
+          'total_items': data['total_items'],
+          'products': data['products'],
+        };
+      }).toList();
+    } catch (e) {
+      log('Error fetching user orders: $e');
+      return [];
     }
   }
 
@@ -265,6 +384,11 @@ class FirestoreService extends GetxController {
           'name': doc['name'],
           'price': doc['price'],
           'image': doc['image'],
+          'seller_id': doc['seller_id'],
+          'stock': doc['stock'],
+          'model_3d': doc['model_3d'],
+          'created_at': doc['created_at'],
+          'updated_at': doc['updated_at'],
         };
       }).toList();
     } catch (e) {

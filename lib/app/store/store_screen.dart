@@ -1,9 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:furnistore/app/store/brand_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 
-class StoreScreen extends StatelessWidget {
+class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
+
+  @override
+  State<StoreScreen> createState() => _StoreScreenState();
+}
+
+class _StoreScreenState extends State<StoreScreen> {
+  List<Map<String, dynamic>> sellers = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSellers();
+  }
+
+  Future<void> _fetchSellers() async {
+    try {
+      final QuerySnapshot snapshot = await FirebaseFirestore.instance
+          .collection('sellersApplication')
+          .where('status', isEqualTo: 'Approved')
+          .limit(8) // Limit to 8 sellers for the grid
+          .get();
+
+      final List<Map<String, dynamic>> sellersList = [];
+      for (var doc in snapshot.docs) {
+        final data = doc.data() as Map<String, dynamic>;
+        print('🏪 Found seller: ${data['storeName']} | ID: ${doc.id}');
+        sellersList.add({
+          'id': doc.id,
+          'storeName': data['storeName'] ?? 'Unknown Store',
+          'ownerName': data['ownerName'] ?? 'Unknown Owner',
+        });
+      }
+
+      if (mounted) {
+        setState(() {
+          sellers = sellersList;
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching sellers: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,20 +101,34 @@ class StoreScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 4,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.75,
-                  children: [
-                    _buildBrandItem('F&K', 'F&K'),
-                    _buildBrandItem('W', 'Wilkris'),
-                    _buildBrandItem('Exercise', 'Exercise'),
-                    _buildBrandItem('ds', 'EMCOR'),
-                  ],
-                ),
+                if (isLoading)
+                  const Center(
+                    child: CircularProgressIndicator(),
+                  )
+                else if (sellers.isEmpty)
+                  const Center(
+                    child: Text(
+                      'No approved sellers available',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  )
+                else
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisCount: 4,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: 0.75,
+                    children: sellers.map((seller) {
+                      final storeName = seller['storeName'] as String;
+                      final initials = _getInitials(storeName);
+                      return _buildBrandItem(initials, storeName, seller['id']);
+                    }).toList(),
+                  ),
               ],
             ),
           ),
@@ -73,10 +137,28 @@ class StoreScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBrandItem(String logo, String name) {
+  String _getInitials(String storeName) {
+    if (storeName.isEmpty) return '?';
+
+    final words = storeName.trim().split(' ');
+    if (words.length == 1) {
+      // Single word - take first 2 characters
+      return storeName
+          .substring(0, storeName.length > 2 ? 2 : storeName.length)
+          .toUpperCase();
+    } else {
+      // Multiple words - take first character of each word (max 2)
+      final initials =
+          words.take(2).map((word) => word.isNotEmpty ? word[0] : '').join('');
+      return initials.toUpperCase();
+    }
+  }
+
+  Widget _buildBrandItem(String logo, String name, String sellerId) {
     return GestureDetector(
       onTap: () {
-        Get.to(() => BrandScreen());
+        print('🖱️ Tapped brand: $name | Seller ID: $sellerId');
+        Get.to(() => BrandScreen(sellerId: sellerId, sellerName: name));
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

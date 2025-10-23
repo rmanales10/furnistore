@@ -44,6 +44,7 @@ class _DeliveryAddressScreenState extends State<DeliveryAddressScreen> {
         ),
         centerTitle: false,
       ),
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
