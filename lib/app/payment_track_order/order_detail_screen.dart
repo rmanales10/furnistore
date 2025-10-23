@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:furnistore/app/firebase_service/firestore_service.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final String orderId;
@@ -40,6 +41,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       return orderId.substring(7); // Remove "Order #" (7 characters)
     }
     return orderId;
+  }
+
+  // Helper method to display peso symbol with FontAwesome
+  Widget _buildPesoText(String amount, {TextStyle? style}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FaIcon(
+          FontAwesomeIcons.pesoSign,
+          size: (style?.fontSize ?? 16) * 0.8,
+          color: style?.color ?? Colors.black87,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          amount,
+          style: style,
+        ),
+      ],
+    );
   }
 
   Future<void> _loadOrderDetails() async {
@@ -495,8 +515,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  '₱${(product['price'] ?? 0).toString()}',
+                _buildPesoText(
+                  '${(product['price'] ?? 0).toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -563,6 +583,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildCancelOrderButton() {
+    // Only show cancel button if order is not cancelled
+    if (orderDetails['status'] == 'Cancelled') {
+      return const SizedBox.shrink(); // Hide button for cancelled orders
+    }
+
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
@@ -821,13 +846,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
             const Spacer(),
-            Text(
-              '₱${subtotal.toStringAsFixed(2)}',
+            _buildPesoText(
+              '${subtotal.toStringAsFixed(2)}',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -842,13 +866,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
             const Spacer(),
-            Text(
-              '₱${delivery.toStringAsFixed(2)}',
+            _buildPesoText(
+              '${delivery.toStringAsFixed(2)}',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -864,14 +887,13 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ),
             const Spacer(),
-            Text(
-              '₱${total.toStringAsFixed(2)}',
+            _buildPesoText(
+              '${total.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
               ),
-              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -886,125 +908,115 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       backgroundColor: Colors.transparent,
       isDismissible: true,
       enableDrag: true,
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.4,
-        minChildSize: 0.3,
-        maxChildSize: 0.6,
-        builder: (context, scrollController) => Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
           ),
-          child: SingleChildScrollView(
-            controller: scrollController,
-            child: Padding(
-              padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+        ),
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 24,
+            right: 24,
+            top: 24,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag handle
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Drag handle
-                  Container(
-                    width: 40,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
+              const SizedBox(height: 24),
 
-                  // Title
-                  const Text(
-                    'Want to cancel your order?',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+              // Title
+              const Text(
+                'Want to cancel your order?',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+
+              // Description
+              Text(
+                'You can cancel orders for a short time after they are placed - free of charge.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 32),
+
+              // Buttons
+              Column(
+                children: [
+                  // Go Back Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey.shade300),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Go Back',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
 
-                  // Description
-                  Text(
-                    'You can cancel orders for a short time after they are placed - free of charge.',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey.shade600,
-                      height: 1.4,
+                  // Cancel Order Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        Navigator.pop(context);
+                        await _cancelOrder();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Cancel Order',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 32),
-
-                  // Buttons
-                  Row(
-                    children: [
-                      // Go Back Button
-                      Expanded(
-                        child: SizedBox(
-                          height: 50,
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.pop(context),
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(color: Colors.grey.shade300),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              'Go Back',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-
-                      // Cancel Order Button
-                      Expanded(
-                        child: SizedBox(
-                          height: 50,
-                          child: ElevatedButton(
-                            onPressed: () async {
-                              Navigator.pop(context);
-                              await _cancelOrder();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.black,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text(
-                              'Cancel Order',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                 ],
               ),
-            ),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
       ),
@@ -1028,13 +1040,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           orderDetails['status'] = 'Cancelled';
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Order cancelled successfully'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
+        // Show success confirmation dialog
+        _showCancellationSuccessDialog();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -1054,5 +1061,78 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         ),
       );
     }
+  }
+
+  void _showCancellationSuccessDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title
+              const Text(
+                'Your order has been cancelled',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+
+              // Description
+              Text(
+                'Good news! Your cancellation has been processed and you won\'t be charged. It can take a few minutes for this page to show your order\'s status updated.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey.shade600,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+
+              // Got It Button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context); // Close dialog
+                    Navigator.pop(context); // Go back to orders list
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Got It',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }

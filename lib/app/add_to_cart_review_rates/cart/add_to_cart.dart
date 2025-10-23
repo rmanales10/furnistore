@@ -8,6 +8,7 @@ import 'package:furnistore/services/glb_file_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // ignore: must_be_immutable
 class ProductDetailsScreen extends StatefulWidget {
@@ -62,6 +63,25 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
 
     // Initialize GLB cache check
     _initializeGlbCache();
+  }
+
+  // Helper method to display peso symbol with FontAwesome
+  Widget _buildPesoText(String amount, {TextStyle? style}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FaIcon(
+          FontAwesomeIcons.pesoSign,
+          size: (style?.fontSize ?? 20) * 0.8,
+          color: style?.color ?? Colors.black87,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          amount,
+          style: style,
+        ),
+      ],
+    );
   }
 
   Future<void> _initializeGlbCache() async {
@@ -335,8 +355,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                     ],
                   ),
 
-                  Text(
-                    '₱ ${widget.price}',
+                  _buildPesoText(
+                    '${widget.price}',
                     style: const TextStyle(
                       fontSize: 20,
                     ),
