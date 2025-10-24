@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:furnistore/app/payment_track_order/order_controller.dart';
 import 'package:get/get.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // Order Screen
 // ignore: must_be_immutable
@@ -81,6 +82,25 @@ class OrderCard extends StatelessWidget {
     required this.price,
     required this.productId,
   });
+
+  // Helper method to display peso symbol with FontAwesome
+  Widget _buildPesoText(String amount, {TextStyle? style}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FaIcon(
+          FontAwesomeIcons.pesoSign,
+          size: (style?.fontSize ?? 16) * 0.8,
+          color: style?.color ?? Colors.black87,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          amount,
+          style: style,
+        ),
+      ],
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -176,8 +196,8 @@ class OrderCard extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            '₱ $price',
+                          _buildPesoText(
+                            price.toString(),
                             style: const TextStyle(
                               fontSize: 15,
                               color: Colors.black,

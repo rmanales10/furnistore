@@ -9,6 +9,7 @@ import 'package:furnistore/app/payment_track_order/payment_successful.dart';
 import 'package:furnistore/app/profile/delivery/delivery_address.dart';
 import 'package:furnistore/app/profile/edit_profile/edit_profile.dart';
 import 'package:get/get.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class OrderReviewScreen extends StatefulWidget {
   final List<Map<String, dynamic>> productList;
@@ -21,13 +22,33 @@ class OrderReviewScreen extends StatefulWidget {
 
 class _OrderReviewScreenState extends State<OrderReviewScreen> {
   String selectedDeliveryOption = 'Base Fee'; // Default delivery option
-  String paymentMethod = 'COD'; // Default payment method
+  String paymentMethod = 'Cash on Delivery'; // Default payment method
   int additionalFee = 0;
   final _orderController = Get.put(OrderController());
   final _firestore = Get.put(FirestoreService());
   final _auth = FirebaseAuth.instance;
   final totalItem = 0.obs;
   final subtotal = 0.obs;
+
+  // Helper method to display peso symbol with FontAwesome
+  Widget _buildPesoText(String amount, {TextStyle? style}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FaIcon(
+          FontAwesomeIcons.pesoSign,
+          size: (style?.fontSize ?? 16) * 0.8,
+          color: style?.color ?? Colors.black87,
+        ),
+        const SizedBox(width: 2),
+        Text(
+          amount,
+          style: style,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     subtotal.value = widget.productList.fold(0, (sum, item) {
@@ -104,7 +125,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
 
                   return _buildCartItem(
                     product['name'],
-                    '₱ ${product['price']}',
+                    product['price'].toString(),
                     product['image'],
                     product['quantity'],
                   );
@@ -192,7 +213,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
             style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ),
-        Text(
+        _buildPesoText(
           price,
           style: const TextStyle(fontSize: 14, color: Colors.black),
         ),
@@ -203,8 +224,8 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
   Widget _buildDeliveryOptions() {
     return Column(
       children: [
-        _buildRadioOption('Base Fee', '₱50 for the first 5 km'),
-        _buildRadioOption('Additional Fee', '₱20 per km beyond 5 km'),
+        _buildRadioOption('Base Fee', '50 for the first 5 km'),
+        _buildRadioOption('Additional Fee', '20 per km beyond 5 km'),
       ],
     );
   }
@@ -231,9 +252,19 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
         title,
         style: const TextStyle(fontSize: 14),
       ),
-      subtitle: Text(
-        subtitle,
-        style: const TextStyle(fontSize: 12, color: Colors.grey),
+      subtitle: Row(
+        children: [
+          FaIcon(
+            FontAwesomeIcons.pesoSign,
+            size: 10,
+            color: Colors.grey,
+          ),
+          const SizedBox(width: 2),
+          Text(
+            subtitle,
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
       ),
     );
   }
@@ -246,7 +277,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
         height: 1,
         color: Colors.grey,
       ),
-      items: ['COD'].map((String method) {
+      items: ['Cash on Delivery'].map((String method) {
         return DropdownMenuItem<String>(
           value: method,
           child: Text(
@@ -291,8 +322,8 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
           ),
         ),
-        Text(
-          '₱ $amount',
+        _buildPesoText(
+          amount.toString(),
           style: TextStyle(
             fontSize: fontSize,
             fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
@@ -312,12 +343,23 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'Total  ₱ $total',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            children: [
+              const Text(
+                'Total  ',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              _buildPesoText(
+                total.toString(),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
           ElevatedButton(
             onPressed: () async {
@@ -345,57 +387,120 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                   actionsAlignment: MainAxisAlignment.center,
                 ));
               }
-              Get.dialog(AlertDialog(
-                title: const Text('Place Order'),
-                content: const Text('Are you sure you want to proceed?'),
-                actions: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 100,
-                        decoration: BoxDecoration(
-                            color: Colors.blue,
-                            borderRadius: BorderRadius.circular(15)),
-                        child: TextButton(
-                            onPressed: () => Get.back(),
-                            child: const Text(
-                              'Cancel',
-                              style: TextStyle(color: Colors.white),
-                            )),
-                      ),
-                      SizedBox(width: 10),
-                      Container(
-                        width: 100,
-                        decoration: BoxDecoration(
-                            color: Colors.black,
-                            borderRadius: BorderRadius.circular(15)),
-                        child: TextButton(
-                            onPressed: () {
-                              _firestore.storeOrderData(
-                                  date: DateTime.now(),
-                                  modeOfPayment: paymentMethod,
-                                  orderId: generateOrderId(),
-                                  product: widget.productList,
-                                  status: 'Pending',
-                                  subTotal: subtotal.value,
-                                  total: total,
-                                  totalItems: totalItem.value,
-                                  userId: _auth.currentUser!.uid,
-                                  deliveryFee: additionalFee);
-                              _firestore.deleteCartForCheckout();
-                              Get.back();
-                              _showSuccessDialog(context);
-                            },
-                            child: const Text(
-                              'Continue',
-                              style: TextStyle(color: Colors.white),
-                            )),
-                      ),
-                    ],
+              Get.dialog(
+                Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                ],
-              ));
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Title
+                        const Text(
+                          'Place Order',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Total Amount
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total:',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            _buildPesoText(
+                              total.toString(),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black87,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Buttons
+                        Row(
+                          children: [
+                            // Cancel Button
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () => Get.back(),
+                                style: TextButton.styleFrom(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                    side: BorderSide(color: Colors.grey[300]!),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+
+                            // Place Order Button
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  _firestore.storeOrderData(
+                                      date: DateTime.now(),
+                                      modeOfPayment: paymentMethod,
+                                      orderId: generateOrderId(),
+                                      product: widget.productList,
+                                      status: 'Pending',
+                                      subTotal: subtotal.value,
+                                      total: total,
+                                      totalItems: totalItem.value,
+                                      userId: _auth.currentUser!.uid,
+                                      deliveryFee: additionalFee);
+                                  _firestore.deleteCartForCheckout();
+                                  Get.back();
+                                  _showSuccessDialog(context);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF3E6BE0),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 12),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'Place Order',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,
@@ -424,23 +529,56 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        return const AlertDialog(
-          title: Text('Success!'),
-          content: Text('Your order has been placed successfully.'),
-          actions: [
-            Center(
-              child: Icon(
-                Icons.check_circle_outlined,
-                color: Colors.blue,
-              ),
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle,
+                  size: 48,
+                  color: Colors.green,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Order Placed!',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Your order has been placed successfully.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.green),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         );
       },
     );
 
-    // Wait 1 second, then navigate to another screen
-    Future.delayed(const Duration(seconds: 1), () {
+    // Wait 1.5 seconds, then navigate to another screen
+    Future.delayed(const Duration(milliseconds: 1500), () {
       Get.back(); // Close the dialog
       Get.off(() => const PaymentSuccessScreen());
     });

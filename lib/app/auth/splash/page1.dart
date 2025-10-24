@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:get/get.dart';
 
 class Onboard1 extends StatefulWidget {
   const Onboard1({super.key});
@@ -9,11 +11,25 @@ class Onboard1 extends StatefulWidget {
 }
 
 class _Onboard1State extends State<Onboard1> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   void initState() {
     super.initState();
+    _checkAuthState();
+  }
+
+  void _checkAuthState() {
     Timer(const Duration(seconds: 3), () {
-      Navigator.pushNamed(context, '/2');
+      // Check if user is already logged in
+      User? user = _auth.currentUser;
+      if (user != null) {
+        // User is logged in, navigate to home
+        Get.offAllNamed('/home');
+      } else {
+        // User is not logged in, navigate to onboarding
+        Navigator.pushNamed(context, '/2');
+      }
     });
   }
 

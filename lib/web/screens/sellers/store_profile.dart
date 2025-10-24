@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:furnistore/web/screens/sellers/seller_controller.dart';
 import 'package:furnistore/web/screens/sidebar.dart';
@@ -104,13 +105,7 @@ class _StoreProfileState extends State<StoreProfile> {
                               : 'N/A'),
                       _profileRow(
                         'Store Logo',
-                        CircleAvatar(
-                          radius: 22,
-                          backgroundColor: Colors.blue[50],
-                          child: Text('F',
-                              style:
-                                  TextStyle(fontSize: 22, color: Colors.blue)),
-                        ),
+                        _buildStoreLogo(seller['storeLogoBase64']),
                       ),
                     ],
                   ),
@@ -391,6 +386,51 @@ class _StoreProfileState extends State<StoreProfile> {
             ],
           ),
         );
+    }
+  }
+
+  Widget _buildStoreLogo(String? storeLogoBase64) {
+    if (storeLogoBase64 == null || storeLogoBase64.isEmpty) {
+      return CircleAvatar(
+        radius: 22,
+        backgroundColor: Colors.blue[50],
+        child: Text('F', style: TextStyle(fontSize: 22, color: Colors.blue)),
+      );
+    }
+
+    try {
+      // Decode the Base64 string to bytes
+      final bytes = base64Decode(storeLogoBase64);
+
+      return CircleAvatar(
+        radius: 22,
+        backgroundColor: Colors.grey[200],
+        child: ClipOval(
+          child: Image.memory(
+            gaplessPlayback: true,
+            bytes,
+            width: 44,
+            height: 44,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              // Fallback to default avatar if image fails to load
+              return CircleAvatar(
+                radius: 22,
+                backgroundColor: Colors.blue[50],
+                child: Text('F',
+                    style: TextStyle(fontSize: 22, color: Colors.blue)),
+              );
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      // Fallback to default avatar if Base64 decoding fails
+      return CircleAvatar(
+        radius: 22,
+        backgroundColor: Colors.blue[50],
+        child: Text('F', style: TextStyle(fontSize: 22, color: Colors.blue)),
+      );
     }
   }
 

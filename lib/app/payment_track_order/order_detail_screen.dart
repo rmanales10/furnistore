@@ -473,7 +473,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
           )
         else
-          ...products.map((product) => _buildProductItem(product)).toList(),
+          ...products.map((product) => _buildProductItem(product)),
       ],
     );
   }
@@ -847,7 +847,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
             const Spacer(),
             _buildPesoText(
-              '${subtotal.toStringAsFixed(2)}',
+              subtotal.toStringAsFixed(2),
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey.shade600,
@@ -888,7 +888,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             ),
             const Spacer(),
             _buildPesoText(
-              '${total.toStringAsFixed(2)}',
+              total.toStringAsFixed(2),
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,

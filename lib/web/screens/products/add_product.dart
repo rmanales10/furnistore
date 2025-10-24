@@ -1221,7 +1221,7 @@ class _AddProductPageState extends State<AddProductPage> {
           generationProgress = null;
           generationStatus = 'FAILED';
         });
-        throw e;
+        rethrow;
       }
     }
   }

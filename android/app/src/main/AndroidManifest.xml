@@ -1,4 +1,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Camera permission for AR functionality -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <!-- Internet permission for loading 3D models -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Network state permission -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- AR Core features -->
+    <uses-feature android:name="android.hardware.camera.ar" android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    
     <application
         android:usesCleartextTraffic="true" 
         android:label="furnistore"

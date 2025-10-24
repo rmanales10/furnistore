@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -24,6 +25,7 @@ class _BrandScreenState extends State<BrandScreen> {
   final _auth = FirebaseAuth.instance;
   RxList<Map<String, dynamic>> filteredProducts =
       RxList<Map<String, dynamic>>();
+  String? storeLogoBase64;
 
   String _getInitials(String storeName) {
     if (storeName.isEmpty) return '?';
@@ -39,6 +41,61 @@ class _BrandScreenState extends State<BrandScreen> {
       final initials =
           words.take(2).map((word) => word.isNotEmpty ? word[0] : '').join('');
       return initials.toUpperCase();
+    }
+  }
+
+  Widget _buildStoreLogo(String? storeLogoBase64, String storeName) {
+    if (storeLogoBase64 == null || storeLogoBase64.isEmpty) {
+      // Fallback to initials if no logo
+      final initials = _getInitials(storeName);
+      return Center(
+        child: Text(
+          initials,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
+    try {
+      // Decode the Base64 string to bytes
+      final bytes = base64Decode(storeLogoBase64);
+
+      return ClipOval(
+        child: Image.memory(
+          bytes,
+          width: 40,
+          height: 40,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback to initials if image fails to load
+            final initials = _getInitials(storeName);
+            return Center(
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    } catch (e) {
+      // Fallback to initials if Base64 decoding fails
+      final initials = _getInitials(storeName);
+      return Center(
+        child: Text(
+          initials,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+      );
     }
   }
 
@@ -64,8 +121,31 @@ class _BrandScreenState extends State<BrandScreen> {
 
       print('✅ Found ${sellerProducts.length} products for this seller');
       filteredProducts.value = sellerProducts;
+
+      // Fetch store logo
+      _fetchStoreLogo();
     } else {
       filteredProducts.value = _firestore.allProducts;
+    }
+  }
+
+  Future<void> _fetchStoreLogo() async {
+    if (widget.sellerId == null) return;
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('sellersApplication')
+          .doc(widget.sellerId)
+          .get();
+
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        setState(() {
+          storeLogoBase64 = data['storeLogoBase64'];
+        });
+      }
+    } catch (e) {
+      print('Error fetching store logo: $e');
     }
   }
 
@@ -109,17 +189,8 @@ class _BrandScreenState extends State<BrandScreen> {
                       color: Colors.grey[200],
                       shape: BoxShape.circle,
                     ),
-                    child: Center(
-                      child: Text(
-                        widget.sellerName != null
-                            ? _getInitials(widget.sellerName!)
-                            : '?',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                    child: _buildStoreLogo(
+                        storeLogoBase64, widget.sellerName ?? ''),
                   ),
                   SizedBox(width: 20),
                   Column(
@@ -179,10 +250,11 @@ class _BrandScreenState extends State<BrandScreen> {
                 underline: SizedBox(),
                 items: [
                   'All Products',
-                  'Chairs',
-                  'Tables',
-                  'Sofas',
-                  'Beds',
+                  'Chair',
+                  'Table',
+                  'Sofa',
+                  'Bed',
+                  'Lamp',
                 ].map<DropdownMenuItem<String>>((String value) {
                   return DropdownMenuItem<String>(
                     value: value,

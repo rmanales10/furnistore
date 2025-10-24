@@ -10,6 +10,7 @@ class RegisterController extends GetxController {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final _connect = GetConnect();
   final isSuccess = false.obs;
+  String? userId;
 
   Future<String> getCountry() async {
     try {
@@ -33,18 +34,20 @@ class RegisterController extends GetxController {
     try {
       final userCredential = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
-      log('User created successfully: ${userCredential.user?.uid}');
-      await _firestore.collection('users').doc(userCredential.user?.uid).set({
+      userId = userCredential.user?.uid;
+      log('User created successfully: $userId');
+      await _firestore.collection('users').doc(userId).set({
         'name': name,
         'email': email,
         'phoneNumber': phoneNumber,
         'country': await getCountry(),
         'status': status,
+        'phoneVerified': false, // Phone verification status
         'createdAt': FieldValue.serverTimestamp(),
         'password': encryptText(password),
       });
       log('User data saved successfully.');
-      await _auth.currentUser?.sendEmailVerification();
+      // No email verification - using phone verification instead
       isSuccess.value = true;
     } catch (e) {
       log('Error saving user data to Firestore: $e');

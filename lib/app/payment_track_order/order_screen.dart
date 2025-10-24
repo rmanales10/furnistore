@@ -103,7 +103,7 @@ class OrderCard extends StatelessWidget {
   final String orderId;
   final List<dynamic> products;
 
-  OrderCard({
+  const OrderCard({
     super.key,
     required this.status,
     required this.orderItems,

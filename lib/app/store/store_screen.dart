@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:furnistore/app/store/brand_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,12 +13,41 @@ class StoreScreen extends StatefulWidget {
 
 class _StoreScreenState extends State<StoreScreen> {
   List<Map<String, dynamic>> sellers = [];
+  List<Map<String, dynamic>> filteredSellers = [];
   bool isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchSellers();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    _filterSellers();
+  }
+
+  void _filterSellers() {
+    final query = _searchController.text.toLowerCase();
+    setState(() {
+      if (query.isEmpty) {
+        filteredSellers = List.from(sellers);
+      } else {
+        filteredSellers = sellers.where((seller) {
+          final storeName = (seller['storeName'] ?? '').toLowerCase();
+          final ownerName = (seller['ownerName'] ?? '').toLowerCase();
+          return storeName.contains(query) || ownerName.contains(query);
+        }).toList();
+      }
+    });
   }
 
   Future<void> _fetchSellers() async {
@@ -36,12 +66,14 @@ class _StoreScreenState extends State<StoreScreen> {
           'id': doc.id,
           'storeName': data['storeName'] ?? 'Unknown Store',
           'ownerName': data['ownerName'] ?? 'Unknown Owner',
+          'storeLogoBase64': data['storeLogoBase64'] ?? '',
         });
       }
 
       if (mounted) {
         setState(() {
           sellers = sellersList;
+          filteredSellers = List.from(sellersList);
           isLoading = false;
         });
       }
@@ -80,6 +112,7 @@ class _StoreScreenState extends State<StoreScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: TextField(
+                    controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search in store',
                       prefixIcon: const Icon(Icons.search, color: Colors.grey),
@@ -115,6 +148,16 @@ class _StoreScreenState extends State<StoreScreen> {
                       ),
                     ),
                   )
+                else if (filteredSellers.isEmpty)
+                  const Center(
+                    child: Text(
+                      'No sellers found matching your search',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  )
                 else
                   GridView.count(
                     shrinkWrap: true,
@@ -123,10 +166,12 @@ class _StoreScreenState extends State<StoreScreen> {
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
                     childAspectRatio: 0.75,
-                    children: sellers.map((seller) {
+                    children: filteredSellers.map((seller) {
                       final storeName = seller['storeName'] as String;
-                      final initials = _getInitials(storeName);
-                      return _buildBrandItem(initials, storeName, seller['id']);
+                      final storeLogoBase64 =
+                          seller['storeLogoBase64'] as String;
+                      return _buildBrandItem(
+                          storeName, storeLogoBase64, seller['id']);
                     }).toList(),
                   ),
               ],
@@ -154,7 +199,7 @@ class _StoreScreenState extends State<StoreScreen> {
     }
   }
 
-  Widget _buildBrandItem(String logo, String name, String sellerId) {
+  Widget _buildBrandItem(String name, String storeLogoBase64, String sellerId) {
     return GestureDetector(
       onTap: () {
         print('🖱️ Tapped brand: $name | Seller ID: $sellerId');
@@ -171,15 +216,7 @@ class _StoreScreenState extends State<StoreScreen> {
               color: Colors.grey[200],
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: Text(
-                logo,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              ),
-            ),
+            child: _buildStoreLogo(storeLogoBase64, name),
           ),
           const SizedBox(height: 4),
           Text(
@@ -195,5 +232,60 @@ class _StoreScreenState extends State<StoreScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildStoreLogo(String? storeLogoBase64, String storeName) {
+    if (storeLogoBase64 == null || storeLogoBase64.isEmpty) {
+      // Fallback to initials if no logo
+      final initials = _getInitials(storeName);
+      return Center(
+        child: Text(
+          initials,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
+
+    try {
+      // Decode the Base64 string to bytes
+      final bytes = base64Decode(storeLogoBase64);
+
+      return ClipOval(
+        child: Image.memory(
+          bytes,
+          width: 80,
+          height: 80,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            // Fallback to initials if image fails to load
+            final initials = _getInitials(storeName);
+            return Center(
+              child: Text(
+                initials,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    } catch (e) {
+      // Fallback to initials if Base64 decoding fails
+      final initials = _getInitials(storeName);
+      return Center(
+        child: Text(
+          initials,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+      );
+    }
   }
 }

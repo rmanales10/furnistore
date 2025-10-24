@@ -254,104 +254,89 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                         ),
                       ),
                       Spacer(),
-                      // View in AR button with download icon
-                      Row(
-                        children: [
-                          // Download icon (only show if not ready)
-                          if (!_isGlbReady && _glbUrl != null) ...[
-                            Tooltip(
-                              message: _isDownloading
-                                  ? 'Downloading 3D model...'
-                                  : 'Download 3D model for offline viewing',
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: _isDownloading
-                                      ? Colors.orange
-                                      : Colors.grey[600],
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: IconButton(
-                                  onPressed:
-                                      _isDownloading ? null : _downloadGlb,
-                                  icon: _isDownloading
-                                      ? const SizedBox(
-                                          width: 16,
-                                          height: 16,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                    Colors.white),
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.download,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
-                                  padding: const EdgeInsets.all(8),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 36,
-                                    minHeight: 36,
-                                  ),
-                                ),
-                              ),
+                      // Download icon or View in AR button
+                      if (!_isGlbReady && _glbUrl != null) ...[
+                        // Show download icon only
+                        Tooltip(
+                          message: _isDownloading
+                              ? 'Downloading 3D model...'
+                              : 'Download 3D model for offline viewing',
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _isDownloading
+                                  ? Colors.orange
+                                  : Colors.grey[600],
+                              borderRadius: BorderRadius.circular(6),
                             ),
-                            const SizedBox(width: 8),
-                          ],
-                          // View in AR button
-                          Tooltip(
-                            message: _isGlbReady
-                                ? (_isGlbCached
-                                    ? 'View 3D model (cached - fast loading)'
-                                    : 'View 3D model in AR')
-                                : 'Download 3D model first to view in AR',
-                            child: ElevatedButton(
-                              onPressed: _isGlbReady
-                                  ? () => Get.to(() => ModelViewerScreen(
-                                        productId: widget.productId,
-                                        glbUrl: _glbUrl,
-                                      ))
-                                  : null, // Disable button if not ready
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: _isGlbReady
-                                    ? const Color(0xFF3E6BE0)
-                                    : Colors.grey[400],
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 30, vertical: 10),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _isGlbReady
-                                        ? 'View in AR'
-                                        : 'Download First',
-                                    style: TextStyle(
-                                      color: _isGlbReady
-                                          ? Colors.white
-                                          : Colors.grey[600],
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  if (_isGlbCached && _isGlbReady) ...[
-                                    const SizedBox(width: 6),
-                                    const Icon(
-                                      Icons.offline_pin,
+                            child: IconButton(
+                              onPressed: _isDownloading ? null : _downloadGlb,
+                              icon: _isDownloading
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.white),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.download,
                                       color: Colors.white,
-                                      size: 16,
+                                      size: 18,
                                     ),
-                                  ],
-                                ],
+                              padding: const EdgeInsets.all(8),
+                              constraints: const BoxConstraints(
+                                minWidth: 36,
+                                minHeight: 36,
                               ),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ] else if (_isGlbReady) ...[
+                        // Show View in AR button after successful download
+                        Tooltip(
+                          message: _isGlbCached
+                              ? 'View 3D model (cached - fast loading)'
+                              : 'View 3D model in AR',
+                          child: ElevatedButton(
+                            onPressed: () => Get.to(() => ModelViewerScreen(
+                                  productId: widget.productId,
+                                  glbUrl: _glbUrl,
+                                )),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF3E6BE0),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 30, vertical: 10),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  'View in AR',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (_isGlbCached) ...[
+                                  const SizedBox(width: 6),
+                                  const Icon(
+                                    Icons.offline_pin,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
 
