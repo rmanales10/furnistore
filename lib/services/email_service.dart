@@ -1,14 +1,26 @@
-import 'package:mailer/mailer.dart';
-import 'package:mailer/smtp_server.dart';
+import 'package:emailjs/emailjs.dart' as emailjs;
+import 'package:furnistore/config/emailjs_config.dart';
 
 class EmailService {
-  // Gmail SMTP configuration
-  static const String _smtpServer = 'smtp.gmail.com';
-  static const int _smtpPort = 587;
-  static const String _username = 'furnistoreofficial@gmail.com';
-  static const String _password = 'dxfa nygz mmrt vjjx';
-  static const String _fromEmail = 'furnistoreofficial@gmail.com';
-  static const String _fromName = 'FurniStore Official';
+  // EmailJS configuration from config file
+  static const String _serviceId = EmailJSConfig.serviceId;
+  static const String _templateIdApproval = EmailJSConfig.templateIdApproval;
+  static const String _templateIdRejection = EmailJSConfig.templateIdRejection;
+  static const String _publicKey = EmailJSConfig.publicKey;
+  static const String _privateKey = EmailJSConfig.privateKey;
+
+  // Initialize EmailJS (call this once in your app)
+  static Future<void> initialize() async {
+    try {
+      emailjs.init(emailjs.Options(
+        publicKey: _publicKey,
+        privateKey: _privateKey,
+      ));
+      print('✅ EmailJS initialized successfully');
+    } catch (e) {
+      print('❌ Error initializing EmailJS: $e');
+    }
+  }
 
   /// Send seller approval notification email
   static Future<Map<String, dynamic>> sendSellerApprovalEmail({
@@ -17,29 +29,43 @@ class EmailService {
     required String storeName,
   }) async {
     try {
-      // Create SMTP server configuration
-      final smtpServer = SmtpServer(
-        _smtpServer,
-        port: _smtpPort,
-        username: _username,
-        password: _password,
-        allowInsecure: false,
-        ignoreBadCertificate: false,
+      // Validate email address
+      if (sellerEmail.isEmpty) {
+        return {
+          'success': false,
+          'error': 'Recipient email address is empty',
+        };
+      }
+
+      if (!sellerEmail.contains('@')) {
+        return {
+          'success': false,
+          'error': 'Invalid email address format: $sellerEmail',
+        };
+      }
+
+      // Prepare template parameters for EmailJS
+      final templateParams = {
+        'to_email': sellerEmail,
+        'to_name': sellerName,
+        'store_name': storeName,
+        'subject': '🎉 Your Seller Application Has Been Approved!',
+        'message_html': _buildApprovalEmailHTML(sellerName, storeName),
+        'message_text': _buildApprovalEmailText(sellerName, storeName),
+      };
+
+      // Send email using EmailJS
+      await emailjs.send(
+        _serviceId,
+        _templateIdApproval,
+        templateParams,
+        emailjs.Options(
+          publicKey: _publicKey,
+          privateKey: _privateKey,
+        ),
       );
 
-      // Create email message
-      final message = Message()
-        ..from = Address(_fromEmail, _fromName)
-        ..recipients.add(sellerEmail)
-        ..subject = '🎉 Your Seller Application Has Been Approved!'
-        ..html = _buildApprovalEmailHTML(sellerName, storeName)
-        ..text = _buildApprovalEmailText(sellerName, storeName);
-
-      // Send email
-      final sendReport = await send(message, smtpServer);
-
-      print('✅ Email sent successfully to $sellerEmail');
-      print('📧 Send report: ${sendReport.toString()}');
+      print('✅ Approval email sent successfully to $sellerEmail');
 
       return {
         'success': true,
@@ -63,29 +89,44 @@ class EmailService {
     required String reason,
   }) async {
     try {
-      // Create SMTP server configuration
-      final smtpServer = SmtpServer(
-        _smtpServer,
-        port: _smtpPort,
-        username: _username,
-        password: _password,
-        allowInsecure: false,
-        ignoreBadCertificate: false,
+      // Validate email address
+      if (sellerEmail.isEmpty) {
+        return {
+          'success': false,
+          'error': 'Recipient email address is empty',
+        };
+      }
+
+      if (!sellerEmail.contains('@')) {
+        return {
+          'success': false,
+          'error': 'Invalid email address format: $sellerEmail',
+        };
+      }
+
+      // Prepare template parameters for EmailJS
+      final templateParams = {
+        'to_email': sellerEmail,
+        'to_name': sellerName,
+        'store_name': storeName,
+        'rejection_reason': reason,
+        'subject': '📋 Seller Application Update - Action Required',
+        'message_html': _buildRejectionEmailHTML(sellerName, storeName, reason),
+        'message_text': _buildRejectionEmailText(sellerName, storeName, reason),
+      };
+
+      // Send email using EmailJS
+      await emailjs.send(
+        _serviceId,
+        _templateIdRejection,
+        templateParams,
+        emailjs.Options(
+          publicKey: _publicKey,
+          privateKey: _privateKey,
+        ),
       );
 
-      // Create email message
-      final message = Message()
-        ..from = Address(_fromEmail, _fromName)
-        ..recipients.add(sellerEmail)
-        ..subject = '📋 Seller Application Update - Action Required'
-        ..html = _buildRejectionEmailHTML(sellerName, storeName, reason)
-        ..text = _buildRejectionEmailText(sellerName, storeName, reason);
-
-      // Send email
-      final sendReport = await send(message, smtpServer);
-
       print('✅ Rejection email sent successfully to $sellerEmail');
-      print('📧 Send report: ${sendReport.toString()}');
 
       return {
         'success': true,

@@ -6,6 +6,7 @@ import 'package:furnistore/web/screens/activity_log/activitylog.dart';
 import 'package:furnistore/web/screens/sidebar.dart';
 import 'services/firebase_options.dart';
 import 'services/glb_storage_service.dart';
+import 'services/email_service.dart';
 import 'package:furnistore/app/categories/categories.dart';
 import 'package:furnistore/app/home_screen.dart';
 import 'package:furnistore/app/auth/forgot/forgot_pass.dart';
@@ -29,6 +30,8 @@ void main() async {
   );
   // Initialize GetX Storage for GLB caching
   await GlbStorageService.init();
+  // Initialize EmailJS for email notifications
+  await EmailService.initialize();
   runApp(kIsWeb ? MyAdmin() : MyApp());
 }
 

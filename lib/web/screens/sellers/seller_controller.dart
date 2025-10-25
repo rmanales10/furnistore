@@ -48,9 +48,45 @@ class SellerController extends GetxController {
       }
 
       final sellerData = sellerDoc.data()!;
-      final sellerEmail = sellerData['ownersEmail'] ?? '';
-      final sellerName = sellerData['ownerName'] ?? '';
+
+      // Try different possible email field names
+      String sellerEmail = sellerData['ownersEmail'] ??
+          sellerData['email'] ??
+          sellerData['ownerEmail'] ??
+          sellerData['contactEmail'] ??
+          sellerData['userEmail'] ??
+          '';
+
+      // If email is still empty, try to get it from the user's auth data
+      if (sellerEmail.isEmpty) {
+        try {
+          final userDoc = await _firebase.collection('users').doc(id).get();
+          if (userDoc.exists) {
+            final userData = userDoc.data()!;
+            sellerEmail = userData['email'] ?? userData['userEmail'] ?? '';
+            log('📧 Found email in user data: "$sellerEmail"');
+          }
+        } catch (e) {
+          log('❌ Error fetching user email: $e');
+        }
+      }
+
+      final sellerName = sellerData['ownerName'] ?? sellerData['name'] ?? '';
       final storeName = sellerData['storeName'] ?? '';
+
+      // Debug logging to see what data we have
+      log('🔍 Seller data keys: ${sellerData.keys.toList()}');
+      log('📧 Seller email: "$sellerEmail" (length: ${sellerEmail.length})');
+      log('👤 Seller name: "$sellerName"');
+      log('🏪 Store name: "$storeName"');
+
+      // Check all possible email-related fields
+      for (String key in sellerData.keys) {
+        if (key.toLowerCase().contains('email') ||
+            key.toLowerCase().contains('contact')) {
+          log('📧 Field "$key": "${sellerData[key]}"');
+        }
+      }
 
       // Update seller status
       await _firebase
@@ -77,6 +113,8 @@ class SellerController extends GetxController {
           }
         } else {
           log('⚠️ No email address found for seller: $id');
+          log('⚠️ Available fields: ${sellerData.keys.join(', ')}');
+          log('⚠️ Please check if the seller provided an email address during registration');
         }
       } else if (status.toLowerCase() == 'rejected') {
         // Send rejection email notification
@@ -98,6 +136,8 @@ class SellerController extends GetxController {
           }
         } else {
           log('⚠️ No email address found for seller: $id');
+          log('⚠️ Available fields: ${sellerData.keys.join(', ')}');
+          log('⚠️ Please check if the seller provided an email address during registration');
         }
       }
 
