@@ -12,21 +12,33 @@ import 'package:intl/intl.dart';
 Color _getStatusColor(String status) {
   switch (status.toLowerCase()) {
     case 'pending':
-      return const Color(0xFFF59E0B); // Amber
+      return const Color(0xFF3E6BE0); // Blue
     case 'processing':
-      return const Color(0xFF3B82F6); // Blue
-    case 'shipped':
-      return const Color(0xFF8B5CF6); // Violet
+      return const Color(0xFF3E6BE0); // Blue
     case 'out for delivery':
-      return const Color(0xFF6366F1); // Indigo
+      return const Color(0xFF3E6BE0); // Blue
     case 'delivered':
-      return const Color(0xFF10B981); // Emerald
-    case 'cancelled':
-      return const Color(0xFFEF4444); // Red
-    case 'returned':
-      return const Color(0xFF6B7280); // Gray
+      return const Color(0xFF3E6BE0); // Blue
     default:
-      return const Color(0xFF6B7280); // Default gray
+      return const Color(0xFF3E6BE0); // Default blue
+  }
+}
+
+String _getValidStatus(String status) {
+  switch (status.toLowerCase()) {
+    case 'shipped':
+      return 'Processing'; // Map shipped to processing
+    case 'cancelled':
+      return 'Pending'; // Map cancelled to pending
+    case 'returned':
+      return 'Pending'; // Map returned to pending
+    case 'pending':
+    case 'processing':
+    case 'out for delivery':
+    case 'delivered':
+      return status; // Keep valid statuses as is
+    default:
+      return 'Pending'; // Default to pending for unknown statuses
   }
 }
 
@@ -105,23 +117,20 @@ class _OrdersInformationState extends State<OrdersInformation> {
                               items: int.parse(orderController
                                   .orderInfo['total_items']
                                   .toString()),
-                              status: orderController.orderInfo['status'] ?? '',
+                              status: _getValidStatus(
+                                  orderController.orderInfo['status'] ?? ''),
                               statusOptions: [
                                 'Pending',
                                 'Processing',
-                                'Shipped',
                                 'Out for Delivery',
                                 'Delivered',
-                                'Cancelled',
-                                'Returned'
                               ],
                               onStatusChanged: (value) async {
                                 if (value != null &&
                                     value !=
                                         orderController.orderInfo['status']) {
                                   // Show confirmation for important status changes
-                                  if (value == 'Delivered' ||
-                                      value == 'Cancelled') {
+                                  if (value == 'Delivered') {
                                     final confirmed = await showDialog<bool>(
                                       context: context,
                                       builder: (context) => AlertDialog(
@@ -138,10 +147,7 @@ class _OrdersInformationState extends State<OrdersInformation> {
                                             onPressed: () =>
                                                 Navigator.pop(context, true),
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  value == 'Delivered'
-                                                      ? Colors.green
-                                                      : Colors.red,
+                                              backgroundColor: Colors.green,
                                             ),
                                             child: Text('Confirm'),
                                           ),

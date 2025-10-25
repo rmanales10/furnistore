@@ -1,6 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:furnistore/web/screens/activity_log/activitylog.dart';
 import 'package:furnistore/web/screens/dashboard/admin_dashboard.dart';
 import 'package:furnistore/web/screens/dashboard/seller_dashboard.dart';
 import 'package:furnistore/web/screens/orders/orders.dart';
@@ -46,7 +45,6 @@ class _SidebarState extends State<Sidebar> {
         StoreProfile(id: docId),
         ProductPage(),
         Orders(),
-        ActivityLogScreen(),
         AddProductPage(),
         OrdersInformation(orderId: widget.orderId),
       ];
@@ -182,12 +180,6 @@ class _SidebarState extends State<Sidebar> {
           icon: Icons.shopping_cart,
           isSelected: selectedIndex == 5,
           onTap: () => setState(() => selectedIndex = 5),
-        ),
-        _sidebarItem(
-          title: "Activity Log",
-          icon: Icons.event_note_sharp,
-          isSelected: selectedIndex == 6,
-          onTap: () => setState(() => selectedIndex = 6),
         ),
         const Spacer(),
         _sidebarItem(

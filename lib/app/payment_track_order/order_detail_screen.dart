@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:furnistore/app/firebase_service/firestore_service.dart';
 import 'package:get/get.dart';
@@ -184,6 +185,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           'user_name':
               userData['name'] ?? userData['username'] ?? 'Unknown User',
           'user_email': userData['email'] ?? 'No email provided',
+          'user_image': userData['image'] ?? userData['profile_image'] ?? '',
           'delivery_address': userData['address'] ?? 'No address provided',
           'town_city': userData['town_city'] ?? '',
           'postcode': userData['postcode'] ?? '',
@@ -219,6 +221,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         isLoading = false;
       });
       print('Error loading order details directly: $e');
+    }
+  }
+
+  /// Check if current user has already reviewed a product
+  Future<bool> _checkIfUserReviewedProduct(String productId) async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser == null) return false;
+
+      return await _firestoreService.hasUserReviewedProduct(
+        productId: productId,
+        userId: currentUser.uid,
+      );
+    } catch (e) {
+      print('Error checking if user reviewed product: $e');
+      return false;
     }
   }
 
@@ -549,6 +567,71 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     ),
                   ),
                 ],
+                // Review Button - Only show for delivered orders
+                if (orderDetails['status']?.toString().toLowerCase() ==
+                    'delivered') ...[
+                  const SizedBox(height: 12),
+                  FutureBuilder<bool>(
+                    future: _checkIfUserReviewedProduct(
+                      product['product_id'] ?? product['id'] ?? '',
+                    ),
+                    builder: (context, snapshot) {
+                      bool hasReviewed = snapshot.data ?? false;
+
+                      return SizedBox(
+                        width: 120,
+                        child: ElevatedButton(
+                          onPressed: hasReviewed
+                              ? null
+                              : () {
+                                  // Open review bottom sheet
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) => ReviewBottomSheet(
+                                      productId: product['product_id'] ??
+                                          product['id'] ??
+                                          '',
+                                      productName:
+                                          product['name'] ?? 'Unknown Product',
+                                      productImage: product['image'] ?? '',
+                                      orderId: orderDetails['order_id'] ?? '',
+                                      userName: orderDetails['user_name'] ??
+                                          'Unknown User',
+                                      userImage:
+                                          orderDetails['user_image'] ?? '',
+                                      onReviewSubmitted: () {
+                                        // Refresh the order details to update button states
+                                        _loadOrderDetailsDirect();
+                                      },
+                                    ),
+                                  );
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: hasReviewed
+                                ? Colors.grey
+                                : const Color(0xFF3E6BE0),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            hasReviewed ? 'Reviewed' : 'Review',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
             ),
           ),
@@ -583,9 +666,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   }
 
   Widget _buildCancelOrderButton() {
-    // Only show cancel button if order is not cancelled
-    if (orderDetails['status'] == 'Cancelled') {
-      return const SizedBox.shrink(); // Hide button for cancelled orders
+    // Only show cancel button if order is not cancelled or delivered
+    if (orderDetails['status'] == 'Cancelled' ||
+        orderDetails['status'] == 'Delivered') {
+      return const SizedBox
+          .shrink(); // Hide button for cancelled or delivered orders
     }
 
     return SizedBox(
@@ -1131,6 +1216,337 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// Review Bottom Sheet - Matches the design shown
+class ReviewBottomSheet extends StatefulWidget {
+  final String productId;
+  final String productName;
+  final String productImage;
+  final String orderId;
+  final String userName;
+  final String userImage;
+  final VoidCallback? onReviewSubmitted;
+
+  const ReviewBottomSheet({
+    super.key,
+    required this.productId,
+    required this.productName,
+    required this.productImage,
+    required this.orderId,
+    required this.userName,
+    required this.userImage,
+    this.onReviewSubmitted,
+  });
+
+  @override
+  State<ReviewBottomSheet> createState() => _ReviewBottomSheetState();
+}
+
+class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
+  int rating = 0;
+  final _comment = TextEditingController();
+  final _firestoreService = FirestoreService();
+
+  @override
+  void dispose() {
+    _comment.dispose();
+    super.dispose();
+  }
+
+  void _showThankYouModal() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Check icon with blue background
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.blue[50],
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.check,
+                  color: Colors.blue[600],
+                  size: 40,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // "Done!" text
+              const Text(
+                'Done!',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // "Thank you for your review" text
+              const Text(
+                'Thank you for your review',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Five filled amber stars
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 2),
+                    child: Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                      size: 32,
+                    ),
+                  );
+                }),
+              ),
+              const SizedBox(height: 24),
+
+              // Auto-close after 2 seconds
+              FutureBuilder(
+                future: Future.delayed(const Duration(seconds: 2)),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    Navigator.of(context).pop();
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle bar
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Review form
+            const Text(
+              'Review',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // User info and order number
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: Colors.grey[300],
+                  backgroundImage: widget.userImage.isNotEmpty
+                      ? MemoryImage(base64Decode(widget.userImage))
+                      : null,
+                  child: widget.userImage.isEmpty
+                      ? Icon(
+                          Icons.person,
+                          color: Colors.grey[600],
+                          size: 24,
+                        )
+                      : null,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        widget.userName,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Order #${widget.orderId}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // Star rating
+            Row(
+              children: List.generate(5, (index) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      rating = index + 1;
+                    });
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Icon(
+                      index < rating ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 32,
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 20),
+
+            // Comment text field
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: TextField(
+                controller: _comment,
+                decoration: const InputDecoration(
+                  hintText: 'Your comment',
+                  hintStyle: TextStyle(color: Colors.grey),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.all(16),
+                ),
+                maxLines: 4,
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Submit button
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (rating == 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please select a rating'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                    return;
+                  }
+
+                  // Submit review
+                  try {
+                    // Get current user ID from Firebase Auth
+                    final currentUser = FirebaseAuth.instance.currentUser;
+                    if (currentUser == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please log in to submit a review'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+
+                    await _firestoreService.submitReview(
+                      productId: widget.productId,
+                      userId: currentUser.uid,
+                      rating: rating,
+                      comment: _comment.text,
+                      orderId: widget.orderId,
+                    );
+
+                    // Close the bottom sheet first
+                    Navigator.of(context).pop();
+
+                    // Call the callback to refresh the parent screen
+                    if (widget.onReviewSubmitted != null) {
+                      widget.onReviewSubmitted!();
+                    }
+
+                    // Show the thank you modal
+                    _showThankYouModal();
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error submitting review: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[800],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Text(
+                  'Say it!',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

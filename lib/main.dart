@@ -2,7 +2,6 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:furnistore/web/auth_screen/login.dart';
-import 'package:furnistore/web/screens/activity_log/activitylog.dart';
 import 'package:furnistore/web/screens/sidebar.dart';
 import 'services/firebase_options.dart';
 import 'services/glb_storage_service.dart';
@@ -92,7 +91,6 @@ class MyAdmin extends StatelessWidget {
       initialRoute: '/',
       getPages: [
         GetPage(name: '/', page: () => MyLogin()),
-        GetPage(name: '/activitylog', page: () => ActivityLogScreen()),
         GetPage(name: '/admin-dashboard', page: () => Sidebar(role: 'admin')),
         GetPage(
             name: '/seller-dashboard',

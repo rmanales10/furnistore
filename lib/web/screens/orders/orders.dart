@@ -146,7 +146,7 @@ class _OrdersState extends State<Orders> {
                                                               Sidebar(
                                                                 orderId: order[
                                                                     'order_id'],
-                                                                initialIndex: 8,
+                                                                initialIndex: 7,
                                                               ))),
                                               icon: const Icon(
                                                   Icons.remove_red_eye,

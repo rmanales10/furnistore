@@ -527,4 +527,50 @@ class FirestoreService extends GetxController {
   //     log('Error $e');
   //   }
   // }
+
+  /// Submit a product review
+  Future<void> submitReview({
+    required String productId,
+    required String userId,
+    required int rating,
+    required String comment,
+    required String orderId,
+  }) async {
+    try {
+      await _firestore.collection('reviews').add({
+        'product_id': productId,
+        'user_id': userId,
+        'rating': rating,
+        'comment': comment,
+        'order_id': orderId,
+        'created_at': FieldValue.serverTimestamp(),
+      });
+      log('✅ Review submitted successfully for product: $productId');
+    } catch (e) {
+      log('❌ Error submitting review: $e');
+      throw Exception('Failed to submit review: $e');
+    }
+  }
+
+  /// Check if user has already reviewed a product
+  Future<bool> hasUserReviewedProduct({
+    required String productId,
+    required String userId,
+  }) async {
+    try {
+      QuerySnapshot querySnapshot = await _firestore
+          .collection('reviews')
+          .where('product_id', isEqualTo: productId)
+          .where('user_id', isEqualTo: userId)
+          .limit(1)
+          .get();
+
+      bool hasReviewed = querySnapshot.docs.isNotEmpty;
+      log('🔍 User $userId has reviewed product $productId: $hasReviewed');
+      return hasReviewed;
+    } catch (e) {
+      log('❌ Error checking if user reviewed product: $e');
+      return false;
+    }
+  }
 }

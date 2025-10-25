@@ -67,7 +67,7 @@ class _ProductPageState extends State<ProductPage> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) => Sidebar(
-                                      initialIndex: 7,
+                                      initialIndex: 6,
                                     ))),
                         child: const Text(
                           'Add Product',
@@ -169,11 +169,34 @@ class _ProductPageState extends State<ProductPage> {
                                         ),
                                       ),
 
+                                      // Stock
                                       Expanded(
                                         flex: 2,
-                                        child: Text(
-                                          '${product['stock'] ?? '0'}',
-                                        ),
+                                        child: isEditing
+                                            ? SizedBox(
+                                                width: 100,
+                                                child: TextFormField(
+                                                  initialValue:
+                                                      editedProducts[index]
+                                                                  ?['stock']
+                                                              ?.toString() ??
+                                                          product['stock']
+                                                              .toString(),
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  onChanged: (value) {
+                                                    editedProducts[index] ??=
+                                                        Map.from(product);
+                                                    editedProducts[index]![
+                                                            'stock'] =
+                                                        int.tryParse(value) ??
+                                                            0;
+                                                  },
+                                                ),
+                                              )
+                                            : Text(
+                                                '${product['stock'] ?? '0'}',
+                                              ),
                                       ),
                                       // Price
                                       Expanded(

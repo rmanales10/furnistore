@@ -322,7 +322,7 @@ class OrderCard extends StatelessWidget {
       child: TextButton(
         onPressed: () {
           if (isDelivered) {
-            Get.to(() => OrdersScreen1(orderId: orderId));
+            Get.to(() => OrderDetailScreen(orderId: orderId));
           } else {
             Get.to(() => OrderDetailScreen(orderId: orderId));
           }
