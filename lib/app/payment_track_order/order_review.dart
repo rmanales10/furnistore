@@ -49,6 +49,35 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
     );
   }
 
+  // Method to place the order
+  Future<void> _placeOrder() async {
+    try {
+      await _firestore.storeOrderData(
+        date: DateTime.now(),
+        modeOfPayment: paymentMethod,
+        orderId: generateOrderId(),
+        product: widget.productList,
+        status: 'Pending',
+        subTotal: subtotal.value,
+        total: subtotal.value + additionalFee,
+        totalItems: totalItem.value,
+        userId: _auth.currentUser!.uid,
+        deliveryFee: additionalFee,
+      );
+      await _firestore.deleteCartForCheckout();
+      Get.back();
+      _showSuccessDialog(context);
+    } catch (e) {
+      log('❌ Error placing order: $e');
+      Get.snackbar(
+        'Error',
+        'Failed to place order. Please try again.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     subtotal.value = widget.productList.fold(0, (sum, item) {
@@ -460,21 +489,93 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                             // Place Order Button
                             Expanded(
                               child: ElevatedButton(
-                                onPressed: () {
-                                  _firestore.storeOrderData(
-                                      date: DateTime.now(),
-                                      modeOfPayment: paymentMethod,
-                                      orderId: generateOrderId(),
-                                      product: widget.productList,
-                                      status: 'Pending',
-                                      subTotal: subtotal.value,
-                                      total: total,
-                                      totalItems: totalItem.value,
-                                      userId: _auth.currentUser!.uid,
-                                      deliveryFee: additionalFee);
-                                  _firestore.deleteCartForCheckout();
-                                  Get.back();
-                                  _showSuccessDialog(context);
+                                onPressed: () async {
+                                  // Validate stock availability before placing order
+                                  final stockValidation = await _firestore
+                                      .validateStockAvailability(
+                                          widget.productList);
+
+                                  if (!stockValidation['isValid']) {
+                                    // Show error dialog if stock validation fails
+                                    Get.dialog(
+                                      AlertDialog(
+                                        title: Text('Stock Unavailable'),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                                'The following items are not available:'),
+                                            SizedBox(height: 10),
+                                            ...stockValidation['errors']
+                                                .map<Widget>((error) => Padding(
+                                                      padding: EdgeInsets.only(
+                                                          bottom: 5),
+                                                      child: Text('• $error',
+                                                          style: TextStyle(
+                                                              color:
+                                                                  Colors.red)),
+                                                    ))
+                                                .toList(),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Get.back(),
+                                            child: Text('OK'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  // Show warnings if any
+                                  if (stockValidation['warnings'].isNotEmpty) {
+                                    Get.dialog(
+                                      AlertDialog(
+                                        title: Text('Stock Warning'),
+                                        content: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text('Please note:'),
+                                            SizedBox(height: 10),
+                                            ...stockValidation['warnings']
+                                                .map<Widget>((warning) =>
+                                                    Padding(
+                                                      padding: EdgeInsets.only(
+                                                          bottom: 5),
+                                                      child: Text('• $warning',
+                                                          style: TextStyle(
+                                                              color: Colors
+                                                                  .orange)),
+                                                    ))
+                                                .toList(),
+                                          ],
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Get.back(),
+                                            child: Text('Cancel'),
+                                          ),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              Get.back();
+                                              _placeOrder();
+                                            },
+                                            child: Text('Continue'),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  // Place order if no warnings
+                                  _placeOrder();
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF3E6BE0),

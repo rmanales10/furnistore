@@ -361,6 +361,7 @@ class _BrandScreenState extends State<BrandScreen> {
                       product['description'] ?? 'No description';
                   final productImage = product['image'] ?? '';
                   final productId = product['id'] ?? '';
+                  final productStock = product['stock'] ?? 0;
 
                   Uint8List imageBytes;
                   try {
@@ -369,8 +370,14 @@ class _BrandScreenState extends State<BrandScreen> {
                     imageBytes = Uint8List(0);
                   }
 
-                  return _buildProductCard(context, productName, productPrice,
-                      imageBytes, productDescription, productId, () {
+                  return _buildProductCard(
+                      context,
+                      productName,
+                      productPrice,
+                      imageBytes,
+                      productDescription,
+                      productId,
+                      productStock, () {
                     // Navigate to product details page
                     Get.to(() => ProductDetailsScreen(
                           nameProduct: productName,
@@ -378,6 +385,7 @@ class _BrandScreenState extends State<BrandScreen> {
                           price: productPrice,
                           imageBytes: imageBytes,
                           productId: productId,
+                          stock: productStock,
                         ));
                   }, () {
                     // Add to cart functionality
@@ -403,12 +411,13 @@ class _BrandScreenState extends State<BrandScreen> {
     Uint8List imageBytes,
     String description,
     String productId,
+    int stock,
     VoidCallback onCardTap,
     VoidCallback onAddToCart,
     Size size,
   ) {
     return GestureDetector(
-      onTap: onCardTap,
+      onTap: stock > 0 ? onCardTap : null,
       child: Card(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         elevation: 8,
@@ -446,14 +455,17 @@ class _BrandScreenState extends State<BrandScreen> {
                       width: size.width * 0.25,
                       fit: BoxFit.cover,
                       gaplessPlayback: true,
+                      color: stock == 0 ? Colors.grey : null,
+                      colorBlendMode: stock == 0 ? BlendMode.saturation : null,
                     ),
                   ),
                   const SizedBox(height: 15),
                   Text(
                     name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.w600,
                       fontSize: 15,
+                      color: stock == 0 ? Colors.grey : Colors.black,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -464,36 +476,100 @@ class _BrandScreenState extends State<BrandScreen> {
                       Icon(
                         FontAwesomeIcons.pesoSign,
                         size: 12,
+                        color: stock == 0 ? Colors.grey : Colors.black,
                       ),
                       Text(
                         ' $price',
-                        style:
-                            const TextStyle(color: Colors.black, fontSize: 15),
+                        style: TextStyle(
+                          color: stock == 0 ? Colors.grey : Colors.black,
+                          fontSize: 15,
+                        ),
                       ),
                     ],
                   )
                 ],
               ),
             ),
+            // Sold Out Overlay
+            if (stock == 0)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey[800],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Text(
+                        'Sold Out',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            // Low Stock Banner
+            if (stock > 0 && stock <= 5)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[700],
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(12),
+                      topRight: Radius.circular(12),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Only $stock left',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             Positioned(
               bottom: 0,
               right: 0,
               child: GestureDetector(
-                onTap: onAddToCart,
+                onTap: stock > 0 ? onAddToCart : null,
                 child: Container(
                   width: 36,
                   height: 36,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF3E6BE0),
-                    borderRadius: BorderRadius.only(
+                  decoration: BoxDecoration(
+                    color: stock > 0 ? const Color(0xFF3E6BE0) : Colors.grey,
+                    borderRadius: const BorderRadius.only(
                       bottomRight: Radius.circular(12),
                       topLeft: Radius.circular(8),
                     ),
                   ),
-                  child: const Center(
-                    child: Text(
-                      '+',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                  child: Center(
+                    child: Icon(
+                      stock > 0 ? Icons.add : Icons.block,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
                 ),

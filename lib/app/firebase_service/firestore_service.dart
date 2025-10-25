@@ -188,6 +188,9 @@ class FirestoreService extends GetxController {
     required int deliveryFee,
   }) async {
     try {
+      // Reduce stock for each product in the order
+      await _reduceProductStock(product);
+
       // Prepare the data map
       Map<String, dynamic> orderData = {
         'date': date,
@@ -206,9 +209,9 @@ class FirestoreService extends GetxController {
 
       await _firestore.collection('orders').doc(orderId).set(orderData);
 
-      // log("Order data stored successfully.");
+      log("✅ Order data stored successfully and stock reduced.");
     } catch (e) {
-      log("Failed to store order data: $e");
+      log("❌ Failed to store order data: $e");
     }
   }
 
@@ -346,6 +349,104 @@ class FirestoreService extends GetxController {
     } catch (e) {
       log('Error fetching product IDs: $e');
     }
+  }
+
+  /// Reduce stock for products in an order
+  Future<void> _reduceProductStock(List<Map<String, dynamic>> products) async {
+    try {
+      for (Map<String, dynamic> product in products) {
+        String productId = product['id'] ?? product['product_id'] ?? '';
+        int quantity = product['quantity'] ?? 1;
+
+        if (productId.isNotEmpty) {
+          // Get current stock
+          DocumentSnapshot productDoc =
+              await _firestore.collection('products').doc(productId).get();
+
+          if (productDoc.exists) {
+            Map<String, dynamic> productData =
+                productDoc.data() as Map<String, dynamic>;
+            int currentStock = productData['stock'] ?? 0;
+            int newStock = currentStock - quantity;
+
+            // Ensure stock doesn't go below 0
+            if (newStock < 0) {
+              log('⚠️ Warning: Product $productId stock would go negative. Setting to 0.');
+              newStock = 0;
+            }
+
+            // Update stock
+            await _firestore.collection('products').doc(productId).update({
+              'stock': newStock,
+              'updated_at': FieldValue.serverTimestamp(),
+            });
+
+            log('📦 Reduced stock for product $productId: $currentStock → $newStock (quantity: $quantity)');
+          } else {
+            log('❌ Product $productId not found in database');
+          }
+        } else {
+          log('❌ Invalid product ID in order: $product');
+        }
+      }
+    } catch (e) {
+      log('❌ Error reducing product stock: $e');
+      throw Exception('Failed to reduce product stock: $e');
+    }
+  }
+
+  /// Validate stock availability before placing order
+  Future<Map<String, dynamic>> validateStockAvailability(
+      List<Map<String, dynamic>> products) async {
+    Map<String, dynamic> result = {
+      'isValid': true,
+      'errors': <String>[],
+      'warnings': <String>[],
+    };
+
+    try {
+      for (Map<String, dynamic> product in products) {
+        String productId = product['id'] ?? product['product_id'] ?? '';
+        String productName = product['name'] ?? 'Unknown Product';
+        int quantity = product['quantity'] ?? 1;
+
+        if (productId.isNotEmpty) {
+          // Get current stock
+          DocumentSnapshot productDoc =
+              await _firestore.collection('products').doc(productId).get();
+
+          if (productDoc.exists) {
+            Map<String, dynamic> productData =
+                productDoc.data() as Map<String, dynamic>;
+            int currentStock = productData['stock'] ?? 0;
+
+            if (currentStock < quantity) {
+              result['isValid'] = false;
+              result['errors'].add(
+                  '$productName: Only $currentStock items available (requested: $quantity)');
+            } else if (currentStock == quantity) {
+              result['warnings']
+                  .add('$productName: Last $quantity items in stock');
+            } else if (currentStock <= 5) {
+              result['warnings'].add(
+                  '$productName: Low stock ($currentStock items remaining)');
+            }
+          } else {
+            result['isValid'] = false;
+            result['errors'].add('$productName: Product not found');
+          }
+        } else {
+          result['isValid'] = false;
+          result['errors'].add('Invalid product ID in cart');
+        }
+      }
+    } catch (e) {
+      log('❌ Error validating stock: $e');
+      result['isValid'] = false;
+      result['errors'].add('Error validating stock: $e');
+    }
+
+    return result;
   }
 
   Future<void> deleteCartForCheckout() async {

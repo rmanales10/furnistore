@@ -17,13 +17,15 @@ class ProductDetailsScreen extends StatefulWidget {
   int price;
   Uint8List imageBytes;
   String productId;
+  int stock;
   ProductDetailsScreen(
       {super.key,
       required this.nameProduct,
       required this.description,
       required this.price,
       required this.imageBytes,
-      required this.productId});
+      required this.productId,
+      required this.stock});
 
   @override
   State<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
@@ -61,8 +63,23 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
       curve: Curves.easeInOut,
     ));
 
+    // Initialize counter to 1 and ensure it doesn't exceed stock
+    _counter.value = 1;
+    if (_counter.value > widget.stock && widget.stock > 0) {
+      _counter.value = widget.stock;
+    }
+
     // Initialize GLB cache check
     _initializeGlbCache();
+  }
+
+  // Helper method to ensure counter is within valid bounds
+  void _validateCounter() {
+    if (_counter.value > widget.stock && widget.stock > 0) {
+      _counter.value = widget.stock;
+    } else if (_counter.value < 1) {
+      _counter.value = 1;
+    }
   }
 
   // Helper method to display peso symbol with FontAwesome
@@ -186,6 +203,23 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
   }
 
   void _addToCart() async {
+    // Validate counter before adding to cart
+    _validateCounter();
+
+    // Check if we can add the requested quantity
+    if (_counter.value > widget.stock) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+              'Cannot add ${_counter.value} items. Only ${widget.stock} available.'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+      return;
+    }
+
     // Trigger the animation
     await _animationController.forward();
     _animationController.reverse();
@@ -374,6 +408,57 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                       height: 1.5,
                     ),
                   ),
+                  const SizedBox(height: 12),
+
+                  // Stock Information
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: widget.stock > 5
+                          ? Colors.green.withOpacity(0.1)
+                          : widget.stock > 0
+                              ? Colors.orange.withOpacity(0.1)
+                              : Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: widget.stock > 5
+                            ? Colors.green
+                            : widget.stock > 0
+                                ? Colors.orange
+                                : Colors.red,
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.inventory_2_outlined,
+                          size: 16,
+                          color: widget.stock > 5
+                              ? Colors.green
+                              : widget.stock > 0
+                                  ? Colors.orange
+                                  : Colors.red,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          widget.stock > 0
+                              ? '${widget.stock} items in stock'
+                              : 'Out of stock',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: widget.stock > 5
+                                ? Colors.green[700]
+                                : widget.stock > 0
+                                    ? Colors.orange[700]
+                                    : Colors.red[700],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   const SizedBox(height: 20),
 
                   // Reviews Section
@@ -410,10 +495,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                         child: Obx(() => Row(
                               children: [
                                 IconButton(
-                                  onPressed: () => _counter.value <= 1
-                                      ? null
-                                      : _counter.value--,
-                                  icon: const Icon(Icons.remove, size: 18),
+                                  onPressed: () {
+                                    if (_counter.value > 1) {
+                                      _counter.value--;
+                                      _validateCounter();
+                                    }
+                                  },
+                                  icon: Icon(
+                                    Icons.remove,
+                                    size: 18,
+                                    color: _counter.value <= 1
+                                        ? Colors.grey
+                                        : Colors.black,
+                                  ),
                                 ),
                                 Text(
                                   _counter.toString(),
@@ -422,8 +516,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                                       fontWeight: FontWeight.bold),
                                 ),
                                 IconButton(
-                                  onPressed: () => _counter.value++,
-                                  icon: const Icon(Icons.add, size: 18),
+                                  onPressed: () {
+                                    if (_counter.value < widget.stock) {
+                                      _counter.value++;
+                                      _validateCounter();
+                                    }
+                                  },
+                                  icon: Icon(
+                                    Icons.add,
+                                    size: 18,
+                                    color: _counter.value >= widget.stock
+                                        ? Colors.grey
+                                        : Colors.black,
+                                  ),
                                 ),
                               ],
                             )),
@@ -433,16 +538,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                       ScaleTransition(
                         scale: _scaleAnimation,
                         child: ElevatedButton(
-                          onPressed: () {
-                            _addToCart();
-                            _firestore.insertCart(
-                                productId: widget.productId,
-                                quantity: _counter.value,
-                                userId: _auth.currentUser!.uid);
-                            // _firestore.insertCart(productId: widget.productId, quantity: _counter.value, userId: userId)
-                          },
+                          onPressed: widget.stock > 0
+                              ? () {
+                                  _addToCart();
+                                  _firestore.insertCart(
+                                      productId: widget.productId,
+                                      quantity: _counter.value,
+                                      userId: _auth.currentUser!.uid);
+                                  // _firestore.insertCart(productId: widget.productId, quantity: _counter.value, userId: userId)
+                                }
+                              : null,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black,
+                            backgroundColor:
+                                widget.stock > 0 ? Colors.black : Colors.grey,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 40,
                                 vertical: 16), // Adjust button size
@@ -450,9 +558,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            'Add to Cart',
-                            style: TextStyle(
+                          child: Text(
+                            widget.stock > 0 ? 'Add to Cart' : 'Out of Stock',
+                            style: const TextStyle(
                               color: Colors.white,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
