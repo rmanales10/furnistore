@@ -415,18 +415,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: widget.stock > 5
-                          ? Colors.green.withOpacity(0.1)
-                          : widget.stock > 0
-                              ? Colors.orange.withOpacity(0.1)
-                              : Colors.red.withOpacity(0.1),
+                      color: widget.stock > 0
+                          ? const Color(0xFF3E6BE0).withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: widget.stock > 5
-                            ? Colors.green
-                            : widget.stock > 0
-                                ? Colors.orange
-                                : Colors.red,
+                        color: widget.stock > 0
+                            ? const Color(0xFF3E6BE0)
+                            : Colors.grey,
                         width: 1,
                       ),
                     ),
@@ -435,11 +431,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                         Icon(
                           Icons.inventory_2_outlined,
                           size: 16,
-                          color: widget.stock > 5
-                              ? Colors.green
-                              : widget.stock > 0
-                                  ? Colors.orange
-                                  : Colors.red,
+                          color: widget.stock > 0
+                              ? const Color(0xFF3E6BE0)
+                              : Colors.grey,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -449,11 +443,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: widget.stock > 5
-                                ? Colors.green[700]
-                                : widget.stock > 0
-                                    ? Colors.orange[700]
-                                    : Colors.red[700],
+                            color: widget.stock > 0
+                                ? const Color(0xFF3E6BE0)
+                                : Colors.grey[700],
                           ),
                         ),
                       ],
