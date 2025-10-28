@@ -4,8 +4,10 @@ import 'package:furnistore/config/emailjs_config.dart';
 class EmailService {
   // EmailJS configuration from config file
   static const String _serviceId = EmailJSConfig.serviceId;
-  static const String _templateIdApproval = EmailJSConfig.templateIdApproval;
-  static const String _templateIdRejection = EmailJSConfig.templateIdRejection;
+  static const String _templateIdSellerStatus =
+      EmailJSConfig.templateIdSellerStatus;
+  static const String _templateIdOrderStatus =
+      EmailJSConfig.templateIdOrderStatus;
   static const String _publicKey = EmailJSConfig.publicKey;
   static const String _privateKey = EmailJSConfig.privateKey;
 
@@ -50,6 +52,7 @@ class EmailService {
         'to_name': sellerName,
         'store_name': storeName,
         'subject': '🎉 Your Seller Application Has Been Approved!',
+        'email_type': 'seller_approval',
         'message_html': _buildApprovalEmailHTML(sellerName, storeName),
         'message_text': _buildApprovalEmailText(sellerName, storeName),
       };
@@ -57,7 +60,7 @@ class EmailService {
       // Send email using EmailJS
       await emailjs.send(
         _serviceId,
-        _templateIdApproval,
+        _templateIdSellerStatus,
         templateParams,
         emailjs.Options(
           publicKey: _publicKey,
@@ -111,6 +114,7 @@ class EmailService {
         'store_name': storeName,
         'rejection_reason': reason,
         'subject': '📋 Seller Application Update - Action Required',
+        'email_type': 'seller_rejection',
         'message_html': _buildRejectionEmailHTML(sellerName, storeName, reason),
         'message_text': _buildRejectionEmailText(sellerName, storeName, reason),
       };
@@ -118,7 +122,7 @@ class EmailService {
       // Send email using EmailJS
       await emailjs.send(
         _serviceId,
-        _templateIdRejection,
+        _templateIdSellerStatus,
         templateParams,
         emailjs.Options(
           publicKey: _publicKey,
@@ -486,5 +490,68 @@ We appreciate your interest in FurniStore!
 Best regards,
 The FurniStore Team
     ''';
+  }
+
+  /// Send order status update notification email to customer
+  static Future<Map<String, dynamic>> sendOrderStatusEmail({
+    required String customerEmail,
+    required String customerName,
+    required String orderId,
+    required String status,
+    required String message,
+    required String subject,
+    required String orderDate,
+    required String totalAmount,
+  }) async {
+    try {
+      // Validate email address
+      if (customerEmail.isEmpty) {
+        return {
+          'success': false,
+          'error': 'Customer email address is empty',
+        };
+      }
+
+      if (!customerEmail.contains('@')) {
+        return {
+          'success': false,
+          'error': 'Invalid email address format: $customerEmail',
+        };
+      }
+
+      // Prepare template parameters for EmailJS
+      final templateParams = {
+        'to_email': customerEmail,
+        'to_name': customerName,
+        'order_id': orderId,
+        'order_status': status,
+        'status_message': message,
+        'subject': subject,
+        'order_date': orderDate,
+        'total_amount': totalAmount,
+        'from_name': 'FurniStore Team',
+        'from_email': 'furnistoreofficial@gmail.com',
+      };
+
+      // Send email using EmailJS
+      final response = await emailjs.send(
+        _serviceId,
+        _templateIdOrderStatus,
+        templateParams,
+      );
+
+      print('✅ Order status email sent successfully to $customerEmail');
+      return {
+        'success': true,
+        'message': 'Order status email sent successfully',
+        'response': response,
+      };
+    } catch (e) {
+      print('❌ Error sending order status email: $e');
+      return {
+        'success': false,
+        'error': 'Failed to send order status email: $e',
+      };
+    }
   }
 }

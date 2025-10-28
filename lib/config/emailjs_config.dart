@@ -6,8 +6,8 @@ class EmailJSConfig {
   static const String serviceId = 'service_furnistore';
 
   // Your EmailJS Template IDs
-  static const String templateIdApproval = 'template_approval';
-  static const String templateIdRejection = 'template_rejection';
+  static const String templateIdSellerStatus = 'template_seller_status';
+  static const String templateIdOrderStatus = 'template_order_status';
 
   // Your EmailJS Public Key (safe to expose in client-side code)
   static const String publicKey = 'mdOaW-Zha7Z8TNwlo';

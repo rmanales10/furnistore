@@ -281,7 +281,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           decoration: BoxDecoration(
-            color: Colors.purple.shade50,
+            color: Colors.grey.shade50,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(

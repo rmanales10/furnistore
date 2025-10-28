@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         },
         backgroundColor: Colors.white,
-        selectedItemColor: Colors.blue,
+        selectedItemColor: const Color(0xFF3E6BE0),
         unselectedItemColor: Colors.grey,
         items: [
           const BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),

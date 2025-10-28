@@ -4,6 +4,7 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:furnistore/services/email_service.dart';
 import 'package:furnistore/web/screens/orders/order_controller.dart';
 import 'package:furnistore/web/screens/sidebar.dart';
 import 'package:get/get.dart';
@@ -57,6 +58,74 @@ class _OrdersInformationState extends State<OrdersInformation> {
   void initState() {
     super.initState();
     orderController.getOrderInfo(orderId: widget.orderId);
+  }
+
+  /// Send email notification to customer about order status update
+  Future<void> _sendOrderStatusEmail({
+    required String customerEmail,
+    required String customerName,
+    required String orderId,
+    required String newStatus,
+    required String orderDate,
+    required String totalAmount,
+  }) async {
+    try {
+      // Get status-specific message
+      String statusMessage = _getStatusMessage(newStatus);
+
+      // Prepare email template
+      String subject = 'Order Status Update - Order #$orderId';
+      String message = '''
+Dear $customerName,
+
+Your order status has been updated to: $newStatus
+
+Order Details:
+- Order ID: #$orderId
+- Order Date: $orderDate
+- Total Amount: ₱$totalAmount
+
+$statusMessage
+
+Thank you for choosing FurniStore!
+
+Best regards,
+FurniStore Team
+      ''';
+
+      // Send email using EmailJS
+      await EmailService.sendOrderStatusEmail(
+        customerEmail: customerEmail,
+        customerName: customerName,
+        orderId: orderId,
+        status: newStatus,
+        message: message,
+        subject: subject,
+        orderDate: orderDate,
+        totalAmount: totalAmount,
+      );
+
+      log('✅ Order status email sent successfully to $customerEmail');
+    } catch (e) {
+      log('❌ Error sending order status email: $e');
+      // Don't throw error to prevent blocking status update
+    }
+  }
+
+  /// Get status-specific message for email
+  String _getStatusMessage(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return 'Your order has been received and is being prepared for processing.';
+      case 'processing':
+        return 'Your order is currently being processed and prepared for shipment.';
+      case 'out for delivery':
+        return 'Great news! Your order is out for delivery and should arrive soon.';
+      case 'delivered':
+        return 'Your order has been successfully delivered! Thank you for your purchase.';
+      default:
+        return 'Your order status has been updated.';
+    }
   }
 
   @override
@@ -164,10 +233,36 @@ class _OrdersInformationState extends State<OrdersInformation> {
                                       newStatus: value,
                                     );
 
+                                    // Send email notification to customer
+                                    if (orderController.userInfo.isNotEmpty) {
+                                      await _sendOrderStatusEmail(
+                                        customerEmail:
+                                            orderController.userInfo['email'] ??
+                                                orderController
+                                                    .userInfo['user_email'] ??
+                                                '',
+                                        customerName:
+                                            orderController.userInfo['name'] ??
+                                                orderController
+                                                    .userInfo['username'] ??
+                                                'Customer',
+                                        orderId: widget.orderId,
+                                        newStatus: value,
+                                        orderDate: DateFormat('MMMM dd, yyyy')
+                                            .format((orderController
+                                                        .orderInfo['date']
+                                                    as Timestamp)
+                                                .toDate()),
+                                        totalAmount: orderController
+                                            .orderInfo['total']
+                                            .toString(),
+                                      );
+                                    }
+
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(
-                                            'Order status updated to $value'),
+                                            'Order status updated to $value and customer notified'),
                                         backgroundColor: Colors.green,
                                         duration: const Duration(seconds: 2),
                                       ),

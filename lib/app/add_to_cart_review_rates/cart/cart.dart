@@ -91,16 +91,21 @@ class _CartScreenState extends State<CartScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Obx(() => Row(children: [
-                      Icon(FontAwesomeIcons.pesoSign,size: 16,),
-                      Text(
-                          ' ${cartController.totalPrice.value}',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )
-                    ],)),
+                    Obx(() => Row(
+                          children: [
+                            Icon(
+                              FontAwesomeIcons.pesoSign,
+                              size: 16,
+                            ),
+                            Text(
+                              ' ${cartController.totalPrice.value}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          ],
+                        )),
                     ElevatedButton(
                       onPressed: () {
                         Get.to(() => OrderReviewScreen(
@@ -202,11 +207,18 @@ class CartItem extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Row(children: [ Icon(FontAwesomeIcons.pesoSign,size: 12,),Text(
-                  ' $price',
-                  style: const TextStyle(color: Colors.grey, fontSize: 14),
-                ),],)
-               
+                Row(
+                  children: [
+                    Icon(
+                      FontAwesomeIcons.pesoSign,
+                      size: 12,
+                    ),
+                    Text(
+                      ' $price',
+                      style: const TextStyle(color: Colors.grey, fontSize: 14),
+                    ),
+                  ],
+                )
               ],
             ),
           ),
@@ -220,7 +232,7 @@ class CartItem extends StatelessWidget {
                       onQuantityChanged(currentQuantity.value);
                     }
                   },
-                  icon: const Icon(Icons.remove, color: Colors.blue),
+                  icon: const Icon(Icons.remove, color: Color(0xFF3E6BE0)),
                 ),
                 Text(
                   currentQuantity.value.toString(),
@@ -234,7 +246,7 @@ class CartItem extends StatelessWidget {
                     currentQuantity.value += 1;
                     onQuantityChanged(currentQuantity.value);
                   },
-                  icon: const Icon(Icons.add, color: Colors.blue),
+                  icon: const Icon(Icons.add, color: Color(0xFF3E6BE0)),
                 ),
               ],
             ),

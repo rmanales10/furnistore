@@ -96,7 +96,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   _showLogoutDialog(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
+                  backgroundColor: const Color(0xFF3E6BE0),
                   minimumSize: const Size(200, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
