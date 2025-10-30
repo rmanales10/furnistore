@@ -130,15 +130,22 @@ FurniStore Team
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1024;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: Padding(
-        padding: const EdgeInsets.all(30),
+        padding: EdgeInsets.all(isMobile ? 16 : (isTablet ? 20 : 30)),
         child: SingleChildScrollView(
           child: Obx(() {
             if (orderController.orderInfo.isEmpty) {
-              return const Center(
-                child: CircularProgressIndicator(),
+              return Center(
+                child: Padding(
+                  padding: EdgeInsets.all(isMobile ? 32 : 48),
+                  child: CircularProgressIndicator(),
+                ),
               );
             }
             if (orderController.userInfo.isEmpty) {
@@ -159,177 +166,257 @@ FurniStore Team
                               builder: (context) => Sidebar(
                                     initialIndex: 5,
                                   ))),
-                      icon: const Icon(Icons.arrow_back_ios_new),
+                      icon: Icon(
+                        Icons.arrow_back_ios_new,
+                        size: isMobile ? 20 : 24,
+                      ),
                     ),
-                    const Text(
-                      'Orders Information',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Text(
+                        'Orders Information',
+                        style: TextStyle(
+                          fontSize: isMobile ? 20 : (isTablet ? 22 : 24),
+                          fontWeight: FontWeight.bold,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                        flex: 3,
-                        child: Column(
-                          children: [
-                            orderInfoCard(
-                              date: DateFormat('MMMM dd, yyyy').format(
-                                  (orderController.orderInfo['date']
-                                          as Timestamp)
-                                      .toDate()),
-                              items: int.parse(orderController
-                                  .orderInfo['total_items']
-                                  .toString()),
-                              status: _getValidStatus(
-                                  orderController.orderInfo['status'] ?? ''),
-                              statusOptions: [
-                                'Pending',
-                                'Processing',
-                                'Out for Delivery',
-                                'Delivered',
-                              ],
-                              onStatusChanged: (value) async {
-                                if (value != null &&
-                                    value !=
-                                        orderController.orderInfo['status']) {
-                                  // Show confirmation for important status changes
-                                  if (value == 'Delivered') {
-                                    final confirmed = await showDialog<bool>(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: Text('Confirm Status Change'),
-                                        content: Text(
-                                            'Are you sure you want to change the order status to "$value"?'),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, false),
-                                            child: const Text('Cancel'),
-                                          ),
-                                          ElevatedButton(
-                                            onPressed: () =>
-                                                Navigator.pop(context, true),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Colors.green,
-                                            ),
-                                            child: Text('Confirm'),
-                                          ),
-                                        ],
-                                      ),
-                                    );
+                SizedBox(height: isMobile ? 16 : 20),
 
-                                    if (confirmed != true) return;
-                                  }
-
-                                  try {
-                                    await orderController.updateOrderStatus(
-                                      orderId: widget.orderId,
-                                      newStatus: value,
-                                    );
-
-                                    // Send email notification to customer
-                                    if (orderController.userInfo.isNotEmpty) {
-                                      await _sendOrderStatusEmail(
-                                        customerEmail:
-                                            orderController.userInfo['email'] ??
-                                                orderController
-                                                    .userInfo['user_email'] ??
-                                                '',
-                                        customerName:
-                                            orderController.userInfo['name'] ??
-                                                orderController
-                                                    .userInfo['username'] ??
-                                                'Customer',
-                                        orderId: widget.orderId,
-                                        newStatus: value,
-                                        orderDate: DateFormat('MMMM dd, yyyy')
-                                            .format((orderController
-                                                        .orderInfo['date']
-                                                    as Timestamp)
-                                                .toDate()),
-                                        totalAmount: orderController
-                                            .orderInfo['total']
-                                            .toString(),
-                                      );
-                                    }
-
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'Order status updated to $value and customer notified'),
-                                        backgroundColor: Colors.green,
-                                        duration: const Duration(seconds: 2),
-                                      ),
-                                    );
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content:
-                                            Text('Error updating status: $e'),
-                                        backgroundColor: Colors.red,
-                                        duration: const Duration(seconds: 3),
-                                      ),
-                                    );
-                                  }
-                                }
-                              },
-                              total:
-                                  orderController.orderInfo['total'].toString(),
+                // Responsive Layout
+                isMobile
+                    ? Column(
+                        children: [
+                          // Customer info first on mobile
+                          customerInfoCard(
+                            avatarUrl: 'assets/no_profile.webp',
+                            name: orderController.userInfo['name'] ?? '',
+                            email: orderController.userInfo['email'] ?? '',
+                            contactNumber:
+                                orderController.userInfo['phone_number'] ?? '',
+                            address:
+                                '${orderController.userInfo['address']}, ${orderController.userInfo['town_city']}, ${orderController.userInfo['postcode']}',
+                            isMobile: isMobile,
+                          ),
+                          SizedBox(height: 16),
+                          orderInfoCard(
+                            date: DateFormat('MMMM dd, yyyy').format(
+                                (orderController.orderInfo['date'] as Timestamp)
+                                    .toDate()),
+                            items: int.parse(orderController
+                                .orderInfo['total_items']
+                                .toString()),
+                            status: _getValidStatus(
+                                orderController.orderInfo['status'] ?? ''),
+                            statusOptions: [
+                              'Pending',
+                              'Processing',
+                              'Out for Delivery',
+                              'Delivered',
+                            ],
+                            onStatusChanged: (value) =>
+                                _handleStatusChange(value, context),
+                            total:
+                                orderController.orderInfo['total'].toString(),
+                            isMobile: isMobile,
+                            isTablet: isTablet,
+                          ),
+                          SizedBox(height: 16),
+                          itemsSummaryCard(
+                            items: orderController.orderInfo['products']
+                                .map((product) => {
+                                      'image': product['image'] ?? '',
+                                      'name': product['name'] ?? '',
+                                      'price': product['price'].toString()
+                                    })
+                                .toList(),
+                            subtotal: orderController.orderInfo['sub_total']
+                                .toString(),
+                            deliveryFee: orderController
+                                .orderInfo['delivery_fee']
+                                .toString(),
+                            total:
+                                orderController.orderInfo['total'].toString(),
+                            isMobile: isMobile,
+                            isTablet: isTablet,
+                          ),
+                          SizedBox(height: 16),
+                          transactionInfoCard(
+                            iconAsset: 'assets/image_3.png',
+                            label:
+                                orderController.orderInfo['mode_of_payment'] ??
+                                    '',
+                            isMobile: isMobile,
+                          )
+                        ],
+                      )
+                    : Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                              flex: 3,
+                              child: Column(
+                                children: [
+                                  orderInfoCard(
+                                    date: DateFormat('MMMM dd, yyyy').format(
+                                        (orderController.orderInfo['date']
+                                                as Timestamp)
+                                            .toDate()),
+                                    items: int.parse(orderController
+                                        .orderInfo['total_items']
+                                        .toString()),
+                                    status: _getValidStatus(
+                                        orderController.orderInfo['status'] ??
+                                            ''),
+                                    statusOptions: [
+                                      'Pending',
+                                      'Processing',
+                                      'Out for Delivery',
+                                      'Delivered',
+                                    ],
+                                    onStatusChanged: (value) =>
+                                        _handleStatusChange(value, context),
+                                    total: orderController.orderInfo['total']
+                                        .toString(),
+                                    isMobile: isMobile,
+                                    isTablet: isTablet,
+                                  ),
+                                  SizedBox(height: isTablet ? 16 : 20),
+                                  itemsSummaryCard(
+                                    items: orderController.orderInfo['products']
+                                        .map((product) => {
+                                              'image': product['image'] ?? '',
+                                              'name': product['name'] ?? '',
+                                              'price':
+                                                  product['price'].toString()
+                                            })
+                                        .toList(),
+                                    subtotal: orderController
+                                        .orderInfo['sub_total']
+                                        .toString(),
+                                    deliveryFee: orderController
+                                        .orderInfo['delivery_fee']
+                                        .toString(),
+                                    total: orderController.orderInfo['total']
+                                        .toString(),
+                                    isMobile: isMobile,
+                                    isTablet: isTablet,
+                                  ),
+                                  SizedBox(height: isTablet ? 16 : 20),
+                                  transactionInfoCard(
+                                    iconAsset: 'assets/image_3.png',
+                                    label: orderController
+                                            .orderInfo['mode_of_payment'] ??
+                                        '',
+                                    isMobile: isMobile,
+                                  )
+                                ],
+                              )),
+                          SizedBox(width: isTablet ? 16 : 20),
+                          Expanded(
+                            flex: 1,
+                            child: customerInfoCard(
+                              avatarUrl: 'assets/no_profile.webp',
+                              name: orderController.userInfo['name'] ?? '',
+                              email: orderController.userInfo['email'] ?? '',
+                              contactNumber:
+                                  orderController.userInfo['phone_number'] ??
+                                      '',
+                              address:
+                                  '${orderController.userInfo['address']}, ${orderController.userInfo['town_city']}, ${orderController.userInfo['postcode']}',
+                              isMobile: isMobile,
                             ),
-                            const SizedBox(height: 20),
-                            itemsSummaryCard(
-                              items: orderController.orderInfo['products']
-                                  .map((product) => {
-                                        'image': product['image'] ?? '',
-                                        'name': product['name'] ?? '',
-                                        'price': product['price'].toString()
-                                      })
-                                  .toList(),
-                              subtotal: orderController.orderInfo['sub_total']
-                                  .toString(),
-                              deliveryFee: orderController
-                                  .orderInfo['delivery_fee']
-                                  .toString(),
-                              total:
-                                  orderController.orderInfo['total'].toString(),
-                            ),
-                            const SizedBox(height: 20),
-                            transactionInfoCard(
-                              iconAsset: 'assets/image_3.png',
-                              label: orderController
-                                      .orderInfo['mode_of_payment'] ??
-                                  '',
-                            )
-                          ],
-                        )),
-                    const SizedBox(width: 20),
-                    Expanded(
-                      flex: 1,
-                      child: customerInfoCard(
-                        avatarUrl: 'assets/no_profile.webp',
-                        name: orderController.userInfo['name'] ?? '',
-                        email: orderController.userInfo['email'] ?? '',
-                        contactNumber:
-                            orderController.userInfo['phone_number'] ?? '',
-                        address:
-                            '${orderController.userInfo['address']}, ${orderController.userInfo['town_city']}, ${orderController.userInfo['postcode']}',
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
+                SizedBox(height: 20),
               ],
             );
           }),
         ),
       ),
     );
+  }
+
+  Future<void> _handleStatusChange(String? value, BuildContext context) async {
+    if (value != null && value != orderController.orderInfo['status']) {
+      // Show confirmation for important status changes
+      if (value == 'Delivered') {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: Text('Confirm Status Change'),
+            content: Text(
+                'Are you sure you want to change the order status to "$value"?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                ),
+                child: Text('Confirm'),
+              ),
+            ],
+          ),
+        );
+
+        if (confirmed != true) return;
+      }
+
+      try {
+        await orderController.updateOrderStatus(
+          orderId: widget.orderId,
+          newStatus: value,
+        );
+
+        // Send email notification to customer
+        if (orderController.userInfo.isNotEmpty) {
+          await _sendOrderStatusEmail(
+            customerEmail: orderController.userInfo['email'] ??
+                orderController.userInfo['user_email'] ??
+                '',
+            customerName: orderController.userInfo['name'] ??
+                orderController.userInfo['username'] ??
+                'Customer',
+            orderId: widget.orderId,
+            newStatus: value,
+            orderDate: DateFormat('MMMM dd, yyyy').format(
+                (orderController.orderInfo['date'] as Timestamp).toDate()),
+            totalAmount: orderController.orderInfo['total'].toString(),
+          );
+        }
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content:
+                  Text('Order status updated to $value and customer notified'),
+              backgroundColor: Colors.green,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error updating status: $e'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      }
+    }
   }
 }
 
@@ -340,148 +427,218 @@ Widget orderInfoCard({
   required List<String> statusOptions,
   required void Function(String?) onStatusChanged,
   required String total,
+  bool isMobile = false,
+  bool isTablet = false,
 }) {
   return Container(
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(16),
       color: Colors.white,
     ),
-    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 32),
+    padding: EdgeInsets.symmetric(
+      vertical: isMobile ? 20 : (isTablet ? 20 : 24),
+      horizontal: isMobile ? 20 : (isTablet ? 24 : 32),
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Order Information',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: isMobile ? 16 : 18,
           ),
         ),
-        const SizedBox(height: 32),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Date
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Date', style: TextStyle(color: Colors.grey[600])),
-                const SizedBox(height: 8),
-                Text(date, style: const TextStyle(fontWeight: FontWeight.w500)),
-              ],
-            ),
-            // Items
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Items', style: TextStyle(color: Colors.grey[600])),
-                const SizedBox(height: 8),
-                Text('$items Items',
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-              ],
-            ),
-            // Status
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Status', style: TextStyle(color: Colors.grey[600])),
-                const SizedBox(height: 8),
-                Container(
-                  decoration: BoxDecoration(
-                    color: _getStatusColor(status).withOpacity(0.08),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: _getStatusColor(status).withOpacity(0.3),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: _getStatusColor(status).withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
+        SizedBox(height: isMobile ? 20 : 32),
+        isMobile
+            ? Column(
+                children: [
+                  _buildInfoItem('Date', date, isMobile),
+                  SizedBox(height: 16),
+                  _buildInfoItem('Items', '$items Items', isMobile),
+                  SizedBox(height: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Status',
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(status).withOpacity(0.08),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _getStatusColor(status).withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                        ),
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: status,
+                            isExpanded: true,
+                            dropdownColor: Colors.white,
+                            iconEnabledColor: _getStatusColor(status),
+                            style: TextStyle(
+                              color: _getStatusColor(status),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                            items: statusOptions.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                            onChanged: onStatusChanged,
+                          ),
+                        ),
                       ),
                     ],
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: status,
-                      dropdownColor: Colors.white,
-                      iconEnabledColor: _getStatusColor(status),
-                      iconSize: 20,
-                      style: TextStyle(
-                        color: _getStatusColor(status),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Total',
+                          style:
+                              TextStyle(color: Colors.grey[600], fontSize: 13)),
+                      Row(
+                        children: [
+                          Icon(FontAwesomeIcons.pesoSign, size: 14),
+                          Text(total,
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18)),
+                        ],
                       ),
-                      items: statusOptions.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 10,
-                                  height: 10,
-                                  decoration: BoxDecoration(
-                                    color: _getStatusColor(value),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: _getStatusColor(value)
-                                            .withOpacity(0.3),
-                                        blurRadius: 3,
-                                        offset: const Offset(0, 1),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  value,
-                                  style: TextStyle(
-                                    color: _getStatusColor(value),
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: onStatusChanged,
+                    ],
+                  ),
+                ],
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Date
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Date',
+                            style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: isTablet ? 12 : 13)),
+                        SizedBox(height: 8),
+                        Text(date,
+                            style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: isTablet ? 13 : 14)),
+                      ],
                     ),
                   ),
-                ),
-              ],
-            ),
-            // Total
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Total', style: TextStyle(color: Colors.grey[600])),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(
-                      FontAwesomeIcons.pesoSign,
-                      size: 14,
+                  // Items
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Items',
+                            style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: isTablet ? 12 : 13)),
+                        SizedBox(height: 8),
+                        Text('$items Items',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: isTablet ? 13 : 14)),
+                      ],
                     ),
-                    Text(total,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
-                  ],
-                ),
-                const SizedBox(width: 45),
-              ],
-            ),
-          ],
-        ),
+                  ),
+                  // Status
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Status',
+                            style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: isTablet ? 12 : 13)),
+                        SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: _getStatusColor(status).withOpacity(0.08),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _getStatusColor(status).withOpacity(0.3),
+                              width: 1.5,
+                            ),
+                          ),
+                          padding: EdgeInsets.symmetric(
+                              horizontal: isTablet ? 12 : 16, vertical: 8),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: status,
+                              dropdownColor: Colors.white,
+                              iconEnabledColor: _getStatusColor(status),
+                              iconSize: 18,
+                              style: TextStyle(
+                                color: _getStatusColor(status),
+                                fontWeight: FontWeight.w600,
+                                fontSize: isTablet ? 12 : 14,
+                              ),
+                              items: statusOptions.map((String value) {
+                                return DropdownMenuItem<String>(
+                                  value: value,
+                                  child: Text(value),
+                                );
+                              }).toList(),
+                              onChanged: onStatusChanged,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  // Total
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Total',
+                            style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: isTablet ? 12 : 13)),
+                        SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(FontAwesomeIcons.pesoSign,
+                                size: isTablet ? 12 : 14),
+                            Text(total,
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: isTablet ? 14 : 16)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
       ],
     ),
+  );
+}
+
+Widget _buildInfoItem(String label, String value, bool isMobile) {
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+      Text(value,
+          style: TextStyle(
+              fontWeight: FontWeight.w600, fontSize: isMobile ? 14 : 15)),
+    ],
   );
 }
 
@@ -491,83 +648,91 @@ Widget customerInfoCard({
   required String email,
   required String contactNumber,
   required String address,
+  bool isMobile = false,
 }) {
   return Container(
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
     ),
-    padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 24),
+    padding: EdgeInsets.symmetric(
+      vertical: isMobile ? 20 : 30,
+      horizontal: isMobile ? 20 : 24,
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Customer',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 16,
+            fontSize: isMobile ? 15 : 16,
           ),
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: isMobile ? 12 : 16),
         Row(
           children: [
             CircleAvatar(
-              radius: 28,
+              radius: isMobile ? 24 : 28,
               backgroundImage: AssetImage(avatarUrl),
             ),
-            const SizedBox(width: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
+            SizedBox(width: isMobile ? 12 : 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: isMobile ? 14 : 15,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  email,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 13,
+                  SizedBox(height: 4),
+                  Text(
+                    email,
+                    style: TextStyle(
+                      color: Colors.grey,
+                      fontSize: isMobile ? 12 : 13,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 28),
-        const Text(
+        SizedBox(height: isMobile ? 20 : 28),
+        Text(
           'Contact Number',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 15,
+            fontSize: isMobile ? 14 : 15,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           contactNumber,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.grey,
-            fontSize: 14,
+            fontSize: isMobile ? 13 : 14,
           ),
         ),
-        const SizedBox(height: 24),
-        const Text(
+        SizedBox(height: isMobile ? 20 : 24),
+        Text(
           'Delivery Address',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 15,
+            fontSize: isMobile ? 14 : 15,
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(height: 8),
         Text(
           address,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.grey,
-            fontSize: 14,
+            fontSize: isMobile ? 13 : 14,
           ),
         ),
       ],
@@ -576,113 +741,132 @@ Widget customerInfoCard({
 }
 
 Widget itemsSummaryCard({
-  required List items, // [{image, name, price}]
+  required List items,
   required String subtotal,
   required String deliveryFee,
   required String total,
+  bool isMobile = false,
+  bool isTablet = false,
 }) {
   return Container(
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
     ),
-    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 32),
+    padding: EdgeInsets.symmetric(
+      vertical: isMobile ? 20 : (isTablet ? 20 : 24),
+      horizontal: isMobile ? 20 : (isTablet ? 24 : 32),
+    ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Items',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: isMobile ? 16 : 18,
           ),
         ),
-        const SizedBox(height: 24),
+        SizedBox(height: isMobile ? 16 : 24),
         ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 16),
+              padding: EdgeInsets.only(bottom: isMobile ? 12 : 16),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 28,
-                    backgroundImage: MemoryImage(base64Decode(item['image']!)),
-                    backgroundColor: Colors.white,
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.memory(
+                      base64Decode(item['image']!),
+                      width: isMobile ? 50 : (isTablet ? 50 : 56),
+                      height: isMobile ? 50 : (isTablet ? 50 : 56),
+                      fit: BoxFit.cover,
+                      gaplessPlayback: true,
+                    ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: isMobile ? 12 : 16),
                   Expanded(
                     child: Text(
                       item['name']!,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w500, fontSize: 15),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: isMobile ? 13 : (isTablet ? 14 : 15)),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Row(
                     children: [
                       Icon(
                         FontAwesomeIcons.pesoSign,
-                        size: 14,
+                        size: isMobile ? 12 : 14,
                       ),
                       Text(
                         item['price']!,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: isMobile ? 14 : (isTablet ? 14 : 16)),
                       ),
                     ],
                   ),
-                  const SizedBox(width: 16),
                 ],
               ),
             )),
-        const SizedBox(height: 16),
+        SizedBox(height: isMobile ? 12 : 16),
         Container(
           decoration: BoxDecoration(
             color: const Color(0xFFF7F8FA),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          padding: EdgeInsets.all(isMobile ? 16 : 20),
           child: Column(
             children: [
               Row(
                 children: [
-                  const Expanded(
-                    child: Text('Subtotal', style: TextStyle(fontSize: 15)),
+                  Expanded(
+                    child: Text('Subtotal',
+                        style: TextStyle(fontSize: isMobile ? 13 : 15)),
                   ),
                   Row(
                     children: [
-                      Icon(FontAwesomeIcons.pesoSign, size: 14),
-                      Text(subtotal, style: const TextStyle(fontSize: 15)),
+                      Icon(FontAwesomeIcons.pesoSign, size: isMobile ? 12 : 14),
+                      Text(subtotal,
+                          style: TextStyle(fontSize: isMobile ? 13 : 15)),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               Row(
                 children: [
-                  const Expanded(
-                    child: Text('Delivery Fee', style: TextStyle(fontSize: 15)),
+                  Expanded(
+                    child: Text('Delivery Fee',
+                        style: TextStyle(fontSize: isMobile ? 13 : 15)),
                   ),
                   Row(
                     children: [
-                      Icon(FontAwesomeIcons.pesoSign, size: 14),
-                      Text(deliveryFee, style: const TextStyle(fontSize: 15)),
+                      Icon(FontAwesomeIcons.pesoSign, size: isMobile ? 12 : 14),
+                      Text(deliveryFee,
+                          style: TextStyle(fontSize: isMobile ? 13 : 15)),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              const Divider(),
+              SizedBox(height: 8),
+              Divider(),
               Row(
                 children: [
-                  const Expanded(
+                  Expanded(
                     child: Text('Total',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16)),
+                            fontWeight: FontWeight.bold,
+                            fontSize: isMobile ? 15 : 16)),
                   ),
                   Row(
                     children: [
-                      Icon(FontAwesomeIcons.pesoSign, size: 14),
+                      Icon(FontAwesomeIcons.pesoSign, size: isMobile ? 12 : 14),
                       Text(total,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: isMobile ? 15 : 16)),
                     ],
                   ),
                 ],
@@ -698,41 +882,49 @@ Widget itemsSummaryCard({
 Widget transactionInfoCard({
   required String iconAsset,
   required String label,
+  bool isMobile = false,
 }) {
   return Container(
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(16),
     ),
-    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 32),
+    padding: EdgeInsets.symmetric(
+      vertical: isMobile ? 20 : 24,
+      horizontal: isMobile ? 20 : 32,
+    ),
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const Text(
+        Text(
           'Transactions',
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            fontSize: 18,
+            fontSize: isMobile ? 16 : 18,
           ),
         ),
-        const SizedBox(width: 40),
+        SizedBox(width: isMobile ? 20 : 40),
         Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(8),
           ),
-          padding: const EdgeInsets.all(8),
+          padding: EdgeInsets.all(isMobile ? 6 : 8),
           child: Image.asset(
             iconAsset,
-            width: 32,
-            height: 32,
+            width: isMobile ? 24 : 32,
+            height: isMobile ? 24 : 32,
             fit: BoxFit.contain,
           ),
         ),
-        const SizedBox(width: 16),
-        Text(
-          label,
-          style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+        SizedBox(width: isMobile ? 12 : 16),
+        Expanded(
+          child: Text(
+            label,
+            style: TextStyle(
+                fontWeight: FontWeight.w500, fontSize: isMobile ? 14 : 16),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
       ],
     ),

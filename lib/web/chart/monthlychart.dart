@@ -10,8 +10,15 @@ class TotalIncomeChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1024;
+
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : (isTablet ? 24 : 40),
+        vertical: isMobile ? 20 : 30,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -26,59 +33,117 @@ class TotalIncomeChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Total Income',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2c3e50),
-                ),
-              ),
-              Obx(() => Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.grey.shade300, width: 1),
-                    ),
-                    child: DropdownButton<String>(
-                      borderRadius: BorderRadius.circular(10),
-                      value: incomeController.selectedTimeRange.value,
-                      items: ["All Time", "This Year", "This Month"]
-                          .map((value) => DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(
-                                  value,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    fontSize: 14,
-                                  ),
-                                ),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          incomeController.changeTimeRange(value);
-                        }
-                      },
-                      icon: const Icon(Icons.keyboard_arrow_down, size: 20),
-                      underline: const SizedBox(),
-                      style: const TextStyle(
+          isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Total Income',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                         color: Color(0xFF2c3e50),
-                        fontSize: 14,
                       ),
-                      dropdownColor: Colors.white,
                     ),
-                  )),
-            ],
-          ),
-          const SizedBox(height: 30),
+                    const SizedBox(height: 12),
+                    Obx(() => Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: Colors.grey.shade300, width: 1),
+                          ),
+                          child: DropdownButton<String>(
+                            isExpanded: true,
+                            borderRadius: BorderRadius.circular(10),
+                            value: incomeController.selectedTimeRange.value,
+                            items: ["All Time", "This Year", "This Month"]
+                                .map((value) => DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(
+                                        value,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                incomeController.changeTimeRange(value);
+                              }
+                            },
+                            icon:
+                                const Icon(Icons.keyboard_arrow_down, size: 20),
+                            underline: const SizedBox(),
+                            style: const TextStyle(
+                              color: Color(0xFF2c3e50),
+                              fontSize: 14,
+                            ),
+                            dropdownColor: Colors.white,
+                          ),
+                        )),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Total Income',
+                      style: TextStyle(
+                        fontSize: isTablet ? 18 : 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2c3e50),
+                      ),
+                    ),
+                    Obx(() => Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: Colors.grey.shade300, width: 1),
+                          ),
+                          child: DropdownButton<String>(
+                            borderRadius: BorderRadius.circular(10),
+                            value: incomeController.selectedTimeRange.value,
+                            items: ["All Time", "This Year", "This Month"]
+                                .map((value) => DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(
+                                        value,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ))
+                                .toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                incomeController.changeTimeRange(value);
+                              }
+                            },
+                            icon:
+                                const Icon(Icons.keyboard_arrow_down, size: 20),
+                            underline: const SizedBox(),
+                            style: const TextStyle(
+                              color: Color(0xFF2c3e50),
+                              fontSize: 14,
+                            ),
+                            dropdownColor: Colors.white,
+                          ),
+                        )),
+                  ],
+                ),
+          SizedBox(height: isMobile ? 20 : 30),
           SizedBox(
-            height: 380,
+            height: isMobile ? 280 : (isTablet ? 320 : 380),
             child: Obx(() {
               // Show loading indicator while fetching data
               if (incomeController.isLoading.value) {
@@ -111,14 +176,14 @@ class TotalIncomeChart extends StatelessWidget {
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 50,
+                        reservedSize: isMobile ? 35 : (isTablet ? 40 : 50),
                         interval: interval.toDouble(),
                         getTitlesWidget: (value, meta) {
                           if (value == 0) {
-                            return const Text(
+                            return Text(
                               '0',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: isMobile ? 10 : 12,
                                 color: Color(0xFF6c757d),
                                 fontWeight: FontWeight.w500,
                               ),
@@ -128,8 +193,8 @@ class TotalIncomeChart extends StatelessWidget {
                             value >= 1000
                                 ? '${(value / 1000).toStringAsFixed(0)}K'
                                 : value.toInt().toString(),
-                            style: const TextStyle(
-                              fontSize: 12,
+                            style: TextStyle(
+                              fontSize: isMobile ? 10 : 12,
                               color: Color(0xFF6c757d),
                               fontWeight: FontWeight.w500,
                             ),
@@ -140,7 +205,7 @@ class TotalIncomeChart extends StatelessWidget {
                     bottomTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 30,
+                        reservedSize: isMobile ? 24 : 30,
                         getTitlesWidget: (value, meta) {
                           const months = [
                             'Jan',
@@ -159,11 +224,11 @@ class TotalIncomeChart extends StatelessWidget {
                           if (value.toInt() >= 0 &&
                               value.toInt() < months.length) {
                             return Padding(
-                              padding: const EdgeInsets.only(top: 8),
+                              padding: EdgeInsets.only(top: isMobile ? 4 : 8),
                               child: Text(
                                 months[value.toInt()],
-                                style: const TextStyle(
-                                  fontSize: 13,
+                                style: TextStyle(
+                                  fontSize: isMobile ? 9 : 13,
                                   color: Color(0xFF6c757d),
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -186,8 +251,8 @@ class TotalIncomeChart extends StatelessWidget {
                       );
                     },
                   ),
-                  barGroups: _buildBarGroups(
-                      incomeController.monthlyIncome, maxIncome),
+                  barGroups: _buildBarGroups(incomeController.monthlyIncome,
+                      maxIncome, isMobile, isTablet),
                   barTouchData: BarTouchData(
                     enabled: true,
                     touchTooltipData: BarTouchTooltipData(
@@ -214,17 +279,17 @@ class TotalIncomeChart extends StatelessWidget {
                         ];
                         return BarTooltipItem(
                           '${months[group.x.toInt()]}\n',
-                          const TextStyle(
+                          TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
-                            fontSize: 14,
+                            fontSize: isMobile ? 12 : 14,
                           ),
                           children: [
                             TextSpan(
                               text: '₱${rod.toY.toStringAsFixed(2)}',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 12,
+                                fontSize: isMobile ? 10 : 12,
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -242,8 +307,8 @@ class TotalIncomeChart extends StatelessWidget {
     );
   }
 
-  List<BarChartGroupData> _buildBarGroups(
-      List<double> monthlyIncome, double maxIncome) {
+  List<BarChartGroupData> _buildBarGroups(List<double> monthlyIncome,
+      double maxIncome, bool isMobile, bool isTablet) {
     return List.generate(monthlyIncome.length, (index) {
       final income = monthlyIncome[index];
       final isHighest = income == maxIncome && maxIncome > 0;
@@ -266,10 +331,10 @@ class TotalIncomeChart extends StatelessWidget {
               begin: Alignment.bottomCenter,
               end: Alignment.topCenter,
             ),
-            width: 28,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(6),
-              topRight: Radius.circular(6),
+            width: isMobile ? 12 : (isTablet ? 18 : 28),
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(isMobile ? 3 : 6),
+              topRight: Radius.circular(isMobile ? 3 : 6),
             ),
             backDrawRodData: BackgroundBarChartRodData(
               show: true,

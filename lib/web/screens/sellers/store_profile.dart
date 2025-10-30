@@ -19,10 +19,17 @@ class _StoreProfileState extends State<StoreProfile> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1024;
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: 100, vertical: 20),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 16 : (isTablet ? 24 : 100),
+          vertical: isMobile ? 16 : 20,
+        ),
         child: Obx(() {
           _controller.fetchSellersStatus(widget.id);
 
@@ -43,12 +50,17 @@ class _StoreProfileState extends State<StoreProfile> {
                                     role: 'admin',
                                     initialIndex: 2,
                                   ))),
-                      icon: Icon(Icons.arrow_back_ios_new_outlined)),
-                  Text(
-                    "Store Profile",
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
+                      icon: Icon(Icons.arrow_back_ios_new_outlined,
+                          size: isMobile ? 18 : 24)),
+                  SizedBox(width: isMobile ? 4 : 0),
+                  Expanded(
+                    child: Text(
+                      "Store Profile",
+                      style: TextStyle(
+                        fontSize: isMobile ? 20 : (isTablet ? 26 : 30),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -57,155 +69,302 @@ class _StoreProfileState extends State<StoreProfile> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(isMobile ? 12 : 15),
                   border: Border.all(width: 1, color: Colors.grey.shade300),
+                  boxShadow: isMobile
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          )
+                        ]
+                      : null,
                 ),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : (isTablet ? 24 : 40),
+                    vertical: isMobile ? 20 : 30,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _profileRow('Store Name', seller['storeName']),
-                      _profileRow('Owner Name', seller['ownerName']),
-                      _profileRow('Email / Contact', seller['ownersEmail']),
+                      if (isMobile)
+                        Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: Text(
+                            'Store Information',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      _profileRow('Store Name', seller['storeName'], isMobile),
+                      if (isMobile) Divider(height: 20),
+                      _profileRow('Owner Name', seller['ownerName'], isMobile),
+                      if (isMobile) Divider(height: 20),
+                      _profileRow(
+                          'Email / Contact', seller['ownersEmail'], isMobile),
+                      if (isMobile) Divider(height: 20),
                       _profileRow('Business Description',
-                          seller['businessDescription']),
+                          seller['businessDescription'], isMobile),
+                      if (isMobile) Divider(height: 20),
                       _profileRow(
                         'Status',
                         _statusSwitch(seller['status']),
+                        isMobile,
                       ),
+                      if (isMobile) Divider(height: 20),
                       _profileRow(
                         'Uploaded Document',
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
-                            elevation: 0,
-                            side: BorderSide(color: Colors.grey.shade300),
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(6),
+                        SizedBox(
+                          width: isMobile ? double.infinity : null,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              elevation: 0,
+                              side: BorderSide(color: Colors.grey.shade300),
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: isMobile ? 12 : 8),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
                             ),
+                            icon: Icon(Icons.insert_drive_file_outlined,
+                                size: 18),
+                            label: Text('View ID/Permit',
+                                style: TextStyle(fontSize: 14)),
+                            onPressed: () {
+                              launchUrl(Uri.parse(seller['file']));
+                            },
                           ),
-                          icon:
-                              Icon(Icons.insert_drive_file_outlined, size: 18),
-                          label: Text('View ID/Permit'),
-                          onPressed: () {
-                            launchUrl(Uri.parse(seller['file']));
-                          },
                         ),
+                        isMobile,
                       ),
+                      if (isMobile) Divider(height: 20),
                       _profileRow(
                           'Date Applied',
                           seller['updatedAt'] != null
                               ? DateFormat('MMMM d, yyyy')
                                   .format(seller['updatedAt'].toDate())
-                              : 'N/A'),
+                              : 'N/A',
+                          isMobile),
+                      if (isMobile) Divider(height: 20),
                       _profileRow(
                         'Store Logo',
                         _buildStoreLogo(seller['storeLogoBase64']),
+                        isMobile,
                       ),
                     ],
                   ),
                 ),
               ),
-              SizedBox(height: 30),
+              SizedBox(height: isMobile ? 20 : 30),
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
+                  borderRadius: BorderRadius.circular(isMobile ? 12 : 15),
                   border: Border.all(width: 1, color: Colors.grey.shade300),
+                  boxShadow: isMobile
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          )
+                        ]
+                      : null,
                 ),
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 30),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isMobile ? 16 : (isTablet ? 24 : 30),
+                    vertical: isMobile ? 20 : 30,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.settings, color: Colors.grey, size: 22),
-                          SizedBox(width: 8),
+                          Icon(Icons.settings,
+                              color: Colors.grey.shade700,
+                              size: isMobile ? 20 : 22),
+                          SizedBox(width: isMobile ? 8 : 8),
                           Text('Admin Controls',
                               style: TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 18)),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: isMobile ? 16 : 18)),
                         ],
                       ),
-                      SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                foregroundColor: Colors.white,
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
+                      SizedBox(height: isMobile ? 16 : 20),
+                      isMobile
+                          ? Column(
+                              children: [
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      textStyle: TextStyle(fontSize: 13),
+                                    ),
+                                    icon: Icon(Icons.check, size: 16),
+                                    label: Text('Approved'),
+                                    onPressed: seller['status'].toLowerCase() ==
+                                                'pending' ||
+                                            seller['status'].toLowerCase() ==
+                                                'rejected'
+                                        ? () async {
+                                            await _controller
+                                                .updateSellerStatus(
+                                                    widget.id, 'Approved', '');
+                                          }
+                                        : null,
+                                  ),
                                 ),
-                                textStyle: TextStyle(fontSize: 15),
-                              ),
-                              icon: Icon(Icons.check, size: 18),
-                              label: Text('Approved'),
-                              onPressed:
-                                  seller['status'].toLowerCase() == 'pending' ||
-                                          seller['status'].toLowerCase() ==
-                                              'rejected'
-                                      ? () async {
-                                          await _controller.updateSellerStatus(
-                                              widget.id, 'Approved', '');
-                                        }
-                                      : null, // Disabled
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red.shade100,
-                                foregroundColor: Colors.red,
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
+                                SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red.shade100,
+                                      foregroundColor: Colors.red,
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      textStyle: TextStyle(fontSize: 13),
+                                    ),
+                                    icon: Icon(Icons.close, size: 16),
+                                    label: Text('Reject Application'),
+                                    onPressed: seller['status'].toLowerCase() ==
+                                                'pending' ||
+                                            seller['status'].toLowerCase() ==
+                                                'approved'
+                                        ? () async {
+                                            _showRejectDialog(
+                                                context, widget.id);
+                                          }
+                                        : null,
+                                  ),
                                 ),
-                                textStyle: TextStyle(fontSize: 15),
-                              ),
-                              icon: Icon(Icons.close, size: 18),
-                              label: Text('Reject Application'),
-                              onPressed:
-                                  seller['status'].toLowerCase() == 'pending' ||
-                                          seller['status'].toLowerCase() ==
-                                              'approved'
-                                      ? () async {
-                                          _showRejectDialog(context, widget.id);
-                                        }
-                                      : null,
-                            ),
-                          ),
-                          SizedBox(width: 16),
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                padding: EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(6),
+                                SizedBox(height: 12),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      side: BorderSide(
+                                          color: Colors.red.shade200),
+                                      textStyle: TextStyle(fontSize: 13),
+                                    ),
+                                    icon: Icon(Icons.delete_outline,
+                                        size: 16, color: Colors.red),
+                                    label: Text('Delete Seller',
+                                        style: TextStyle(color: Colors.red)),
+                                    onPressed: () {
+                                      _showDeleteDialog(context, widget.id);
+                                    },
+                                  ),
                                 ),
-                                side: BorderSide(color: Colors.red.shade200),
-                                textStyle: TextStyle(fontSize: 15),
-                              ),
-                              icon: Icon(Icons.delete_outline,
-                                  size: 18, color: Colors.red),
-                              label: Text('Delete Seller',
-                                  style: TextStyle(color: Colors.red)),
-                              onPressed: () {
-                                _showDeleteDialog(context, widget.id);
-                              },
+                              ],
+                            )
+                          : Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.green,
+                                      foregroundColor: Colors.white,
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      textStyle: TextStyle(
+                                          fontSize: isTablet ? 13 : 15),
+                                    ),
+                                    icon: Icon(Icons.check,
+                                        size: isTablet ? 16 : 18),
+                                    label: Text('Approved'),
+                                    onPressed: seller['status'].toLowerCase() ==
+                                                'pending' ||
+                                            seller['status'].toLowerCase() ==
+                                                'rejected'
+                                        ? () async {
+                                            await _controller
+                                                .updateSellerStatus(
+                                                    widget.id, 'Approved', '');
+                                          }
+                                        : null,
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: ElevatedButton.icon(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.red.shade100,
+                                      foregroundColor: Colors.red,
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      textStyle: TextStyle(
+                                          fontSize: isTablet ? 13 : 15),
+                                    ),
+                                    icon: Icon(Icons.close,
+                                        size: isTablet ? 16 : 18),
+                                    label: Text('Reject Application'),
+                                    onPressed: seller['status'].toLowerCase() ==
+                                                'pending' ||
+                                            seller['status'].toLowerCase() ==
+                                                'approved'
+                                        ? () async {
+                                            _showRejectDialog(
+                                                context, widget.id);
+                                          }
+                                        : null,
+                                  ),
+                                ),
+                                SizedBox(width: 16),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      padding:
+                                          EdgeInsets.symmetric(vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      side: BorderSide(
+                                          color: Colors.red.shade200),
+                                      textStyle: TextStyle(
+                                          fontSize: isTablet ? 13 : 15),
+                                    ),
+                                    icon: Icon(Icons.delete_outline,
+                                        size: isTablet ? 16 : 18,
+                                        color: Colors.red),
+                                    label: Text('Delete Seller',
+                                        style: TextStyle(color: Colors.red)),
+                                    onPressed: () {
+                                      _showDeleteDialog(context, widget.id);
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
@@ -529,7 +688,7 @@ class _StoreProfileState extends State<StoreProfile> {
     switch (status.toLowerCase()) {
       case 'approved':
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: Colors.green[50],
             borderRadius: BorderRadius.circular(20),
@@ -537,15 +696,19 @@ class _StoreProfileState extends State<StoreProfile> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.check, color: Colors.green, size: 18),
+              Icon(Icons.check, color: Colors.green, size: 16),
               SizedBox(width: 6),
-              Text(status, style: TextStyle(color: Colors.black)),
+              Text(status,
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
         );
       case 'rejected':
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: Colors.red[50],
             borderRadius: BorderRadius.circular(20),
@@ -553,25 +716,33 @@ class _StoreProfileState extends State<StoreProfile> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.close, color: Colors.red, size: 18),
+              Icon(Icons.close, color: Colors.red, size: 16),
               SizedBox(width: 6),
-              Text(status, style: TextStyle(color: Colors.black)),
+              Text(status,
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
         );
       default:
         return Container(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.yellow[50],
+            color: Colors.orange[50],
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.pending_actions, color: Colors.yellow, size: 18),
+              Icon(Icons.pending_actions, color: Colors.orange, size: 16),
               SizedBox(width: 6),
-              Text(status, style: TextStyle(color: Colors.black)),
+              Text(status,
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500)),
             ],
           ),
         );
@@ -623,29 +794,50 @@ class _StoreProfileState extends State<StoreProfile> {
     }
   }
 
-  Widget _profileRow(String label, dynamic value) {
+  Widget _profileRow(String label, dynamic value, bool isMobile) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 180,
-            child: Text(
-              label,
-              style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
-            ),
-          ),
-          SizedBox(
-            child: value is Widget
-                ? value
-                : Text(
-                    value,
-                    style: TextStyle(fontSize: 16),
+      padding: EdgeInsets.symmetric(vertical: isMobile ? 8 : 10),
+      child: isMobile
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                    color: Colors.grey.shade700,
                   ),
-          ),
-        ],
-      ),
+                ),
+                SizedBox(height: 6),
+                value is Widget
+                    ? value
+                    : Text(
+                        value,
+                        style: TextStyle(fontSize: 14),
+                      ),
+              ],
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 180,
+                  child: Text(
+                    label,
+                    style: TextStyle(fontWeight: FontWeight.w500, fontSize: 16),
+                  ),
+                ),
+                Expanded(
+                  child: value is Widget
+                      ? value
+                      : Text(
+                          value,
+                          style: TextStyle(fontSize: 16),
+                        ),
+                ),
+              ],
+            ),
     );
   }
 }

@@ -12,6 +12,10 @@ class MyLogin extends StatefulWidget {
 class _MyLoginState extends State<MyLogin> {
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 600;
+    final isTablet = screenWidth >= 600 && screenWidth < 1024;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
       body: Center(
@@ -27,51 +31,59 @@ class _MyLoginState extends State<MyLogin> {
               ),
             );
           },
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 40.0, vertical: 48.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24.0),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
-              width: 520,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const LogoWidget(),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'Welcome Back Admin',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2C3E50),
-                      letterSpacing: 0.5,
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: EdgeInsets.all(isMobile ? 16.0 : 24.0),
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isMobile ? 20.0 : (isTablet ? 30.0 : 40.0),
+                  vertical: isMobile ? 32.0 : 48.0,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(isMobile ? 16.0 : 24.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.08),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Discover Limitless Choices and Unmatched Convenience',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey[600],
-                      letterSpacing: 0.2,
+                  ],
+                ),
+                constraints: BoxConstraints(
+                  maxWidth:
+                      isMobile ? screenWidth * 0.95 : (isTablet ? 480 : 520),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    LogoWidget(isMobile: isMobile),
+                    SizedBox(height: isMobile ? 24 : 32),
+                    Text(
+                      'Welcome Back Admin',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isMobile ? 22 : (isTablet ? 24 : 28),
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2C3E50),
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 48),
-                  const LoginForm(),
-                ],
+                    SizedBox(height: isMobile ? 8 : 12),
+                    Text(
+                      'Discover Limitless Choices and Unmatched Convenience',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: isMobile ? 13 : (isTablet ? 14 : 16),
+                        color: Colors.grey[600],
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    SizedBox(height: isMobile ? 32 : 48),
+                    const LoginForm(),
+                  ],
+                ),
               ),
             ),
           ),
@@ -82,19 +94,20 @@ class _MyLoginState extends State<MyLogin> {
 }
 
 class LogoWidget extends StatelessWidget {
-  const LogoWidget({super.key});
+  final bool isMobile;
+  const LogoWidget({super.key, this.isMobile = false});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(isMobile ? 12 : 16),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.blue.withOpacity(0.1),
       ),
       child: Image.asset(
         'assets/image_3.png',
-        height: 80,
+        height: isMobile ? 60 : 80,
       ),
     );
   }

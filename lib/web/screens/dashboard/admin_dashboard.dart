@@ -12,86 +12,140 @@ class AdminDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1024;
+
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 100, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : (isTablet ? 40 : 100),
+        vertical: isMobile ? 16 : 20,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             "Admin Dashboard",
             style: TextStyle(
-              fontSize: 30,
+              fontSize: isMobile ? 24 : (isTablet ? 26 : 30),
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: isMobile ? 16 : 20),
           Container(
             decoration: BoxDecoration(
                 color: Colors.grey[100],
                 borderRadius: BorderRadiusDirectional.circular(15),
                 border: Border.all(width: 1, color: Colors.grey)),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Obx(() {
                 _controller.fetchTotalUsers();
                 _controller.fetchTotalSellers();
 
-                return Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 100, left: 10),
-                      child: Column(
+                return isMobile
+                    ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Performance',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Performance',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Overview',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            'Overview',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          InfoCard(
+                            icon: Icons.person_outline_rounded,
+                            title: "Total Users",
+                            value: "${_controller.totalUsers}",
+                            isMobile: isMobile,
+                          ),
+                          SizedBox(height: 16),
+                          InfoCard(
+                            icon: Icons.group_outlined,
+                            title: "Total Sellers",
+                            value: "${_controller.totalSellers}",
+                            isMobile: isMobile,
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(
+                                right: isTablet ? 40 : 100, left: 10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Performance',
+                                  style: TextStyle(
+                                    fontSize: isTablet ? 18 : 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Overview',
+                                  style: TextStyle(
+                                    fontSize: isTablet ? 18 : 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: InfoCard(
+                              icon: Icons.person_outline_rounded,
+                              title: "Total Users",
+                              value: "${_controller.totalUsers}",
+                              isMobile: isMobile,
+                            ),
+                          ),
+                          SizedBox(width: isTablet ? 16 : 20),
+                          Expanded(
+                            child: InfoCard(
+                              icon: Icons.group_outlined,
+                              title: "Total Sellers",
+                              value: "${_controller.totalSellers}",
+                              isMobile: isMobile,
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    Expanded(
-                      child: InfoCard(
-                        icon: Icons.person_outline_rounded,
-                        title: "Total Users",
-                        value: "${_controller.totalUsers}",
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    Expanded(
-                      child: InfoCard(
-                        icon: Icons.group_outlined,
-                        title: "Total Sellers",
-                        value: "${_controller.totalSellers}",
-                      ),
-                    ),
-                  ],
-                );
+                      );
               }),
             ),
           ),
-          SizedBox(height: 20),
-          _buildChart(),
+          SizedBox(height: isMobile ? 16 : 20),
+          _buildChart(isMobile, isTablet),
         ],
       ),
     );
   }
 
-  Widget _buildChart() {
+  Widget _buildChart(bool isMobile, bool isTablet) {
     return Obx(() {
       final monthlyCounts = _controller.monthlyUserCounts;
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 20),
+        padding: EdgeInsets.symmetric(
+          horizontal: isMobile ? 16 : (isTablet ? 40 : 100),
+          vertical: isMobile ? 16 : 20,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
@@ -106,16 +160,16 @@ class AdminDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Active Users',
               style: TextStyle(
-                fontSize: 24,
+                fontSize: isMobile ? 18 : (isTablet ? 20 : 24),
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: isMobile ? 16 : 20),
             SizedBox(
-              height: 300,
+              height: isMobile ? 250 : 300,
               child: BarChart(
                 BarChartData(
                   alignment: BarChartAlignment.spaceAround,
@@ -124,12 +178,12 @@ class AdminDashboard extends StatelessWidget {
                     leftTitles: AxisTitles(
                       sideTitles: SideTitles(
                         showTitles: true,
-                        reservedSize: 30,
+                        reservedSize: isMobile ? 25 : 30,
                         interval: 1,
                         getTitlesWidget: (value, meta) {
                           return Text(
                             value.toInt().toString(),
-                            style: const TextStyle(fontSize: 12),
+                            style: TextStyle(fontSize: isMobile ? 10 : 12),
                           );
                         },
                       ),
@@ -154,7 +208,7 @@ class AdminDashboard extends StatelessWidget {
                           ];
                           return Text(
                             months[value.toInt()],
-                            style: const TextStyle(fontSize: 12),
+                            style: TextStyle(fontSize: isMobile ? 9 : 12),
                           );
                         },
                       ),
@@ -169,7 +223,7 @@ class AdminDashboard extends StatelessWidget {
                           borderRadius: BorderRadius.zero,
                           toY: monthlyCounts[index].toDouble(),
                           color: const Color(0xFF3E6BE0),
-                          width: 60,
+                          width: isMobile ? 15 : (isTablet ? 30 : 60),
                         ),
                       ],
                     );
@@ -189,18 +243,20 @@ class InfoCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
+  final bool isMobile;
 
   const InfoCard({
     super.key,
     required this.title,
     required this.value,
     required this.icon,
+    this.isMobile = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -210,20 +266,22 @@ class InfoCard extends StatelessWidget {
         children: [
           Icon(
             icon,
-            size: 50,
+            size: isMobile ? 35 : 50,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isMobile ? 8 : 10),
           Text(title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
+                fontSize: isMobile ? 13 : 14,
               )),
-          const SizedBox(height: 10),
+          SizedBox(height: isMobile ? 8 : 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(value,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 45)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: isMobile ? 32 : 45)),
             ],
           ),
         ],

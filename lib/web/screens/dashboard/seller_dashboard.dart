@@ -66,57 +66,114 @@ class _SellerDashboardState extends State<SellerDashboard> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isMobile = screenWidth < 768;
+    final isTablet = screenWidth >= 768 && screenWidth < 1024;
+
     return SingleChildScrollView(
-      padding: EdgeInsets.symmetric(horizontal: 100, vertical: 20),
+      padding: EdgeInsets.symmetric(
+        horizontal: isMobile ? 16 : (isTablet ? 40 : 100),
+        vertical: isMobile ? 16 : 20,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "General Dashboard",
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: _isGeneratingPDF ? null : _generatePDF,
-                icon: _isGeneratingPDF
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+          isMobile
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "General Dashboard",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: _isGeneratingPDF ? null : _generatePDF,
+                        icon: _isGeneratingPDF
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : const Icon(Icons.picture_as_pdf, size: 20),
+                        label: Text(
+                          _isGeneratingPDF ? 'Generating...' : 'Export PDF',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      )
-                    : const Icon(Icons.picture_as_pdf, size: 20),
-                label: Text(
-                  _isGeneratingPDF ? 'Generating...' : 'Export PDF',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF3E6BE0),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 14,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "General Dashboard",
+                      style: TextStyle(
+                        fontSize: isTablet ? 26 : 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    ElevatedButton.icon(
+                      onPressed: _isGeneratingPDF ? null : _generatePDF,
+                      icon: _isGeneratingPDF
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(Icons.picture_as_pdf, size: 20),
+                      label: Text(
+                        _isGeneratingPDF ? 'Generating...' : 'Export PDF',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF3E6BE0),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 2,
+                      ),
+                    ),
+                  ],
                 ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3E6BE0),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 2,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 20),
+          SizedBox(height: isMobile ? 16 : 20),
           Container(
             decoration: BoxDecoration(
                 color: Colors.grey[100],
@@ -124,53 +181,99 @@ class _SellerDashboardState extends State<SellerDashboard> {
                 border:
                     Border.all(width: 1, color: Colors.grey.withOpacity(0.5))),
             child: Padding(
-              padding: const EdgeInsets.all(20),
+              padding: EdgeInsets.all(isMobile ? 16 : 20),
               child: Obx(() {
-                return Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 100, left: 10),
-                      child: Column(
+                return isMobile
+                    ? Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Performance',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Performance',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Overview',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            'Overview',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
+                          InfoCard(
+                            icon: Icons.bar_chart_outlined,
+                            title: "Total Revenue",
+                            value: "₱ ${_controller.totalRevenue}",
+                            isMobile: isMobile,
+                          ),
+                          SizedBox(height: 16),
+                          InfoCard(
+                            icon: Icons.shopping_cart_outlined,
+                            title: "Total Orders",
+                            value: "${_controller.totalOrders}",
+                            isMobile: isMobile,
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(
+                              right: isTablet ? 40 : 100,
+                              left: 10,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Performance',
+                                  style: TextStyle(
+                                    fontSize: isTablet ? 18 : 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  'Overview',
+                                  style: TextStyle(
+                                    fontSize: isTablet ? 18 : 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: InfoCard(
+                              icon: Icons.bar_chart_outlined,
+                              title: "Total Revenue",
+                              value: "₱ ${_controller.totalRevenue}",
+                              isMobile: isMobile,
+                            ),
+                          ),
+                          SizedBox(width: isTablet ? 16 : 20),
+                          Expanded(
+                            child: InfoCard(
+                              icon: Icons.shopping_cart_outlined,
+                              title: "Total Orders",
+                              value: "${_controller.totalOrders}",
+                              isMobile: isMobile,
                             ),
                           ),
                         ],
-                      ),
-                    ),
-                    Expanded(
-                      child: InfoCard(
-                        icon: Icons.bar_chart_outlined,
-                        title: "Total Revenue",
-                        value: "₱ ${_controller.totalRevenue}",
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    Expanded(
-                      child: InfoCard(
-                        icon: Icons.shopping_cart_outlined,
-                        title: "Total Orders",
-                        value: "${_controller.totalOrders}",
-                      ),
-                    ),
-                  ],
-                );
+                      );
               }),
             ),
           ),
-          SizedBox(height: 20),
+          SizedBox(height: isMobile ? 16 : 20),
           TotalIncomeChart(),
         ],
       ),
@@ -183,18 +286,20 @@ class InfoCard extends StatelessWidget {
   final String title;
   final String value;
   final IconData icon;
+  final bool isMobile;
 
   const InfoCard({
     super.key,
     required this.title,
     required this.value,
     required this.icon,
+    this.isMobile = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(isMobile ? 16 : 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
@@ -204,20 +309,25 @@ class InfoCard extends StatelessWidget {
         children: [
           Icon(
             icon,
-            size: 50,
+            size: isMobile ? 35 : 50,
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: isMobile ? 8 : 10),
           Text(title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.bold,
+                fontSize: isMobile ? 13 : 14,
               )),
-          const SizedBox(height: 10),
+          SizedBox(height: isMobile ? 8 : 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(value,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 45)),
+              Flexible(
+                child: Text(value,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: isMobile ? 28 : 45),
+                    overflow: TextOverflow.ellipsis),
+              ),
             ],
           ),
         ],

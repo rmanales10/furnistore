@@ -114,17 +114,17 @@ class OrderCard extends StatelessWidget {
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending':
-        return const Color(0xFFF59E0B);
+        return const Color(0xFF3B82F6);
       case 'processing':
         return const Color(0xFF3B82F6);
       case 'shipped':
-        return const Color(0xFF8B5CF6);
+        return const Color(0xFF3B82F6);
       case 'delivered':
-        return const Color(0xFF10B981);
+        return const Color(0xFF3B82F6);
       case 'cancelled':
-        return const Color(0xFFEF4444);
+        return const Color(0xFF3B82F6);
       default:
-        return const Color(0xFF6B7280);
+        return const Color(0xFF3B82F6);
     }
   }
 
