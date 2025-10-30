@@ -153,255 +153,258 @@ class _BrandScreenState extends State<BrandScreen> {
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
     return Scaffold(
+        backgroundColor: Colors.white,
         body: Padding(
-      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            SizedBox(height: 70),
-            Row(
+          padding: EdgeInsets.symmetric(vertical: 20, horizontal: 30),
+          child: SingleChildScrollView(
+            child: Column(
               children: [
-                IconButton(
-                    onPressed: () => Get.back(),
-                    icon: Icon(Icons.arrow_back_ios_new_rounded)),
-                SizedBox(width: 15),
-                Text(
-                  widget.sellerName ?? 'Brands',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                )
+                SizedBox(height: 70),
+                Row(
+                  children: [
+                    IconButton(
+                        onPressed: () => Get.back(),
+                        icon: Icon(Icons.arrow_back_ios_new_rounded)),
+                    SizedBox(width: 15),
+                    Text(
+                      widget.sellerName ?? 'Brands',
+                      style:
+                          TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                    )
+                  ],
+                ),
+                SizedBox(height: 40),
+                Container(
+                  height: 60,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 5),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: _buildStoreLogo(
+                            storeLogoBase64, widget.sellerName ?? ''),
+                      ),
+                      SizedBox(width: 20),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                widget.sellerName ?? 'Unknown Store',
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                              SizedBox(width: 10),
+                              Container(
+                                padding: EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Icon(
+                                  Icons.check,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Obx(() => Text(
+                                '${filteredProducts.length} Products',
+                                style: TextStyle(fontSize: 14),
+                              )),
+                        ],
+                      )
+                    ],
+                  ),
+                ),
+                SizedBox(height: 40),
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: Text(
+                    'Products',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+                ),
+                SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.symmetric(horizontal: 25, vertical: 5),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: DropdownButton<String>(
+                    value: selectedValue,
+                    isExpanded: true,
+                    underline: SizedBox(),
+                    items: [
+                      'All Products',
+                      'Chair',
+                      'Table',
+                      'Sofa',
+                      'Bed',
+                      'Lamp',
+                    ].map<DropdownMenuItem<String>>((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(
+                          value,
+                          style: TextStyle(fontSize: 18),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedValue = newValue!;
+                      });
+
+                      // Filter products based on selected category
+                      if (newValue == 'All Products') {
+                        if (widget.sellerId != null) {
+                          filteredProducts.value = _firestore.allProducts
+                              .where((product) =>
+                                  product['seller_id'] == widget.sellerId)
+                              .toList();
+                        } else {
+                          filteredProducts.value = _firestore.allProducts;
+                        }
+                      } else {
+                        if (widget.sellerId != null) {
+                          filteredProducts.value = _firestore.allProducts
+                              .where((product) =>
+                                  product['seller_id'] == widget.sellerId &&
+                                  product['category']?.toLowerCase() ==
+                                      newValue!.toLowerCase())
+                              .toList();
+                        } else {
+                          filteredProducts.value = _firestore.allProducts
+                              .where((product) =>
+                                  product['category']?.toLowerCase() ==
+                                  newValue!.toLowerCase())
+                              .toList();
+                        }
+                      }
+                    },
+                  ),
+                ),
+                SizedBox(height: 40),
+                Obx(() {
+                  // Listen to filtered products
+                  if (filteredProducts.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 64,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              widget.sellerId != null
+                                  ? 'No products available for this seller'
+                                  : 'No products available',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.grey[600],
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              widget.sellerId != null
+                                  ? 'This seller hasn\'t added any products yet'
+                                  : 'Try refreshing or check back later',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 0.75,
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    itemCount: filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      final product = filteredProducts[index];
+                      final productName = product['name'] ?? 'Unnamed Product';
+                      final productPrice = product['price'] ?? 0;
+                      final productDescription =
+                          product['description'] ?? 'No description';
+                      final productImage = product['image'] ?? '';
+                      final productId = product['id'] ?? '';
+                      final productStock = product['stock'] ?? 0;
+
+                      Uint8List imageBytes;
+                      try {
+                        imageBytes = base64Decode(productImage);
+                      } catch (e) {
+                        imageBytes = Uint8List(0);
+                      }
+
+                      return _buildProductCard(
+                          context,
+                          productName,
+                          productPrice,
+                          imageBytes,
+                          productDescription,
+                          productId,
+                          productStock, () {
+                        // Navigate to product details page
+                        Get.to(() => ProductDetailsScreen(
+                              nameProduct: productName,
+                              description: productDescription,
+                              price: productPrice,
+                              imageBytes: imageBytes,
+                              productId: productId,
+                              stock: productStock,
+                            ));
+                      }, () {
+                        // Add to cart functionality
+                        _firestore.insertCart(
+                          productId: productId,
+                          quantity: 1,
+                          userId: _auth.currentUser!.uid,
+                        );
+                      }, size);
+                    },
+                  );
+                }),
               ],
             ),
-            SizedBox(height: 40),
-            Container(
-              height: 60,
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 5),
-              width: double.infinity,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      shape: BoxShape.circle,
-                    ),
-                    child: _buildStoreLogo(
-                        storeLogoBase64, widget.sellerName ?? ''),
-                  ),
-                  SizedBox(width: 20),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            widget.sellerName ?? 'Unknown Store',
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          SizedBox(width: 10),
-                          Container(
-                            padding: EdgeInsets.all(3),
-                            decoration: BoxDecoration(
-                              color: Colors.blue,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.check,
-                              color: Colors.white,
-                              size: 14,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Obx(() => Text(
-                            '${filteredProducts.length} Products',
-                            style: TextStyle(fontSize: 14),
-                          )),
-                    ],
-                  )
-                ],
-              ),
-            ),
-            SizedBox(height: 40),
-            Align(
-              alignment: Alignment.topLeft,
-              child: Text(
-                'Products',
-                style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-              ),
-            ),
-            SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.symmetric(horizontal: 25, vertical: 5),
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: DropdownButton<String>(
-                value: selectedValue,
-                isExpanded: true,
-                underline: SizedBox(),
-                items: [
-                  'All Products',
-                  'Chair',
-                  'Table',
-                  'Sofa',
-                  'Bed',
-                  'Lamp',
-                ].map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(
-                      value,
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedValue = newValue!;
-                  });
-
-                  // Filter products based on selected category
-                  if (newValue == 'All Products') {
-                    if (widget.sellerId != null) {
-                      filteredProducts.value = _firestore.allProducts
-                          .where((product) =>
-                              product['seller_id'] == widget.sellerId)
-                          .toList();
-                    } else {
-                      filteredProducts.value = _firestore.allProducts;
-                    }
-                  } else {
-                    if (widget.sellerId != null) {
-                      filteredProducts.value = _firestore.allProducts
-                          .where((product) =>
-                              product['seller_id'] == widget.sellerId &&
-                              product['category']?.toLowerCase() ==
-                                  newValue!.toLowerCase())
-                          .toList();
-                    } else {
-                      filteredProducts.value = _firestore.allProducts
-                          .where((product) =>
-                              product['category']?.toLowerCase() ==
-                              newValue!.toLowerCase())
-                          .toList();
-                    }
-                  }
-                },
-              ),
-            ),
-            SizedBox(height: 40),
-            Obx(() {
-              // Listen to filtered products
-              if (filteredProducts.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.inventory_2_outlined,
-                          size: 64,
-                          color: Colors.grey[400],
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          widget.sellerId != null
-                              ? 'No products available for this seller'
-                              : 'No products available',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.grey[600],
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          widget.sellerId != null
-                              ? 'This seller hasn\'t added any products yet'
-                              : 'Try refreshing or check back later',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[500],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              return GridView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.75,
-                ),
-                padding: const EdgeInsets.all(16),
-                itemCount: filteredProducts.length,
-                itemBuilder: (context, index) {
-                  final product = filteredProducts[index];
-                  final productName = product['name'] ?? 'Unnamed Product';
-                  final productPrice = product['price'] ?? 0;
-                  final productDescription =
-                      product['description'] ?? 'No description';
-                  final productImage = product['image'] ?? '';
-                  final productId = product['id'] ?? '';
-                  final productStock = product['stock'] ?? 0;
-
-                  Uint8List imageBytes;
-                  try {
-                    imageBytes = base64Decode(productImage);
-                  } catch (e) {
-                    imageBytes = Uint8List(0);
-                  }
-
-                  return _buildProductCard(
-                      context,
-                      productName,
-                      productPrice,
-                      imageBytes,
-                      productDescription,
-                      productId,
-                      productStock, () {
-                    // Navigate to product details page
-                    Get.to(() => ProductDetailsScreen(
-                          nameProduct: productName,
-                          description: productDescription,
-                          price: productPrice,
-                          imageBytes: imageBytes,
-                          productId: productId,
-                          stock: productStock,
-                        ));
-                  }, () {
-                    // Add to cart functionality
-                    _firestore.insertCart(
-                      productId: productId,
-                      quantity: 1,
-                      userId: _auth.currentUser!.uid,
-                    );
-                  }, size);
-                },
-              );
-            }),
-          ],
-        ),
-      ),
-    ));
+          ),
+        ));
   }
 
   Widget _buildProductCard(

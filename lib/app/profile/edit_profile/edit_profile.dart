@@ -81,7 +81,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         height: 30,
                         width: 30,
                         decoration: const BoxDecoration(
-                          color: Colors.blue,
+                          color: Color(0xFF3E6BE0),
                           shape: BoxShape.circle,
                         ),
                         child: IconButton(
@@ -128,7 +128,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: ElevatedButton(
                     onPressed: saveProfileInfo,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
+                      backgroundColor: Color(0xFF3E6BE0),
                       minimumSize: const Size(300, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),

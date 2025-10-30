@@ -336,7 +336,7 @@ class _ApplyAsSellerScreenState extends State<ApplyAsSellerScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Upload Valid ID or Business Permit',
+          'Upload Valid ID & Business Permit',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,

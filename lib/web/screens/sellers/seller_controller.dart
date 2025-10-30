@@ -146,4 +146,44 @@ class SellerController extends GetxController {
       log('❌ Error updating seller status: $e');
     }
   }
+
+  Future<bool> deleteSeller(String id) async {
+    try {
+      // First, get all products by this seller
+      final productsSnapshot = await _firebase
+          .collection('products')
+          .where('seller_id', isEqualTo: id)
+          .get();
+
+      // Delete all products by this seller
+      for (var doc in productsSnapshot.docs) {
+        await _firebase.collection('products').doc(doc.id).delete();
+        log('🗑️ Deleted product: ${doc.id}');
+      }
+
+      // Delete the seller application
+      await _firebase.collection('sellersApplication').doc(id).delete();
+      log('🗑️ Deleted seller application: $id');
+
+      // Update user role back to regular user (if exists)
+      try {
+        final userDoc = await _firebase.collection('users').doc(id).get();
+        if (userDoc.exists) {
+          await _firebase.collection('users').doc(id).update({'role': 'user'});
+          log('✅ Updated user role back to "user"');
+        }
+      } catch (e) {
+        log('⚠️ Could not update user role: $e');
+      }
+
+      // Refresh sellers list
+      await fetchSellers();
+
+      log('✅ Seller deleted successfully: $id');
+      return true;
+    } catch (e) {
+      log('❌ Error deleting seller: $e');
+      return false;
+    }
+  }
 }

@@ -102,7 +102,7 @@ class _DeliveryAddressScreenState extends State<DeliveryAddressScreen> {
                     Get.back();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: Color(0xFF3E6BE0),
                     minimumSize: const Size(200, 50),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),

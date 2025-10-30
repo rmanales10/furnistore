@@ -199,7 +199,9 @@ class _StoreProfileState extends State<StoreProfile> {
                                   size: 18, color: Colors.red),
                               label: Text('Delete Seller',
                                   style: TextStyle(color: Colors.red)),
-                              onPressed: () {},
+                              onPressed: () {
+                                _showDeleteDialog(context, widget.id);
+                              },
                             ),
                           ),
                         ],
@@ -333,6 +335,193 @@ class _StoreProfileState extends State<StoreProfile> {
           },
         );
       },
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          contentPadding: EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          title: Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: Colors.red.shade100,
+                radius: 24,
+                child: Icon(Icons.warning_amber_rounded,
+                    color: Colors.red, size: 28),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Delete Seller',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Are you sure you want to delete this seller?',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: 12),
+              Container(
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'This action will:',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.red.shade900),
+                    ),
+                    SizedBox(height: 8),
+                    _deleteBulletPoint(
+                        '• Delete all products listed by this seller'),
+                    _deleteBulletPoint('• Remove seller application'),
+                    _deleteBulletPoint('• Revoke seller access'),
+                    SizedBox(height: 8),
+                    Text(
+                      'This action cannot be undone!',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Colors.red.shade900),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.black,
+                minimumSize: const Size(100, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                // Show loading dialog
+                Navigator.of(context).pop(); // Close confirmation dialog
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => Center(
+                    child: Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(20),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            CircularProgressIndicator(),
+                            SizedBox(height: 16),
+                            Text('Deleting seller...'),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+
+                // Delete seller
+                final success = await _controller.deleteSeller(id);
+
+                // Close loading dialog
+                Navigator.of(context).pop();
+
+                // Show result and navigate
+                if (success) {
+                  // Navigate back to sellers list first
+                  Navigator.pushAndRemoveUntil(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Sidebar(
+                        role: 'admin',
+                        initialIndex: 2, // SellerScreen index
+                      ),
+                    ),
+                    (route) => false, // Remove all previous routes
+                  );
+
+                  // Show success message after navigation
+                  Future.delayed(Duration(milliseconds: 300), () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Seller deleted successfully'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content:
+                          Text('Failed to delete seller. Please try again.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                minimumSize: const Size(100, 50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Delete Seller',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _deleteBulletPoint(String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Text(
+        text,
+        style: TextStyle(fontSize: 13, color: Colors.red.shade900),
+      ),
     );
   }
 

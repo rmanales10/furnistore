@@ -253,8 +253,8 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
   Widget _buildDeliveryOptions() {
     return Column(
       children: [
-        _buildRadioOption('Base Fee', '50 for the first 5 km'),
-        _buildRadioOption('Additional Fee', '20 per km beyond 5 km'),
+        _buildRadioOption('Delivery Fee', '100'),
+        // _buildRadioOption('Additional Fee', '20 per km beyond 5 km'),
       ],
     );
   }

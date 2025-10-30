@@ -3,6 +3,7 @@ import 'package:furnistore/app/home_screen.dart';
 import 'package:furnistore/app/profile/apply/apply.dart';
 import 'package:furnistore/app/profile/apply/apply_controller.dart';
 import 'package:get/get.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SellerStatusScreen extends StatefulWidget {
   const SellerStatusScreen({super.key});
@@ -13,6 +14,20 @@ class SellerStatusScreen extends StatefulWidget {
 
 class _SellerStatusScreenState extends State<SellerStatusScreen> {
   final ApplyController controller = Get.put(ApplyController());
+
+  Future<void> _launchSellerDashboard() async {
+    final Uri url = Uri.parse('https://furnistore-335e2.web.app');
+    if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not launch seller dashboard'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +59,7 @@ class _SellerStatusScreenState extends State<SellerStatusScreen> {
                     Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Color(0xFF7B61FF),
+                        color: Color(0xFF3E6BE0),
                       ),
                       padding: const EdgeInsets.all(16),
                       child: Icon(Icons.check, color: Colors.white, size: 36),
@@ -156,7 +171,7 @@ class _SellerStatusScreenState extends State<SellerStatusScreen> {
                             borderRadius: BorderRadius.circular(6),
                           ),
                         ),
-                        onPressed: () {},
+                        onPressed: _launchSellerDashboard,
                         child: Text(
                           'Go to Seller Dashboard',
                           style: TextStyle(
