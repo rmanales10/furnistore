@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:furnistore/app/home_screen.dart';
+import 'package:furnistore/app/bottom_nav_bar.dart';
 import 'package:furnistore/app/profile/apply/apply.dart';
 import 'package:furnistore/app/profile/apply/apply_controller.dart';
 import 'package:get/get.dart';

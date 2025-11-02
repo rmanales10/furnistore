@@ -157,6 +157,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: Colors.white,
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
           titlePadding: const EdgeInsets.all(16),
@@ -195,7 +196,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                             const LoginScreen()); // Navigate to LoginScreen
                       },
                       style: TextButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Color(0xFF3E6BE0),
                         foregroundColor: Colors.white,
                       ),
                       child: const Text('Yes'),

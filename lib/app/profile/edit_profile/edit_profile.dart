@@ -31,121 +31,137 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Profile',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-      ),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-          child: Obx(() {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Your Profile',
-                  style: TextStyle(
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom AppBar in body
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: const Row(
+                children: [
+                  Text(
+                    'Profile',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                // Profile Picture with Edit Icon
+                ],
+              ),
+            ),
+            // Main content
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+                  child: Obx(() {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Your Profile',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        // Profile Picture with Edit Icon
 
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundImage: _imageBytes != null
-                          ? MemoryImage(_imageBytes!)
-                          : (_controller.userInfo['image'] != null
-                              ? MemoryImage(
-                                  base64Decode(_controller.userInfo['image']))
-                              : const AssetImage('assets/no_profile.webp')
-                                  as ImageProvider),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        height: 30,
-                        width: 30,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF3E6BE0),
-                          shape: BoxShape.circle,
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundImage: _imageBytes != null
+                                  ? MemoryImage(_imageBytes!)
+                                  : (_controller.userInfo['image'] != null
+                                      ? MemoryImage(base64Decode(
+                                          _controller.userInfo['image']))
+                                      : const AssetImage(
+                                              'assets/no_profile.webp')
+                                          as ImageProvider),
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                height: 30,
+                                width: 30,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF3E6BE0),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: IconButton(
+                                  onPressed: pickImageAndProcess,
+                                  icon: const Icon(Icons.edit),
+                                  color: Colors.white,
+                                  iconSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        child: IconButton(
-                          onPressed: pickImageAndProcess,
-                          icon: const Icon(Icons.edit),
-                          color: Colors.white,
-                          iconSize: 16,
+                        const SizedBox(height: 20),
+                        // Form Fields
+                        TextFormField(
+                          controller: nameController,
+                          decoration: InputDecoration(
+                            labelText: 'Full Name',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            fillColor: Colors.grey[100],
+                            filled: true,
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          enabled: false,
+                          controller: emailController,
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: BorderSide.none,
+                            ),
+                            fillColor: Colors.grey[100],
+                            filled: true,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        // Save Changes Button
+                        Center(
+                          child: ElevatedButton(
+                            onPressed: saveProfileInfo,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF3E6BE0),
+                              minimumSize: const Size(300, 50),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Save Changes',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
                 ),
-                const SizedBox(height: 20),
-                // Form Fields
-                TextFormField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Full Name',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    fillColor: Colors.grey[100],
-                    filled: true,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  enabled: false,
-                  controller: emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    fillColor: Colors.grey[100],
-                    filled: true,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Save Changes Button
-                Center(
-                  child: ElevatedButton(
-                    onPressed: saveProfileInfo,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF3E6BE0),
-                      minimumSize: const Size(300, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: const Text(
-                      'Save Changes',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          }),
+              ),
+            ),
+          ],
         ),
       ),
     );

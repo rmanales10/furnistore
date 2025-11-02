@@ -21,117 +21,135 @@ class _CartScreenState extends State<CartScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Cart',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
-      body: Obx(() {
-        cartController.fetchCartData();
-        if (cartController.carts.isEmpty) {
-          return const Center(
-            child: Text(
-              'Your cart is empty.',
-              style: TextStyle(fontSize: 18, color: Colors.grey),
-            ),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView.builder(
-                  itemCount: cartController.carts.length,
-                  itemBuilder: (context, index) {
-                    final cart = cartController.carts[index];
-                    final product = cartController.productsCart.firstWhere(
-                      (p) => p['id'] == cart['product_id'],
-                      orElse: () => {},
-                    );
-
-                    Uint8List decodedImageBytes;
-                    if (product['image'] != null) {
-                      decodedImageBytes = base64Decode(product['image']);
-                    } else {
-                      decodedImageBytes = Uint8List.fromList([]);
-                    }
-
-                    return CartItem(
-                      title: product['name'] ?? '',
-                      price: product['price'] ?? 0,
-                      imageBytes: decodedImageBytes,
-                      quantity: cart['quantity'] ?? 1,
-                      onDelete: () async {
-                        await cartController.deleteCartItem(cart['id']);
-                      },
-                      onQuantityChanged: (newQuantity) async {
-                        await cartController.updateCartQuantity(
-                            cart['id'], newQuantity);
-                      },
-                    );
-                  },
-                ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom AppBar in body
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: const Row(
+                children: [
+                  Text(
+                    'Cart',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 20.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Obx(() => Row(
-                          children: [
-                            Icon(
-                              FontAwesomeIcons.pesoSign,
-                              size: 16,
-                            ),
-                            Text(
-                              ' ${cartController.totalPrice.value}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
-                          ],
-                        )),
-                    ElevatedButton(
-                      onPressed: () {
-                        Get.to(() => OrderReviewScreen(
-                              productList: cartController.getCartProducts(),
-                            ));
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+            ),
+            // Main content
+            Expanded(
+              child: Obx(() {
+                cartController.fetchCartData();
+                if (cartController.carts.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'Your cart is empty.',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: cartController.carts.length,
+                          itemBuilder: (context, index) {
+                            final cart = cartController.carts[index];
+                            final product =
+                                cartController.productsCart.firstWhere(
+                              (p) => p['id'] == cart['product_id'],
+                              orElse: () => {},
+                            );
+
+                            Uint8List decodedImageBytes;
+                            if (product['image'] != null) {
+                              decodedImageBytes =
+                                  base64Decode(product['image']);
+                            } else {
+                              decodedImageBytes = Uint8List.fromList([]);
+                            }
+
+                            return CartItem(
+                              title: product['name'] ?? '',
+                              price: product['price'] ?? 0,
+                              imageBytes: decodedImageBytes,
+                              quantity: cart['quantity'] ?? 1,
+                              onDelete: () async {
+                                await cartController.deleteCartItem(cart['id']);
+                              },
+                              onQuantityChanged: (newQuantity) async {
+                                await cartController.updateCartQuantity(
+                                    cart['id'], newQuantity);
+                              },
+                            );
+                          },
                         ),
                       ),
-                      child: const Text(
-                        'Checkout',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16.0, vertical: 20.0),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[100],
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Obx(() => Row(
+                                  children: [
+                                    Icon(
+                                      FontAwesomeIcons.pesoSign,
+                                      size: 16,
+                                    ),
+                                    Text(
+                                      ' ${cartController.totalPrice.value}',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    )
+                                  ],
+                                )),
+                            ElevatedButton(
+                              onPressed: () {
+                                Get.to(() => OrderReviewScreen(
+                                      productList:
+                                          cartController.getCartProducts(),
+                                    ));
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.black,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                              child: const Text(
+                                'Checkout',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 16),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      }),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

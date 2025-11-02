@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:furnistore/web/screens/dashboard/admin_dashboard.dart';
 import 'package:furnistore/web/screens/dashboard/seller_dashboard.dart';
@@ -30,6 +34,7 @@ class _SidebarState extends State<Sidebar> {
   User? user;
   int selectedIndex = 0;
   String docId = '';
+  String? storeLogoBase64;
 
   @override
   void initState() {
@@ -37,6 +42,29 @@ class _SidebarState extends State<Sidebar> {
     selectedIndex = widget.initialIndex;
     docId = widget.id;
     user = _auth.currentUser;
+    if (widget.role == 'seller') {
+      _fetchStoreLogo();
+    }
+  }
+
+  Future<void> _fetchStoreLogo() async {
+    if (user == null) return;
+
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('sellersApplication')
+          .doc(user!.uid)
+          .get();
+
+      if (doc.exists && mounted) {
+        final data = doc.data() as Map<String, dynamic>;
+        setState(() {
+          storeLogoBase64 = data['storeLogoBase64'];
+        });
+      }
+    } catch (e) {
+      print('Error fetching store logo: $e');
+    }
   }
 
   List<Widget> get _pages => [
@@ -98,18 +126,45 @@ class _SidebarState extends State<Sidebar> {
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
-      title: Image.asset(
-        'assets/image_3.png',
-        height: 40,
-        fit: BoxFit.contain,
-      ),
-      centerTitle: true,
       actions: [
         Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            backgroundColor: Color(0xFF3E6BE0),
-            child: Icon(Icons.person, color: Colors.white, size: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+          child: Row(
+            children: [
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    widget.role == 'admin' ? "Admin" : "Seller",
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  Text(
+                    user?.email ?? 'No email',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey.shade600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+              SizedBox(width: 8),
+              widget.role == 'seller' &&
+                      storeLogoBase64 != null &&
+                      storeLogoBase64!.isNotEmpty
+                  ? _buildSellerLogoWithMenu(18, true)
+                  : CircleAvatar(
+                      backgroundColor: Color(0xFF3E6BE0),
+                      radius: 18,
+                      child: Icon(Icons.person, color: Colors.white, size: 18),
+                    ),
+            ],
           ),
         ),
       ],
@@ -127,33 +182,20 @@ class _SidebarState extends State<Sidebar> {
               decoration: BoxDecoration(
                 color: Color(0xFF3E6BE0),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircleAvatar(
-                    radius: 35,
-                    backgroundColor: Colors.white,
-                    child:
-                        Icon(Icons.person, size: 40, color: Color(0xFF3E6BE0)),
+              child: Center(
+                child: Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  SizedBox(height: 10),
-                  Text(
-                    widget.role == 'admin' ? "Admin" : "Seller",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
+                  child: Image.asset(
+                    'assets/image_3.png',
+                    height: 60,
+                    width: 60,
+                    fit: BoxFit.contain,
                   ),
-                  Text(
-                    user?.email ?? 'No email',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white70,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                ),
               ),
             ),
             Expanded(
@@ -281,7 +323,12 @@ class _SidebarState extends State<Sidebar> {
           const Spacer(),
           Row(
             children: [
-              Icon(Icons.person, color: Colors.grey, size: isTablet ? 30 : 40),
+              widget.role == 'seller' &&
+                      storeLogoBase64 != null &&
+                      storeLogoBase64!.isNotEmpty
+                  ? _buildSellerLogoWithMenu(isTablet ? 30 : 40, false)
+                  : Icon(Icons.person,
+                      color: Colors.grey, size: isTablet ? 30 : 40),
               const SizedBox(width: 10),
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -398,6 +445,174 @@ class _SidebarState extends State<Sidebar> {
       ),
       onTap: onTap,
     );
+  }
+
+  Widget _buildSellerLogo(double size) {
+    if (storeLogoBase64 == null || storeLogoBase64!.isEmpty) {
+      return Icon(Icons.person, color: Colors.grey, size: size);
+    }
+
+    try {
+      final bytes = base64Decode(storeLogoBase64!);
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.white,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.memory(
+            bytes,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(Icons.person, color: Colors.grey, size: size);
+            },
+          ),
+        ),
+      );
+    } catch (e) {
+      print('Error decoding store logo: $e');
+      return Icon(Icons.person, color: Colors.grey, size: size);
+    }
+  }
+
+  Widget _buildSellerLogoWithMenu(double size, bool isCircle) {
+    return PopupMenuButton<String>(
+      offset: const Offset(0, 50),
+      onSelected: (value) {
+        if (value == 'change_logo') {
+          _changeStoreLogo();
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'change_logo',
+          child: Row(
+            children: [
+              Icon(Icons.edit, size: 18, color: Colors.black87),
+              SizedBox(width: 8),
+              Text('Change Store Logo'),
+            ],
+          ),
+        ),
+      ],
+      child: isCircle
+          ? CircleAvatar(
+              radius: size,
+              backgroundColor: Colors.grey.shade200,
+              child: _buildSellerLogo(size * 2),
+            )
+          : _buildSellerLogo(size),
+    );
+  }
+
+  Future<void> _changeStoreLogo() async {
+    if (user == null) return;
+
+    try {
+      // Use file picker for web
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+        withData: true,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        return;
+      }
+
+      final pickedFile = result.files.single;
+
+      if (pickedFile.bytes == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to read image file. Please try again.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final bytes = pickedFile.bytes!;
+      final fileName = pickedFile.name;
+
+      // Validate file extension
+      final fileExtension = fileName.split('.').last.toLowerCase();
+      if (!['jpg', 'jpeg', 'png', 'gif', 'webp'].contains(fileExtension)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Only JPG, PNG, GIF, and WebP images are allowed.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Check file size (max 2MB)
+      if (bytes.length > 2 * 1024 * 1024) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Logo size too large. Maximum 2MB allowed.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Convert to Base64 and update
+      final base64String = base64Encode(bytes);
+      await _updateStoreLogo(base64String);
+    } catch (e) {
+      print('Error picking store logo: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to pick store logo: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateStoreLogo(String base64String) async {
+    if (user == null) return;
+
+    try {
+      await FirebaseFirestore.instance
+          .collection('sellersApplication')
+          .doc(user!.uid)
+          .update({
+        'storeLogoBase64': base64String,
+        'updatedAt': DateTime.now(),
+      });
+
+      setState(() {
+        storeLogoBase64 = base64String;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✅ Store logo updated successfully!'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error updating store logo: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to update store logo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   void _showLogoutConfirmation(BuildContext context) {

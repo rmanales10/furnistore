@@ -166,7 +166,7 @@ class _StoreScreenState extends State<StoreScreen> {
                     crossAxisCount: 4,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
-                    childAspectRatio: 0.75,
+                    childAspectRatio: 0.8,
                     children: filteredSellers.map((seller) {
                       final storeName = seller['storeName'] as String;
                       final storeLogoBase64 =
@@ -219,16 +219,18 @@ class _StoreScreenState extends State<StoreScreen> {
             ),
             child: _buildStoreLogo(storeLogoBase64, name),
           ),
-          const SizedBox(height: 4),
-          Text(
-            name,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Colors.black87,
+          const SizedBox(height: 8),
+          Flexible(
+            child: Text(
+              name,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.black87,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),

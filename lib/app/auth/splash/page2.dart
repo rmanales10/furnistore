@@ -17,7 +17,7 @@ class _Onboard2State extends State<Onboard2> {
             height: double.infinity,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: Colors.grey[200],
+              color: Colors.white,
               image: const DecorationImage(
                 image: AssetImage('assets/iPhone 16 Pro Max - 91.png'),
                 fit: BoxFit.cover,

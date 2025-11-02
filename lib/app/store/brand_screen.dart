@@ -175,8 +175,7 @@ class _BrandScreenState extends State<BrandScreen> {
                 ),
                 SizedBox(height: 40),
                 Container(
-                  height: 60,
-                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 5),
+                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   width: double.infinity,
                   decoration: BoxDecoration(
                     border: Border.all(color: Colors.grey),
@@ -194,38 +193,48 @@ class _BrandScreenState extends State<BrandScreen> {
                         child: _buildStoreLogo(
                             storeLogoBase64, widget.sellerName ?? ''),
                       ),
-                      SizedBox(width: 20),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                widget.sellerName ?? 'Unknown Store',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.bold),
-                              ),
-                              SizedBox(width: 10),
-                              Container(
-                                padding: EdgeInsets.all(3),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue,
-                                  borderRadius: BorderRadius.circular(12),
+                      SizedBox(width: 15),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    widget.sellerName ?? 'Unknown Store',
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
-                                child: Icon(
-                                  Icons.check,
-                                  color: Colors.white,
-                                  size: 14,
+                                SizedBox(width: 8),
+                                Container(
+                                  padding: EdgeInsets.all(3),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.check,
+                                    color: Colors.white,
+                                    size: 14,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          Obx(() => Text(
-                                '${filteredProducts.length} Products',
-                                style: TextStyle(fontSize: 14),
-                              )),
-                        ],
+                              ],
+                            ),
+                            SizedBox(height: 4),
+                            Obx(() => Text(
+                                  '${filteredProducts.length} Products',
+                                  style: TextStyle(fontSize: 13),
+                                )),
+                          ],
+                        ),
                       )
                     ],
                   ),
@@ -352,7 +361,7 @@ class _BrandScreenState extends State<BrandScreen> {
                       crossAxisCount: 2,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 12,
-                      childAspectRatio: 0.75,
+                      childAspectRatio: 0.65,
                     ),
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredProducts.length,
@@ -446,7 +455,7 @@ class _BrandScreenState extends State<BrandScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -462,18 +471,18 @@ class _BrandScreenState extends State<BrandScreen> {
                       colorBlendMode: stock == 0 ? BlendMode.saturation : null,
                     ),
                   ),
-                  const SizedBox(height: 15),
+                  const SizedBox(height: 12),
                   Text(
                     name,
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      fontSize: 15,
+                      fontSize: 14,
                       color: stock == 0 ? Colors.grey : Colors.black,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 5),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       Icon(
@@ -485,7 +494,7 @@ class _BrandScreenState extends State<BrandScreen> {
                         ' $price',
                         style: TextStyle(
                           color: stock == 0 ? Colors.grey : Colors.black,
-                          fontSize: 15,
+                          fontSize: 14,
                         ),
                       ),
                     ],

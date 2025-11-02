@@ -15,83 +15,96 @@ class OrdersScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.arrow_back_ios_new,
-                color: Colors.black, size: 16),
-          ),
-          onPressed: () => Get.back(),
-        ),
-        title: const Text(
-          'My Orders',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: false,
-      ),
-      body: Obx(() {
-        _controller.getOrderStatus();
-
-        if (_controller.orderStatus.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 80,
-                  color: Colors.grey.shade400,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'No Orders Yet',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade600,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom AppBar in body
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new,
+                          color: Colors.black, size: 16),
+                    ),
+                    onPressed: () => Get.back(),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Your orders will appear here',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade500,
+                  const Text(
+                    'My Orders',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: _controller.orderStatus.length,
-          itemBuilder: (context, index) {
-            final order = _controller.orderStatus[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: OrderCard(
-                status: order['status'] ?? 'Pending',
-                orderItems: '${order['total_items']} items',
-                orderId: order['order_id'] ?? '',
-                products: order['products'] ?? [],
+                ],
               ),
-            );
-          },
-        );
-      }),
+            ),
+            // Main content
+            Expanded(
+              child: Obx(() {
+                _controller.getOrderStatus();
+
+                if (_controller.orderStatus.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 80,
+                          color: Colors.grey.shade400,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No Orders Yet',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Your orders will appear here',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey.shade500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _controller.orderStatus.length,
+                  itemBuilder: (context, index) {
+                    final order = _controller.orderStatus[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: OrderCard(
+                        status: order['status'] ?? 'Pending',
+                        orderItems: '${order['total_items']} items',
+                        orderId: order['order_id'] ?? '',
+                        products: order['products'] ?? [],
+                      ),
+                    );
+                  },
+                );
+              }),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

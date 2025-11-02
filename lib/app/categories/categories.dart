@@ -466,6 +466,8 @@ Widget _buildProductCard(
                     fontSize: 15,
                     color: stock == 0 ? Colors.grey : Colors.black,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 5),
                 Row(

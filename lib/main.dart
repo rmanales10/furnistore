@@ -7,7 +7,7 @@ import 'services/firebase_options.dart';
 import 'services/glb_storage_service.dart';
 import 'services/email_service.dart';
 import 'package:furnistore/app/categories/categories.dart';
-import 'package:furnistore/app/home_screen.dart';
+import 'package:furnistore/app/bottom_nav_bar.dart';
 import 'package:furnistore/app/auth/forgot/forgot_pass.dart';
 import 'package:furnistore/app/auth/login/login.dart';
 import 'package:furnistore/app/auth/forgot/new_pass.dart';
@@ -42,6 +42,17 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       theme: ThemeData(
         fontFamily: 'Poppins',
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Colors.black),
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
       ),
       debugShowCheckedModeBanner: false,
       title: 'FurniStore',
@@ -85,6 +96,7 @@ class MyAdmin extends StatelessWidget {
       theme: ThemeData(
         fontFamily: 'Poppins',
         scaffoldBackgroundColor: Colors.white,
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.white),
         appBarTheme: AppBarTheme(backgroundColor: Colors.white, elevation: 0),
       ),
       debugShowCheckedModeBanner: false,

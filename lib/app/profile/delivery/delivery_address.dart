@@ -31,92 +31,112 @@ class _DeliveryAddressScreenState extends State<DeliveryAddressScreen> {
       _controller.getDeliveryAddress();
     }
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: const Text(
-          'Profile Settings',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-        centerTitle: false,
-      ),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              const Text(
-                'Delivery Address',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: Colors.black,
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Country Field
-              const Text('Country',
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-              const SizedBox(height: 8),
-              const Text('Philippines',
-                  style: TextStyle(
-                      fontSize: 20,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom AppBar in body
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: const Row(
+                children: [
+                  Text(
+                    'Profile Settings',
+                    style: TextStyle(
+                      color: Colors.black,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black)),
-              const SizedBox(height: 16),
-
-              const Text('Address',
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-              const SizedBox(height: 8),
-              _buildTextField(address),
-
-              const Text('Town / City',
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-              const SizedBox(height: 8),
-              _buildTextField(townCity),
-
-              const Text('Postcode',
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-              const SizedBox(height: 8),
-              _buildTextField(postcode),
-
-              const Text('Phone Number',
-                  style: TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-              const SizedBox(height: 8),
-              _buildTextField(phoneNumber),
-
-              const SizedBox(height: 20), // Add extra space before the button
-
-              // Save Changes Button
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    saveChanges();
-                    Get.back();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF3E6BE0),
-                    minimumSize: const Size(200, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      fontSize: 18,
                     ),
                   ),
-                  child: const Text(
-                    'Save Changes',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
+                ],
+              ),
+            ),
+            // Main content
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Delivery Address',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Country Field
+                    const Text('Country',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    const Text('Philippines',
+                        style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black)),
+                    const SizedBox(height: 16),
+
+                    const Text('Address',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    _buildTextField(address),
+
+                    const Text('Town / City',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    _buildTextField(townCity),
+
+                    const Text('Postcode',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    _buildTextField(postcode),
+
+                    const Text('Phone Number',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500, fontSize: 14)),
+                    const SizedBox(height: 8),
+                    _buildTextField(phoneNumber),
+
+                    const SizedBox(
+                        height: 20), // Add extra space before the button
+
+                    // Save Changes Button
+                    Center(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          saveChanges();
+                          Get.back();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Color(0xFF3E6BE0),
+                          minimumSize: const Size(200, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          'Save Changes',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
-              const SizedBox(height: 20),
-            ],
-          )),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

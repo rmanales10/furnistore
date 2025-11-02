@@ -115,42 +115,261 @@ class _ModelViewerScreenState extends State<ModelViewerScreen> {
   void _showARInstructions() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('AR Instructions'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (_arSupported) ...[
-              const Text('✅ AR is ready! Your model is cached locally.'),
-              const SizedBox(height: 12),
-              const Text('To launch AR camera:'),
-              const SizedBox(height: 8),
-              const Text('1. Look for the AR cube button in the 3D viewer'),
-              const Text('2. It may be a small cube icon with arrows'),
-              const Text('3. Tap the AR button to launch camera'),
-              const Text('4. Allow camera permission if prompted'),
-              const Text('5. Point camera at a flat surface (table/floor)'),
-              const Text('6. Tap to place the 3D model'),
-              const Text('7. Move around to view from different angles'),
-              const SizedBox(height: 12),
-              const Text(
-                '💡 Tip: The AR button is part of the 3D viewer itself, not a separate button.',
-                style: TextStyle(fontStyle: FontStyle.italic),
-              ),
-            ] else ...[
-              const Text('❌ AR not supported on this device'),
-              const SizedBox(height: 8),
-              const Text('AR requires a mobile device with camera support.'),
-            ],
-          ],
+      builder: (context) => Dialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Got it!'),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with icon
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF3E6BE0).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.view_in_ar,
+                      color: Color(0xFF3E6BE0),
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'AR Instructions',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              if (_arSupported) ...[
+                // Status Banner
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.green.shade200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color: Colors.green.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'AR is ready! Your model is cached locally.',
+                          style: TextStyle(
+                            color: Colors.green.shade900,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'To launch AR camera:',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Instructions List
+                ...List.generate(7, (index) {
+                  final steps = [
+                    'Look for the AR cube button in the 3D viewer',
+                    'It may be a small cube icon with arrows',
+                    'Tap the AR button to launch camera',
+                    'Allow camera permission if prompted',
+                    'Point camera at a flat surface (table/floor)',
+                    'Tap to place the 3D model',
+                    'Move around to view from different angles',
+                  ];
+                  final icons = [
+                    Icons.search,
+                    Icons.view_in_ar,
+                    Icons.touch_app,
+                    Icons.security,
+                    Icons.camera_alt,
+                    Icons.touch_app_outlined,
+                    Icons.rotate_right,
+                  ];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF3E6BE0).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Center(
+                            child: Text(
+                              '${index + 1}',
+                              style: const TextStyle(
+                                color: Color(0xFF3E6BE0),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(
+                          icons[index],
+                          size: 18,
+                          color: Colors.grey.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            steps[index],
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade800,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                const SizedBox(height: 20),
+                // Tip Section
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.orange.shade200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.lightbulb_outline,
+                        color: Colors.orange.shade700,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Tip: The AR button is part of the 3D viewer itself, not a separate button.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.orange.shade900,
+                            fontStyle: FontStyle.italic,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.red.shade200,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline,
+                        color: Colors.red.shade700,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'AR not supported',
+                              style: TextStyle(
+                                color: Colors.red.shade900,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'AR requires a mobile device with camera support.',
+                              style: TextStyle(
+                                color: Colors.red.shade800,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              // Action Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3E6BE0),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    'Got it!',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -225,7 +444,7 @@ class _ModelViewerScreenState extends State<ModelViewerScreen> {
       children: [
         // 3D Model Viewer
         ModelViewer(
-          backgroundColor: const Color(0xFFEEEEEE),
+          backgroundColor: Colors.white,
           src: _modelUrl!,
           alt: '3D product model',
           arModes: _arSupported
@@ -255,7 +474,7 @@ class _ModelViewerScreenState extends State<ModelViewerScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.green.withOpacity(0.9),
+                color: Color(0xFF3E6BE0).withOpacity(0.9),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Row(
@@ -287,7 +506,7 @@ class _ModelViewerScreenState extends State<ModelViewerScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.9),
+                color: Color(0xFF3E6BE0).withOpacity(0.9),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Row(

@@ -91,95 +91,112 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
     _firestore.getUserCartInfo();
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Order Review',
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Delivery Address
-              _buildSectionTitle('Delivery Address'),
-              Obx(() {
-                _orderController.getUserInfo();
-                final userInfo = _orderController.userInfo;
-                return _buildEditableRow(
-                  '${userInfo['address'] ?? 'Please click edit to enter details '} \n${userInfo['town_city'] ?? ''} \n${userInfo['postcode'] ?? ''} \n${userInfo['phone_number']}',
-                  () => Get.to(() => const DeliveryAddressScreen()),
-                );
-              }),
-
-              const SizedBox(height: 16),
-
-              // Contact Information
-              _buildSectionTitle('Contact Information'),
-              Obx(() {
-                _orderController.getUserInfo();
-                if (_orderController.userInfo.isNotEmpty) {
-                  final user =
-                      _orderController.userInfo; // Access the user data
-                  return _buildEditableRow('${user['email'] ?? 'Not Set'}',
-                      () => Get.to(() => const EditProfileScreen()));
-                } else {
-                  return _buildEditableRow('Loading user information...',
-                      () => Get.to(() => const EditProfileScreen()));
-                }
-              }),
-
-              const SizedBox(height: 16),
-
-              // Items
-              _buildSectionTitle('Items'),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: widget.productList.length,
-                itemBuilder: (context, index) {
-                  final product = widget.productList[index];
-
-                  return _buildCartItem(
-                    product['name'],
-                    product['price'].toString(),
-                    product['image'],
-                    product['quantity'],
-                  );
-                },
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Custom AppBar in body
+            Container(
+              color: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.black),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                  const Text(
+                    'Order Review',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
+            ),
+            // Main content
+            Expanded(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Delivery Address
+                      _buildSectionTitle('Delivery Address'),
+                      Obx(() {
+                        _orderController.getUserInfo();
+                        final userInfo = _orderController.userInfo;
+                        return _buildEditableRow(
+                          '${userInfo['address'] ?? 'Please click edit to enter details '} \n${userInfo['town_city'] ?? ''} \n${userInfo['postcode'] ?? ''} \n${userInfo['phone_number']}',
+                          () => Get.to(() => const DeliveryAddressScreen()),
+                        );
+                      }),
 
-              // Delivery Options
-              _buildSectionTitle('Delivery'),
-              _buildDeliveryOptions(),
-              const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-              // Payment Method
-              _buildSectionTitle('Payment Method'),
-              _buildDropdownPaymentMethod(),
-              const SizedBox(height: 16),
+                      // Contact Information
+                      _buildSectionTitle('Contact Information'),
+                      Obx(() {
+                        _orderController.getUserInfo();
+                        if (_orderController.userInfo.isNotEmpty) {
+                          final user =
+                              _orderController.userInfo; // Access the user data
+                          return _buildEditableRow(
+                              '${user['email'] ?? 'Not Set'}',
+                              () => Get.to(() => const EditProfileScreen()));
+                        } else {
+                          return _buildEditableRow(
+                              'Loading user information...',
+                              () => Get.to(() => const EditProfileScreen()));
+                        }
+                      }),
 
-              // Subtotal and Total
-              _buildPriceSummary(subtotal.value, additionalFee, total),
+                      const SizedBox(height: 16),
 
-              // Pay Button
-              const SizedBox(height: 20),
-              _buildPayButton(total),
-            ],
-          ),
+                      // Items
+                      _buildSectionTitle('Items'),
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: widget.productList.length,
+                        itemBuilder: (context, index) {
+                          final product = widget.productList[index];
+
+                          return _buildCartItem(
+                            product['name'],
+                            product['price'].toString(),
+                            product['image'],
+                            product['quantity'],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Delivery Options
+                      _buildSectionTitle('Delivery'),
+                      _buildDeliveryOptions(),
+                      const SizedBox(height: 16),
+
+                      // Payment Method
+                      _buildSectionTitle('Payment Method'),
+                      _buildPaymentMethodDisplay(),
+                      const SizedBox(height: 16),
+
+                      // Subtotal and Total
+                      _buildPriceSummary(subtotal.value, additionalFee, total),
+
+                      // Pay Button
+                      const SizedBox(height: 20),
+                      _buildPayButton(total),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -298,28 +315,13 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
     );
   }
 
-  Widget _buildDropdownPaymentMethod() {
-    return DropdownButton<String>(
-      value: paymentMethod,
-      isExpanded: true,
-      underline: Container(
-        height: 1,
-        color: Colors.grey,
+  Widget _buildPaymentMethodDisplay() {
+    return Text(
+      paymentMethod,
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.black,
       ),
-      items: ['Cash on Delivery'].map((String method) {
-        return DropdownMenuItem<String>(
-          value: method,
-          child: Text(
-            method,
-            style: const TextStyle(fontSize: 14, color: Colors.black),
-          ),
-        );
-      }).toList(),
-      onChanged: (String? newValue) {
-        setState(() {
-          paymentMethod = newValue!;
-        });
-      },
     );
   }
 
@@ -418,6 +420,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
               }
               Get.dialog(
                 Dialog(
+                  backgroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
@@ -534,41 +537,199 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                                   // Show warnings if any
                                   if (stockValidation['warnings'].isNotEmpty) {
                                     Get.dialog(
-                                      AlertDialog(
-                                        title: Text('Stock Warning'),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text('Please note:'),
-                                            SizedBox(height: 10),
-                                            ...stockValidation['warnings']
-                                                .map<Widget>((warning) =>
-                                                    Padding(
-                                                      padding: EdgeInsets.only(
-                                                          bottom: 5),
-                                                      child: Text('• $warning',
-                                                          style: TextStyle(
-                                                              color: Colors
-                                                                  .orange)),
-                                                    ))
-                                                .toList(),
-                                          ],
+                                      Dialog(
+                                        backgroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
                                         ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text('Cancel'),
+                                        child: Container(
+                                          padding: const EdgeInsets.all(24),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              // Warning Icon
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.all(12),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.orange.shade50,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: Icon(
+                                                  Icons.warning_amber_rounded,
+                                                  size: 40,
+                                                  color: Colors.orange.shade700,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              // Title
+                                              const Text(
+                                                'Stock Warning',
+                                                style: TextStyle(
+                                                  fontSize: 20,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.black87,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 8),
+                                              // Subtitle
+                                              Text(
+                                                'Please note:',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color: Colors.grey.shade600,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              // Warning List Container
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.all(12),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.orange.shade50,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color:
+                                                        Colors.orange.shade200,
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    ...stockValidation[
+                                                            'warnings']
+                                                        .map<Widget>(
+                                                            (warning) =>
+                                                                Padding(
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .only(
+                                                                          bottom:
+                                                                              8),
+                                                                  child: Row(
+                                                                    crossAxisAlignment:
+                                                                        CrossAxisAlignment
+                                                                            .start,
+                                                                    children: [
+                                                                      Icon(
+                                                                        Icons
+                                                                            .info_outline,
+                                                                        size:
+                                                                            18,
+                                                                        color: Colors
+                                                                            .orange
+                                                                            .shade700,
+                                                                      ),
+                                                                      const SizedBox(
+                                                                          width:
+                                                                              8),
+                                                                      Expanded(
+                                                                        child:
+                                                                            Text(
+                                                                          warning,
+                                                                          style:
+                                                                              TextStyle(
+                                                                            fontSize:
+                                                                                13,
+                                                                            color:
+                                                                                Colors.orange.shade900,
+                                                                            fontWeight:
+                                                                                FontWeight.w500,
+                                                                            height:
+                                                                                1.4,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    ],
+                                                                  ),
+                                                                ))
+                                                        .toList(),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(height: 24),
+                                              // Buttons
+                                              Row(
+                                                children: [
+                                                  // Cancel Button
+                                                  Expanded(
+                                                    child: TextButton(
+                                                      onPressed: () =>
+                                                          Get.back(),
+                                                      style:
+                                                          TextButton.styleFrom(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                vertical: 14),
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10),
+                                                          side: BorderSide(
+                                                            color: Colors
+                                                                .grey.shade300,
+                                                            width: 1.5,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      child: const Text(
+                                                        'Cancel',
+                                                        style: TextStyle(
+                                                          color: Colors.black87,
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  // Continue Button
+                                                  Expanded(
+                                                    child: ElevatedButton(
+                                                      onPressed: () {
+                                                        Get.back();
+                                                        _placeOrder();
+                                                      },
+                                                      style: ElevatedButton
+                                                          .styleFrom(
+                                                        backgroundColor:
+                                                            const Color(
+                                                                0xFF3E6BE0),
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                vertical: 14),
+                                                        shape:
+                                                            RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(10),
+                                                        ),
+                                                        elevation: 0,
+                                                      ),
+                                                      child: const Text(
+                                                        'Continue',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
                                           ),
-                                          ElevatedButton(
-                                            onPressed: () {
-                                              Get.back();
-                                              _placeOrder();
-                                            },
-                                            child: Text('Continue'),
-                                          ),
-                                        ],
+                                        ),
                                       ),
                                     );
                                     return;

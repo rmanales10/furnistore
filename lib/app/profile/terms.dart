@@ -85,7 +85,7 @@ class Terms extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'elsiemrybonza@gmail.com',
+              'furnistoreofficial@gmail.com',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
