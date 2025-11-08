@@ -21,9 +21,9 @@ class OrderReviewScreen extends StatefulWidget {
 }
 
 class _OrderReviewScreenState extends State<OrderReviewScreen> {
-  String selectedDeliveryOption = 'Base Fee'; // Default delivery option
+  String selectedDeliveryOption = 'Delivery Fee'; // Default delivery option
   String paymentMethod = 'Cash on Delivery'; // Default payment method
-  int additionalFee = 0;
+  int additionalFee = 100; // Default delivery fee
   final _orderController = Get.put(OrderController());
   final _firestore = Get.put(FirestoreService());
   final _auth = FirebaseAuth.instance;
@@ -286,11 +286,13 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
         onChanged: (value) {
           setState(() {
             selectedDeliveryOption = value!;
-            additionalFee = (value == 'Base Fee')
-                ? 50
-                : (value == 'Additional Fee')
-                    ? 20
-                    : 0;
+            additionalFee = (value == 'Delivery Fee')
+                ? 100
+                : (value == 'Base Fee')
+                    ? 50
+                    : (value == 'Additional Fee')
+                        ? 20
+                        : 0;
           });
         },
       ),
@@ -329,7 +331,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
     return Column(
       children: [
         _buildPriceRow('Subtotal', subtotal),
-        _buildPriceRow('Additional Fee', additionalFee),
+        _buildPriceRow('Delivery Fee', additionalFee),
         const Divider(height: 24, thickness: 1),
         _buildPriceRow(
           'Total',

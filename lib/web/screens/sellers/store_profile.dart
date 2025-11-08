@@ -16,9 +16,12 @@ class StoreProfile extends StatefulWidget {
 
 class _StoreProfileState extends State<StoreProfile> {
   final _controller = Get.put(SellerController());
+  BuildContext? _rootContext;
 
   @override
   Widget build(BuildContext context) {
+    // Store root context for navigation
+    _rootContext ??= context;
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
     final isTablet = screenWidth >= 768 && screenWidth < 1024;
@@ -202,167 +205,181 @@ class _StoreProfileState extends State<StoreProfile> {
                       isMobile
                           ? Column(
                               children: [
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      foregroundColor: Colors.white,
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
+                                // Show Approved button only if status is Pending or Rejected
+                                if (seller['status'].toLowerCase() ==
+                                        'pending' ||
+                                    seller['status'].toLowerCase() ==
+                                        'rejected') ...[
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        foregroundColor: Colors.white,
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        textStyle: TextStyle(fontSize: 13),
                                       ),
-                                      textStyle: TextStyle(fontSize: 13),
+                                      icon: Icon(Icons.check, size: 16),
+                                      label: Text('Approved'),
+                                      onPressed: () async {
+                                        await _controller.updateSellerStatus(
+                                            widget.id, 'Approved', '');
+                                      },
                                     ),
-                                    icon: Icon(Icons.check, size: 16),
-                                    label: Text('Approved'),
-                                    onPressed: seller['status'].toLowerCase() ==
-                                                'pending' ||
-                                            seller['status'].toLowerCase() ==
-                                                'rejected'
-                                        ? () async {
-                                            await _controller
-                                                .updateSellerStatus(
-                                                    widget.id, 'Approved', '');
-                                          }
-                                        : null,
                                   ),
-                                ),
-                                SizedBox(height: 12),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red.shade100,
-                                      foregroundColor: Colors.red,
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
+                                  SizedBox(height: 12),
+                                ],
+                                // Show Reject Application button only if status is Pending
+                                if (seller['status'].toLowerCase() ==
+                                    'pending') ...[
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red.shade100,
+                                        foregroundColor: Colors.red,
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        textStyle: TextStyle(fontSize: 13),
                                       ),
-                                      textStyle: TextStyle(fontSize: 13),
+                                      icon: Icon(Icons.close, size: 16),
+                                      label: Text('Reject Application'),
+                                      onPressed: () async {
+                                        _showRejectDialog(context, widget.id);
+                                      },
                                     ),
-                                    icon: Icon(Icons.close, size: 16),
-                                    label: Text('Reject Application'),
-                                    onPressed: seller['status'].toLowerCase() ==
-                                                'pending' ||
-                                            seller['status'].toLowerCase() ==
-                                                'approved'
-                                        ? () async {
-                                            _showRejectDialog(
-                                                context, widget.id);
-                                          }
-                                        : null,
                                   ),
-                                ),
-                                SizedBox(height: 12),
-                                SizedBox(
-                                  width: double.infinity,
-                                  child: OutlinedButton.icon(
-                                    style: OutlinedButton.styleFrom(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 12),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
+                                  SizedBox(height: 12),
+                                ],
+                                // Show Delete Seller button if status is Approved or Rejected
+                                if (seller['status'].toLowerCase() ==
+                                        'approved' ||
+                                    seller['status'].toLowerCase() ==
+                                        'rejected') ...[
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 12),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        side: BorderSide(
+                                            color: Colors.red.shade200),
+                                        textStyle: TextStyle(fontSize: 13),
                                       ),
-                                      side: BorderSide(
-                                          color: Colors.red.shade200),
-                                      textStyle: TextStyle(fontSize: 13),
+                                      icon: Icon(Icons.delete_outline,
+                                          size: 16, color: Colors.red),
+                                      label: Text('Delete Seller',
+                                          style: TextStyle(color: Colors.red)),
+                                      onPressed: () {
+                                        _showDeleteDialog(context, widget.id);
+                                      },
                                     ),
-                                    icon: Icon(Icons.delete_outline,
-                                        size: 16, color: Colors.red),
-                                    label: Text('Delete Seller',
-                                        style: TextStyle(color: Colors.red)),
-                                    onPressed: () {
-                                      _showDeleteDialog(context, widget.id);
-                                    },
                                   ),
-                                ),
+                                ],
                               ],
                             )
                           : Row(
                               children: [
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.green,
-                                      foregroundColor: Colors.white,
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
+                                // Show Approved button only if status is Pending or Rejected
+                                if (seller['status'].toLowerCase() ==
+                                        'pending' ||
+                                    seller['status'].toLowerCase() ==
+                                        'rejected') ...[
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        foregroundColor: Colors.white,
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 14),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        textStyle: TextStyle(
+                                            fontSize: isTablet ? 13 : 15),
                                       ),
-                                      textStyle: TextStyle(
-                                          fontSize: isTablet ? 13 : 15),
+                                      icon: Icon(Icons.check,
+                                          size: isTablet ? 16 : 18),
+                                      label: Text('Approved'),
+                                      onPressed: () async {
+                                        await _controller.updateSellerStatus(
+                                            widget.id, 'Approved', '');
+                                      },
                                     ),
-                                    icon: Icon(Icons.check,
-                                        size: isTablet ? 16 : 18),
-                                    label: Text('Approved'),
-                                    onPressed: seller['status'].toLowerCase() ==
-                                                'pending' ||
-                                            seller['status'].toLowerCase() ==
-                                                'rejected'
-                                        ? () async {
-                                            await _controller
-                                                .updateSellerStatus(
-                                                    widget.id, 'Approved', '');
-                                          }
-                                        : null,
                                   ),
-                                ),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: ElevatedButton.icon(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.red.shade100,
-                                      foregroundColor: Colors.red,
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
+                                  SizedBox(width: 16),
+                                ],
+                                // Show Reject Application button only if status is Pending
+                                if (seller['status'].toLowerCase() ==
+                                    'pending') ...[
+                                  Expanded(
+                                    child: ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.red.shade100,
+                                        foregroundColor: Colors.red,
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 14),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        textStyle: TextStyle(
+                                            fontSize: isTablet ? 13 : 15),
                                       ),
-                                      textStyle: TextStyle(
-                                          fontSize: isTablet ? 13 : 15),
+                                      icon: Icon(Icons.close,
+                                          size: isTablet ? 16 : 18),
+                                      label: Text('Reject Application'),
+                                      onPressed: () async {
+                                        _showRejectDialog(context, widget.id);
+                                      },
                                     ),
-                                    icon: Icon(Icons.close,
-                                        size: isTablet ? 16 : 18),
-                                    label: Text('Reject Application'),
-                                    onPressed: seller['status'].toLowerCase() ==
-                                                'pending' ||
-                                            seller['status'].toLowerCase() ==
-                                                'approved'
-                                        ? () async {
-                                            _showRejectDialog(
-                                                context, widget.id);
-                                          }
-                                        : null,
                                   ),
-                                ),
-                                SizedBox(width: 16),
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    style: OutlinedButton.styleFrom(
-                                      padding:
-                                          EdgeInsets.symmetric(vertical: 14),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(6),
+                                  SizedBox(width: 16),
+                                ],
+                                // Show Delete Seller button if status is Approved or Rejected
+                                if (seller['status'].toLowerCase() ==
+                                        'approved' ||
+                                    seller['status'].toLowerCase() ==
+                                        'rejected') ...[
+                                  Expanded(
+                                    child: OutlinedButton.icon(
+                                      style: OutlinedButton.styleFrom(
+                                        padding:
+                                            EdgeInsets.symmetric(vertical: 14),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        side: BorderSide(
+                                            color: Colors.red.shade200),
+                                        textStyle: TextStyle(
+                                            fontSize: isTablet ? 13 : 15),
                                       ),
-                                      side: BorderSide(
-                                          color: Colors.red.shade200),
-                                      textStyle: TextStyle(
-                                          fontSize: isTablet ? 13 : 15),
+                                      icon: Icon(Icons.delete_outline,
+                                          size: isTablet ? 16 : 18,
+                                          color: Colors.red),
+                                      label: Text('Delete Seller',
+                                          style: TextStyle(color: Colors.red)),
+                                      onPressed: () {
+                                        _showDeleteDialog(context, widget.id);
+                                      },
                                     ),
-                                    icon: Icon(Icons.delete_outline,
-                                        size: isTablet ? 16 : 18,
-                                        color: Colors.red),
-                                    label: Text('Delete Seller',
-                                        style: TextStyle(color: Colors.red)),
-                                    onPressed: () {
-                                      _showDeleteDialog(context, widget.id);
-                                    },
                                   ),
-                                ),
+                                ],
                               ],
                             ),
                     ],
@@ -470,9 +487,89 @@ class _StoreProfileState extends State<StoreProfile> {
                 ),
                 ElevatedButton(
                   onPressed: () async {
-                    await _controller.updateSellerStatus(
-                        id, 'Rejected', reasonController.text);
+                    // Close dialog first
                     Navigator.of(context).pop();
+
+                    // Show loading dialog using root navigator
+                    BuildContext? loadingContext;
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (ctx) {
+                        loadingContext = ctx;
+                        return Center(
+                          child: Card(
+                            child: Padding(
+                              padding: EdgeInsets.all(20),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(),
+                                  SizedBox(height: 16),
+                                  Text('Rejecting application...'),
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+
+                    try {
+                      // Reject and delete seller application
+                      await _controller.updateSellerStatus(
+                          id, 'Rejected', reasonController.text);
+
+                      // Close loading dialog
+                      if (loadingContext != null && loadingContext!.mounted) {
+                        Navigator.of(loadingContext!, rootNavigator: true)
+                            .pop();
+                      }
+
+                      // Navigate back to sellers list using root navigator
+                      if (_rootContext != null && _rootContext!.mounted) {
+                        Navigator.of(_rootContext!, rootNavigator: true)
+                            .pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => Sidebar(
+                              role: 'admin',
+                              initialIndex: 2, // SellerScreen index
+                            ),
+                          ),
+                          (route) => false, // Remove all previous routes
+                        );
+
+                        // Show success message after navigation
+                        Future.delayed(Duration(milliseconds: 300), () {
+                          if (_rootContext != null && _rootContext!.mounted) {
+                            ScaffoldMessenger.of(_rootContext!).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                    'Application rejected and deleted. SMS notification sent.'),
+                                backgroundColor: Colors.orange,
+                                duration: Duration(seconds: 3),
+                              ),
+                            );
+                          }
+                        });
+                      }
+                    } catch (e) {
+                      // Close loading dialog if error occurs
+                      if (loadingContext != null && loadingContext!.mounted) {
+                        Navigator.of(loadingContext!, rootNavigator: true)
+                            .pop();
+                      }
+                      // Show error message
+                      if (_rootContext != null && _rootContext!.mounted) {
+                        ScaffoldMessenger.of(_rootContext!).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.red,
@@ -523,7 +620,12 @@ class _StoreProfileState extends State<StoreProfile> {
               ),
               IconButton(
                 icon: Icon(Icons.close),
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () =>
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(
+                        builder: (context) => Sidebar(
+                              role: 'admin',
+                              initialIndex: 2,
+                            ))),
               ),
             ],
           ),
@@ -572,7 +674,12 @@ class _StoreProfileState extends State<StoreProfile> {
           ),
           actions: [
             ElevatedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () =>
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) => Sidebar(
+                            role: 'admin',
+                            initialIndex: 2,
+                          ))),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
@@ -591,66 +698,97 @@ class _StoreProfileState extends State<StoreProfile> {
             ),
             ElevatedButton(
               onPressed: () async {
-                // Show loading dialog
-                Navigator.of(context).pop(); // Close confirmation dialog
+                // Close confirmation dialog
+                Navigator.of(context).pop();
+
+                // Show loading dialog using root navigator
+                BuildContext? loadingContext;
                 showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (context) => Center(
-                    child: Card(
-                      child: Padding(
-                        padding: EdgeInsets.all(20),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            CircularProgressIndicator(),
-                            SizedBox(height: 16),
-                            Text('Deleting seller...'),
-                          ],
+                  builder: (ctx) {
+                    loadingContext = ctx;
+                    return Center(
+                      child: Card(
+                        child: Padding(
+                          padding: EdgeInsets.all(20),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircularProgressIndicator(),
+                              SizedBox(height: 16),
+                              Text('Deleting seller...'),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 );
 
-                // Delete seller
-                final success = await _controller.deleteSeller(id);
+                try {
+                  // Delete seller
+                  final success = await _controller.deleteSeller(id);
 
-                // Close loading dialog
-                Navigator.of(context).pop();
+                  // Close loading dialog
+                  if (loadingContext != null && loadingContext!.mounted) {
+                    Navigator.of(loadingContext!, rootNavigator: true).pop();
+                  }
 
-                // Show result and navigate
-                if (success) {
-                  // Navigate back to sellers list first
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Sidebar(
-                        role: 'admin',
-                        initialIndex: 2, // SellerScreen index
-                      ),
-                    ),
-                    (route) => false, // Remove all previous routes
-                  );
+                  // Show result and navigate
+                  if (success) {
+                    // Navigate back to sellers list using root navigator
+                    if (_rootContext != null && _rootContext!.mounted) {
+                      Navigator.of(_rootContext!, rootNavigator: true)
+                          .pushAndRemoveUntil(
+                        MaterialPageRoute(
+                          builder: (context) => Sidebar(
+                            role: 'admin',
+                            initialIndex: 2, // SellerScreen index
+                          ),
+                        ),
+                        (route) => false, // Remove all previous routes
+                      );
 
-                  // Show success message after navigation
-                  Future.delayed(Duration(milliseconds: 300), () {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                      // Show success message after navigation
+                      Future.delayed(Duration(milliseconds: 300), () {
+                        if (_rootContext != null && _rootContext!.mounted) {
+                          ScaffoldMessenger.of(_rootContext!).showSnackBar(
+                            SnackBar(
+                              content: Text('Seller deleted successfully'),
+                              backgroundColor: Colors.green,
+                              duration: Duration(seconds: 3),
+                            ),
+                          );
+                        }
+                      });
+                    }
+                  } else {
+                    if (_rootContext != null && _rootContext!.mounted) {
+                      ScaffoldMessenger.of(_rootContext!).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Failed to delete seller. Please try again.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  // Close loading dialog if error occurs
+                  if (loadingContext != null && loadingContext!.mounted) {
+                    Navigator.of(loadingContext!, rootNavigator: true).pop();
+                  }
+                  // Show error message
+                  if (_rootContext != null && _rootContext!.mounted) {
+                    ScaffoldMessenger.of(_rootContext!).showSnackBar(
                       SnackBar(
-                        content: Text('Seller deleted successfully'),
-                        backgroundColor: Colors.green,
+                        content: Text('Error: ${e.toString()}'),
+                        backgroundColor: Colors.red,
                         duration: Duration(seconds: 3),
                       ),
                     );
-                  });
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content:
-                          Text('Failed to delete seller. Please try again.'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -769,8 +907,8 @@ class _StoreProfileState extends State<StoreProfile> {
           child: Image.memory(
             gaplessPlayback: true,
             bytes,
-            width: 44,
-            height: 44,
+            width: 50,
+            height: 50,
             fit: BoxFit.cover,
             errorBuilder: (context, error, stackTrace) {
               // Fallback to default avatar if image fails to load

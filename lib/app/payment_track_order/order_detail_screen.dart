@@ -116,6 +116,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       );
 
       if (orderData != null) {
+        // Check and update status if 24 hours have passed
+        await _checkAndUpdateOrderStatus(orderData);
+
         print('📦 Order Data Loaded:');
         print('  - Order ID: ${orderData['order_id']}');
         print('  - Status: ${orderData['status']}');
@@ -193,6 +196,9 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               userData['phone_number'] ?? userData['phoneNumber'] ?? '',
         };
 
+        // Check and update status if 24 hours have passed
+        await _checkAndUpdateOrderStatus(finalOrderData);
+
         print('📦 Order Data Loaded via Direct Query:');
         print('  - Order ID: ${finalOrderData['order_id']}');
         print('  - Status: ${finalOrderData['status']}');
@@ -221,6 +227,67 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         isLoading = false;
       });
       print('Error loading order details directly: $e');
+    }
+  }
+
+  /// Check and automatically update order status from Pending to Processing after 24 hours
+  Future<void> _checkAndUpdateOrderStatus(
+      Map<String, dynamic> orderData) async {
+    try {
+      final status = (orderData['status'] ?? '').toString();
+      if (status.toLowerCase() != 'pending') {
+        return; // Only process pending orders
+      }
+
+      final orderDate = orderData['date'];
+      if (orderDate == null) {
+        return; // No date available
+      }
+
+      DateTime orderDateTime;
+      if (orderDate is Timestamp) {
+        orderDateTime = orderDate.toDate();
+      } else if (orderDate is String) {
+        // Try to parse string date
+        try {
+          if (orderDate.contains('at')) {
+            List<String> parts = orderDate.split(' at ');
+            if (parts.isNotEmpty) {
+              orderDateTime = DateFormat('MMMM dd, yyyy').parse(parts[0]);
+            } else {
+              return;
+            }
+          } else {
+            return;
+          }
+        } catch (e) {
+          print('Error parsing order date: $e');
+          return;
+        }
+      } else {
+        return;
+      }
+
+      // Check if 24 hours have passed
+      final now = DateTime.now();
+      final difference = now.difference(orderDateTime);
+
+      if (difference.inHours >= 24) {
+        // Update status to Processing
+        final orderId = orderData['order_id'] ?? '';
+        if (orderId.isNotEmpty) {
+          print(
+              '⏰ 24 hours passed, updating order $orderId from Pending to Processing');
+          await _firestoreService.updateOrderStatus(
+            orderId: orderId,
+            newStatus: 'Processing',
+          );
+          // Update local order data
+          orderData['status'] = 'Processing';
+        }
+      }
+    } catch (e) {
+      print('Error checking/updating order status: $e');
     }
   }
 
@@ -274,12 +341,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Order Date
+                // Order Date and Status
                 _buildOrderDate(),
-                const SizedBox(height: 12),
-
-                // Order Status
-                _buildOrderStatus(),
                 const SizedBox(height: 24),
 
                 // Products List
@@ -342,13 +405,14 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   Widget _buildOrderDate() {
     String formattedDate = 'May 03, 2025'; // Default fallback
+    DateTime? orderDate;
 
     try {
       if (orderDetails['date'] != null) {
         if (orderDetails['date'] is Timestamp) {
           Timestamp timestamp = orderDetails['date'] as Timestamp;
-          formattedDate =
-              DateFormat('MMMM dd, yyyy').format(timestamp.toDate());
+          orderDate = timestamp.toDate();
+          formattedDate = DateFormat('MMMM dd, yyyy').format(orderDate);
         } else if (orderDetails['date'] is String) {
           // Handle string date format from Firebase
           String dateString = orderDetails['date'] as String;
@@ -357,6 +421,12 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             List<String> parts = dateString.split(' at ');
             if (parts.isNotEmpty) {
               formattedDate = parts[0]; // "June 25, 2025"
+              // Try to parse the date
+              try {
+                orderDate = DateFormat('MMMM dd, yyyy').parse(parts[0]);
+              } catch (e) {
+                print('Error parsing date string: $e');
+              }
             }
           }
         }
@@ -365,12 +435,119 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       print('Error formatting date: $e');
     }
 
-    return Text(
-      'Purchased Online - $formattedDate',
-      style: TextStyle(
-        fontSize: 16,
-        color: Colors.grey.shade600,
-        fontWeight: FontWeight.w500,
+    // Get order status
+    final status = (orderDetails['status'] ?? '').toString().toLowerCase();
+    final shouldShowEstimatedDelivery = status == 'processing' ||
+        status == 'out for delivery' ||
+        status == 'delivered';
+
+    // Calculate estimated delivery date (purchase date + 2 days)
+    String? estimatedDeliveryDate;
+    if (shouldShowEstimatedDelivery && orderDate != null) {
+      try {
+        DateTime estimatedDate = orderDate.add(const Duration(days: 2));
+        estimatedDeliveryDate =
+            DateFormat('MMMM dd, yyyy').format(estimatedDate);
+      } catch (e) {
+        print('Error calculating estimated delivery date: $e');
+      }
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF3E6BE0).withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: const Color(0xFF3E6BE0).withOpacity(0.3),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Purchased Online Section
+          // const SizedBox(height: 12),
+          // const SizedBox(height: 12),
+          _buildOrderStatus(),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                Icons.shopping_bag_outlined,
+                size: 18,
+                color: Colors.grey.shade600,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Purchased Online',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      formattedDate,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Estimated Delivery Section (if available)
+          if (estimatedDeliveryDate != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.local_shipping_outlined,
+                  size: 18,
+                  color: const Color(0xFF3E6BE0),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Estimated Delivery',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: const Color(0xFF3E6BE0),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        estimatedDeliveryDate,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: const Color(0xFF3E6BE0),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+          // Order Status
+        ],
       ),
     );
   }
@@ -668,33 +845,61 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Widget _buildCancelOrderButton() {
     // Only show cancel button if order is not cancelled or delivered
     if (orderDetails['status'] == 'Cancelled' ||
+        orderDetails['status'] == 'Processing' ||
+        orderDetails['status'] == 'Out for Delivery' ||
         orderDetails['status'] == 'Delivered') {
       return const SizedBox
           .shrink(); // Hide button for cancelled or delivered orders
     }
 
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: () {
-          _showCancelOrderDialog();
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              _showCancelOrderDialog();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            child: const Text(
+              'Cancel Order',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
-        child: const Text(
-          'Cancel Order',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Icon(
+              Icons.info_outline,
+              size: 16,
+              color: Colors.grey.shade600,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'You can cancel this order before 24hrs',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: Colors.grey.shade600,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
         ),
-      ),
+      ],
     );
   }
 

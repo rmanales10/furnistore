@@ -166,7 +166,7 @@ class _StoreScreenState extends State<StoreScreen> {
                     crossAxisCount: 4,
                     mainAxisSpacing: 16,
                     crossAxisSpacing: 16,
-                    childAspectRatio: 0.8,
+                    childAspectRatio: 0.7,
                     children: filteredSellers.map((seller) {
                       final storeName = seller['storeName'] as String;
                       final storeLogoBase64 =
@@ -211,20 +211,21 @@ class _StoreScreenState extends State<StoreScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 80,
-            height: 80,
+            width: 75,
+            height: 75,
             decoration: BoxDecoration(
               color: Colors.grey[200],
               shape: BoxShape.circle,
             ),
             child: _buildStoreLogo(storeLogoBase64, name),
           ),
-          const SizedBox(height: 8),
-          Flexible(
+          const SizedBox(height: 6),
+          SizedBox(
+            width: 75,
             child: Text(
               name,
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 10,
                 color: Colors.black87,
               ),
               textAlign: TextAlign.center,
@@ -259,8 +260,8 @@ class _StoreScreenState extends State<StoreScreen> {
       return ClipOval(
         child: Image.memory(
           bytes,
-          width: 80,
-          height: 80,
+          width: 75,
+          height: 75,
           fit: BoxFit.cover,
           errorBuilder: (context, error, stackTrace) {
             // Fallback to initials if image fails to load

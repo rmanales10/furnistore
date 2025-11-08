@@ -16,16 +16,68 @@ class OrderController extends GetxController {
 
   Future<void> getOrders() async {
     try {
+      // Get current seller's user ID
+      final sellerId = currentUser?.uid;
+      if (sellerId == null) {
+        log('No seller user ID found');
+        orders.value = [];
+        return;
+      }
+
+      // First, get all product IDs that belong to this seller
+      final productsSnapshot = await _firestore
+          .collection('products')
+          .where('seller_id', isEqualTo: sellerId)
+          .get();
+
+      final sellerProductIds = productsSnapshot.docs
+          .map((doc) => doc.id)
+          .toSet(); // Use Set for faster lookup
+
+      if (sellerProductIds.isEmpty) {
+        log('No products found for seller: $sellerId');
+        orders.value = [];
+        return;
+      }
+
+      // Fetch all orders
       QuerySnapshot querySnapshot = await _firestore.collection('orders').get();
 
-      orders.value = querySnapshot.docs.map((doc) {
-        return {
-          ...doc.data() as Map<String, dynamic>,
-        };
-      }).toList();
-      // log('Success $orders');
+      // Filter orders that contain at least one product from this seller
+      final filteredOrders = <Map<String, dynamic>>[];
+
+      for (var doc in querySnapshot.docs) {
+        final orderData = doc.data() as Map<String, dynamic>;
+        final products = orderData['products'] as List<dynamic>?;
+
+        if (products != null && products.isNotEmpty) {
+          // Check if any product in the order belongs to this seller
+          bool hasSellerProduct = false;
+          for (var product in products) {
+            if (product is Map<String, dynamic>) {
+              // Check both 'product_id' and 'id' fields
+              final productId = product['product_id'] ?? product['id'];
+              if (productId != null &&
+                  sellerProductIds.contains(productId.toString())) {
+                hasSellerProduct = true;
+                break;
+              }
+            }
+          }
+
+          if (hasSellerProduct) {
+            filteredOrders.add({
+              ...orderData,
+            });
+          }
+        }
+      }
+
+      orders.value = filteredOrders;
+      log('Successfully fetched ${filteredOrders.length} orders for seller: $sellerId');
     } catch (e) {
-      // log('Error fetching orders: $e');
+      log('Error fetching orders: $e');
+      orders.value = [];
     }
   }
 

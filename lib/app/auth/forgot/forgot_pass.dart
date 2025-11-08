@@ -67,15 +67,85 @@ class ForgetPasswordScreen extends StatelessWidget {
                   onPressed: () {
                     _auth.sendPasswordResetEmail(email: email.text);
                     Get.snackbar('Success', 'Check you reset link');
-                    Get.dialog(AlertDialog(
-                      title: Text('Success'),
-                      content: Text('Please check your email.'),
-                      actions: [
-                        ElevatedButton(
-                            onPressed: () => Get.off(() => LoginScreen()),
-                            child: Text('Confirm'))
-                      ],
-                    ));
+                    Get.dialog(
+                      Dialog(
+                        backgroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Success Icon
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.green.shade50,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.check_circle_rounded,
+                                  size: 48,
+                                  color: Colors.green.shade700,
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              // Title
+                              const Text(
+                                'Success',
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // Message
+                              Text(
+                                'Please check your email.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.grey.shade700,
+                                  height: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              // Confirm Button
+                              SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Get.back();
+                                    Get.off(() => LoginScreen());
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF3E6BE0),
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 16),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text(
+                                    'Confirm',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
                   },
                   child: const Text(
                     'Submit',

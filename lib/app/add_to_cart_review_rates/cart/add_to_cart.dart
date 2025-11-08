@@ -414,14 +414,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                                 Icon(Icons.star, color: Colors.amber, size: 18),
                                 SizedBox(width: 4),
                                 Text(
-                                  '4.5',
+                                  controller.averageRating > 0
+                                      ? controller.averageRating
+                                          .toStringAsFixed(1)
+                                      : '0.0',
                                   style: TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600),
                                 ),
                                 SizedBox(width: 4),
                                 Text(
-                                  '(${review.length} Reviews)',
+                                  controller.totalReviews == 1
+                                      ? '(1 Review)'
+                                      : '(${controller.totalReviews} Reviews)',
                                   style: TextStyle(
                                       fontSize: 12, color: Colors.grey),
                                 ),
@@ -488,7 +493,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen>
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Reviews (${review.length})',
+                                  controller.totalReviews == 1
+                                      ? 'Review (1)'
+                                      : 'Reviews (${controller.totalReviews})',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,

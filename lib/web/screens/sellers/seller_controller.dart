@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 import 'package:furnistore/services/email_service.dart';
+import 'package:furnistore/services/semaphore_service.dart';
 
 class SellerController extends GetxController {
   final _firebase = FirebaseFirestore.instance;
@@ -117,28 +118,85 @@ class SellerController extends GetxController {
           log('⚠️ Please check if the seller provided an email address during registration');
         }
       } else if (status.toLowerCase() == 'rejected') {
-        // Send rejection email notification
-        if (sellerEmail.isNotEmpty) {
-          log('📧 Sending rejection email to: $sellerEmail');
-          final emailResult = await EmailService.sendSellerRejectionEmail(
-            sellerEmail: sellerEmail,
-            sellerName: sellerName,
-            storeName: storeName,
-            reason: reason.isNotEmpty
-                ? reason
-                : 'Application did not meet our requirements',
+        // Get phone number for SMS
+        String phoneNumber = '';
+
+        // Try to get phone from ownersEmail (if it's a phone number, not email)
+        String ownersContact = sellerData['ownersEmail'] ?? '';
+        if (ownersContact.isNotEmpty && !ownersContact.contains('@')) {
+          // It's a phone number, not an email
+          phoneNumber = ownersContact;
+        } else {
+          // Try to get phone number from users collection
+          try {
+            final userDoc = await _firebase.collection('users').doc(id).get();
+            if (userDoc.exists) {
+              final userData = userDoc.data()!;
+              phoneNumber =
+                  userData['phoneNumber'] ?? userData['phone_number'] ?? '';
+            }
+          } catch (e) {
+            log('❌ Error fetching user phone number: $e');
+          }
+        }
+
+        // Format phone number for SMS (needs to be 639xxxxxxxxx format)
+        String formattedPhone = '';
+        if (phoneNumber.isNotEmpty) {
+          // Remove any non-digit characters
+          String digitsOnly = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+
+          // If it starts with 0, remove it
+          if (digitsOnly.startsWith('0')) {
+            digitsOnly = digitsOnly.substring(1);
+          }
+
+          // If it doesn't start with 63, add it
+          if (!digitsOnly.startsWith('63')) {
+            formattedPhone = '63$digitsOnly';
+          } else {
+            formattedPhone = digitsOnly;
+          }
+        }
+
+        // Delete the seller application
+        await _firebase.collection('sellersApplication').doc(id).delete();
+        log('🗑️ Deleted seller application: $id');
+
+        // Refresh sellers list to remove deleted seller
+        await fetchSellers();
+
+        // Send SMS notification
+        if (formattedPhone.isNotEmpty) {
+          final rejectionReason = reason.isNotEmpty
+              ? reason
+              : 'Application did not meet our requirements';
+
+          final smsMessage = 'Hello $sellerName,\n\n'
+              'We regret to inform you that your seller application for "$storeName" has been rejected.\n\n'
+              'Reason: $rejectionReason\n\n'
+              'If you have any questions, please contact us at furnistoreofficial@gmail.com\n\n'
+              'Thank you for your interest.\n'
+              '- FurniStore Team';
+
+          log('📱 Sending rejection SMS to: $formattedPhone');
+          final smsResult = await SemaphoreService.sendSMS(
+            phoneNumber: formattedPhone,
+            message: smsMessage,
           );
 
-          if (emailResult['success']) {
-            log('✅ Rejection email sent successfully');
+          if (smsResult['success']) {
+            log('✅ Rejection SMS sent successfully');
           } else {
-            log('❌ Failed to send rejection email: ${emailResult['error']}');
+            log('❌ Failed to send rejection SMS: ${smsResult['error']}');
           }
         } else {
-          log('⚠️ No email address found for seller: $id');
+          log('⚠️ No phone number found for seller: $id');
           log('⚠️ Available fields: ${sellerData.keys.join(', ')}');
-          log('⚠️ Please check if the seller provided an email address during registration');
         }
+
+        // Don't fetch seller status after deletion since it no longer exists
+        return;
       }
 
       fetchSellersStatus(id);

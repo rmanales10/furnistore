@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:furnistore/web/screens/orders/order_controller.dart';
 import 'package:furnistore/web/screens/sidebar.dart';
 import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Orders extends StatefulWidget {
   const Orders({super.key});
@@ -104,6 +105,12 @@ class _OrdersState extends State<Orders> {
                                   _headerCell('Items', isTablet),
                                   _headerCell('Status', isTablet),
                                   _headerCell('Action', isTablet),
+                                  // _headerCell('Notes', isTablet),
+                                  Expanded(
+                                    flex: 3,
+                                    child:
+                                        SizedBox(), // Empty space for notes column
+                                  ),
                                 ],
                               ),
                             ),
@@ -230,6 +237,22 @@ class _OrdersState extends State<Orders> {
                                           flex: 2,
                                           isTablet: isTablet,
                                         ),
+                                        _bodyCell(
+                                          _getOrderNote(order).isNotEmpty
+                                              ? Text(
+                                                  _getOrderNote(order),
+                                                  style: TextStyle(
+                                                    fontSize:
+                                                        isTablet ? 12 : 13,
+                                                    color: Colors.orange[700],
+                                                    fontStyle: FontStyle.italic,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                )
+                                              : SizedBox.shrink(),
+                                          flex: 3,
+                                          isTablet: isTablet,
+                                        ),
                                       ],
                                     ),
                                   );
@@ -322,6 +345,27 @@ class _OrdersState extends State<Orders> {
                 ),
               ],
             ),
+            if (_getOrderNote(order).isNotEmpty) ...[
+              SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      size: 16, color: Colors.orange[700]),
+                  SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      _getOrderNote(order),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.orange[700],
+                        fontStyle: FontStyle.italic,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             SizedBox(height: 12),
             Divider(),
             Row(
@@ -398,6 +442,55 @@ class _OrdersState extends State<Orders> {
         return Color(0xFF3B82F6);
       default:
         return const Color(0xFF3B82F6);
+    }
+  }
+
+  String _getOrderNote(dynamic order) {
+    final status = (order['status'] ?? '').toString().toLowerCase();
+
+    try {
+      final orderDate =
+          order['date'] ?? order['created_at'] ?? order['updated_at'];
+      if (orderDate == null) {
+        return ''; // No date available
+      }
+
+      DateTime orderDateTime;
+      if (orderDate is Timestamp) {
+        orderDateTime = orderDate.toDate();
+      } else if (orderDate is String) {
+        // Try to parse string date if needed
+        return ''; // Skip string parsing for now
+      } else {
+        return '';
+      }
+
+      // Check if 3 hours or more have passed
+      final now = DateTime.now();
+      final difference = now.difference(orderDateTime);
+
+      // Only show reminder if 3+ hours have passed
+      if (difference.inHours < 3) {
+        return ''; // Less than 3 hours, no reminder needed
+      }
+
+      // Default reminders based on status
+      switch (status) {
+        case 'pending':
+          return 'Needs status update today';
+        case 'processing':
+          return 'Consider updating to next status';
+        case 'out for delivery':
+          return 'Track delivery and update when delivered';
+        case 'delivered':
+          return ''; // No action needed for delivered orders
+        case 'cancelled':
+          return ''; // No action needed for cancelled orders
+        default:
+          return 'Action required - check order status';
+      }
+    } catch (e) {
+      return ''; // Error parsing date, return empty
     }
   }
 

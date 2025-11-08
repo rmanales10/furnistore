@@ -224,7 +224,7 @@ class _LoginFormState extends State<LoginForm> {
             },
             style: ElevatedButton.styleFrom(
               minimumSize: const Size(double.infinity, 56),
-              backgroundColor: Colors.blue,
+              backgroundColor: Color(0xFF3E6BE0),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
