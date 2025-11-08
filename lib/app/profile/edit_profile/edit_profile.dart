@@ -77,14 +77,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           children: [
                             CircleAvatar(
                               radius: 50,
+                              backgroundColor: Colors.grey[200],
                               backgroundImage: _imageBytes != null
                                   ? MemoryImage(_imageBytes!)
-                                  : (_controller.userInfo['image'] != null
-                                      ? MemoryImage(base64Decode(
-                                          _controller.userInfo['image']))
+                                  : (_controller.userInfo['image'] != null &&
+                                          _controller.userInfo['image']
+                                              .toString()
+                                              .isNotEmpty
+                                      ? _buildProfileImageFromBase64(_controller
+                                          .userInfo['image']
+                                          .toString())
                                       : const AssetImage(
                                               'assets/no_profile.webp')
                                           as ImageProvider),
+                              child: _imageBytes == null &&
+                                      (_controller.userInfo['image'] == null ||
+                                          _controller.userInfo['image']
+                                              .toString()
+                                              .isEmpty)
+                                  ? Icon(
+                                      Icons.person,
+                                      size: 50,
+                                      color: Colors.grey[400],
+                                    )
+                                  : null,
                             ),
                             Positioned(
                               bottom: 0,
@@ -171,41 +187,149 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final ImagePicker picker = ImagePicker();
 
     try {
-      final XFile? pickedFile =
-          await picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85, // Compress image to reduce size
+        maxWidth: 1024, // Limit image dimensions
+        maxHeight: 1024,
+      );
 
       if (pickedFile != null) {
+        // Validate file extension
+        final fileName = pickedFile.name.toLowerCase();
+        final validExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+        final hasValidExtension =
+            validExtensions.any((ext) => fileName.endsWith(ext));
+
+        if (!hasValidExtension) {
+          Get.snackbar(
+            'Invalid File Type',
+            'Please select an image file (JPG, PNG, or WEBP)',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          log("Invalid file type selected: $fileName");
+          return;
+        }
+
+        Uint8List imageBytes;
         if (kIsWeb) {
           // For Web: Read image as bytes
-          final Uint8List webImageBytes = await pickedFile.readAsBytes();
-          setState(() {
-            _imageBytes = webImageBytes;
-            base64Image = base64Encode(webImageBytes);
-          });
-          log("Image selected on Web: ${webImageBytes.lengthInBytes} bytes");
+          imageBytes = await pickedFile.readAsBytes();
+          log("Image selected on Web: ${imageBytes.lengthInBytes} bytes");
         } else {
           // For Native: Use File
           final File nativeImageFile = File(pickedFile.path);
-          final Uint8List nativeImageBytes =
-              await nativeImageFile.readAsBytes();
-          setState(() {
-            _imageBytes = nativeImageBytes;
-            base64Image = base64Encode(nativeImageBytes);
-          });
+          imageBytes = await nativeImageFile.readAsBytes();
           log("Image selected on Native: ${nativeImageFile.path}");
         }
+
+        // Validate file size (max 2MB)
+        const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+        if (imageBytes.length > maxSizeInBytes) {
+          Get.snackbar(
+            'File Too Large',
+            'Please select an image smaller than 2MB',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          log("Image too large: ${imageBytes.lengthInBytes} bytes");
+          return;
+        }
+
+        // Validate that it's actually an image by checking magic bytes
+        if (!_isValidImage(imageBytes)) {
+          Get.snackbar(
+            'Invalid Image',
+            'The selected file is not a valid image. Please try another file.',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
+          log("Invalid image file detected");
+          return;
+        }
+
+        setState(() {
+          _imageBytes = imageBytes;
+          base64Image = base64Encode(imageBytes);
+        });
+        log("✅ Image processed successfully: ${imageBytes.lengthInBytes} bytes");
       } else {
         log("No image selected.");
       }
     } catch (e) {
       log("Error picking image: $e");
+      Get.snackbar(
+        'Error',
+        'Failed to pick image. Please try again.',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
     }
   }
 
+  // Validate image by checking magic bytes (file signature)
+  bool _isValidImage(Uint8List bytes) {
+    if (bytes.length < 4) return false;
+
+    // Check for common image file signatures
+    // JPEG: FF D8 FF
+    if (bytes[0] == 0xFF && bytes[1] == 0xD8 && bytes[2] == 0xFF) return true;
+    // PNG: 89 50 4E 47
+    if (bytes[0] == 0x89 &&
+        bytes[1] == 0x50 &&
+        bytes[2] == 0x4E &&
+        bytes[3] == 0x47) return true;
+    // WEBP: Check for "RIFF" and "WEBP"
+    if (bytes.length >= 12) {
+      final header = String.fromCharCodes(bytes.sublist(0, 4));
+      final webpHeader = String.fromCharCodes(bytes.sublist(8, 12));
+      if (header == 'RIFF' && webpHeader == 'WEBP') return true;
+    }
+
+    return false;
+  }
+
   void saveProfileInfo() {
+    // Validate name
+    if (nameController.text.trim().isEmpty) {
+      Get.snackbar(
+        'Validation Error',
+        'Please enter your full name',
+        backgroundColor: Colors.orange,
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    // Validate image if a new one was selected
+    String? imageToSave = base64Image ?? _controller.userInfo['image'];
+
+    // If there's an existing image, validate it before saving
+    if (imageToSave != null && imageToSave.isNotEmpty && base64Image == null) {
+      // Only validate existing image if we're not replacing it
+      // (base64Image is null means we're keeping the existing one)
+      try {
+        String cleanBase64 = imageToSave;
+        if (imageToSave.contains(',')) {
+          cleanBase64 = imageToSave.split(',').last;
+        }
+        final bytes = base64Decode(cleanBase64);
+        if (!_isValidImage(bytes)) {
+          // Existing image is invalid, clear it
+          log("⚠️ Existing profile image is invalid, clearing it");
+          imageToSave = null;
+        }
+      } catch (e) {
+        // Existing image is corrupted, clear it
+        log("⚠️ Existing profile image is corrupted, clearing it: $e");
+        imageToSave = null;
+      }
+    }
+
     _controller.setProfileInfo(
-      name: nameController.text,
-      image: base64Image ?? _controller.userInfo['image'],
+      name: nameController.text.trim(),
+      image: imageToSave ?? '',
     );
 
     Get.back(closeOverlays: true);
@@ -226,5 +350,36 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       nameController.text = _controller.userInfo['name'] ?? 'Default';
       emailController.text = _controller.userInfo['email'] ?? 'Default';
     });
+  }
+
+  // Helper method to safely decode and create ImageProvider from base64
+  ImageProvider _buildProfileImageFromBase64(String base64String) {
+    try {
+      // Validate base64 string
+      if (base64String.isEmpty) {
+        return const AssetImage('assets/no_profile.webp') as ImageProvider;
+      }
+
+      // Remove data URL prefix if present (e.g., "data:image/jpeg;base64,")
+      String cleanBase64 = base64String;
+      if (base64String.contains(',')) {
+        cleanBase64 = base64String.split(',').last;
+      }
+
+      // Decode base64
+      final bytes = base64Decode(cleanBase64);
+
+      // Validate that decoded bytes are actually an image
+      if (!_isValidImage(bytes)) {
+        log("⚠️ Invalid image data in profile, using default");
+        return const AssetImage('assets/no_profile.webp') as ImageProvider;
+      }
+
+      return MemoryImage(bytes);
+    } catch (e) {
+      log("❌ Error decoding profile image: $e");
+      // If decoding fails, return default image
+      return const AssetImage('assets/no_profile.webp') as ImageProvider;
+    }
   }
 }

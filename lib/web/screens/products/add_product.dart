@@ -642,8 +642,7 @@ class _AddProductPageState extends State<AddProductPage> {
                                                   Text(
                                                     'Upload Image',
                                                     style: TextStyle(
-                                                      color:
-                                                          Colors.grey.shade500,
+                                                      color: Color(0xFF667EEA),
                                                       fontSize: 12,
                                                       fontWeight:
                                                           FontWeight.w500,

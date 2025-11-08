@@ -437,11 +437,39 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
     // Get order status
     final status = (orderDetails['status'] ?? '').toString().toLowerCase();
-    final shouldShowEstimatedDelivery = status == 'processing' ||
-        status == 'out for delivery' ||
-        status == 'delivered';
+    final isDelivered = status == 'delivered';
+    final shouldShowEstimatedDelivery =
+        status == 'processing' || status == 'out for delivery';
 
-    // Calculate estimated delivery date (purchase date + 2 days)
+    // Get delivered date if order is delivered
+    String? deliveredDate;
+    if (isDelivered) {
+      try {
+        // Try to get delivered date from updated_at (when status was changed to delivered)
+        final updatedAt = orderDetails['updated_at'];
+        if (updatedAt != null) {
+          DateTime? deliveredDateTime;
+          if (updatedAt is Timestamp) {
+            deliveredDateTime = updatedAt.toDate();
+          }
+
+          if (deliveredDateTime != null) {
+            deliveredDate =
+                DateFormat('MMMM dd, yyyy').format(deliveredDateTime);
+          }
+        }
+
+        // Fallback: if no updated_at, use order date + 2 days as delivered date
+        if (deliveredDate == null && orderDate != null) {
+          DateTime estimatedDate = orderDate.add(const Duration(days: 2));
+          deliveredDate = DateFormat('MMMM dd, yyyy').format(estimatedDate);
+        }
+      } catch (e) {
+        print('Error getting delivered date: $e');
+      }
+    }
+
+    // Calculate estimated delivery date (purchase date + 2 days) for non-delivered orders
     String? estimatedDeliveryDate;
     if (shouldShowEstimatedDelivery && orderDate != null) {
       try {
@@ -507,8 +535,49 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
               ),
             ],
           ),
-          // Estimated Delivery Section (if available)
-          if (estimatedDeliveryDate != null) ...[
+          // Delivered Date Section (if order is delivered)
+          if (isDelivered && deliveredDate != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 18,
+                  color: Colors.green,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Delivered Date',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.green,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        deliveredDate,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.green,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+          // Estimated Delivery Section (if order is not delivered)
+          if (!isDelivered &&
+              shouldShowEstimatedDelivery &&
+              estimatedDeliveryDate != null) ...[
             const SizedBox(height: 12),
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1456,11 +1525,116 @@ class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
   int rating = 0;
   final _comment = TextEditingController();
   final _firestoreService = FirestoreService();
+  String? _userProfileImage;
+  bool _isLoadingImage = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserProfileImage();
+  }
+
+  Future<void> _fetchUserProfileImage() async {
+    try {
+      final currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+
+        if (userDoc.exists && mounted) {
+          final userData = userDoc.data() as Map<String, dynamic>;
+          setState(() {
+            _userProfileImage = userData['image'] ?? '';
+            _isLoadingImage = false;
+          });
+        } else {
+          setState(() {
+            _isLoadingImage = false;
+          });
+        }
+      } else {
+        setState(() {
+          _isLoadingImage = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching user profile image: $e');
+      setState(() {
+        _isLoadingImage = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
     _comment.dispose();
     super.dispose();
+  }
+
+  Widget _buildUserAvatar() {
+    if (_isLoadingImage) {
+      return CircleAvatar(
+        radius: 20,
+        backgroundColor: Colors.grey[300],
+        child: const SizedBox(
+          width: 20,
+          height: 20,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            valueColor: AlwaysStoppedAnimation<Color>(Colors.grey),
+          ),
+        ),
+      );
+    }
+
+    if (_userProfileImage != null && _userProfileImage!.isNotEmpty) {
+      try {
+        // Remove data URL prefix if present
+        String cleanBase64 = _userProfileImage!;
+        if (_userProfileImage!.contains(',')) {
+          cleanBase64 = _userProfileImage!.split(',').last;
+        }
+
+        // Decode base64
+        final bytes = base64Decode(cleanBase64);
+
+        return CircleAvatar(
+          radius: 20,
+          backgroundColor: Colors.grey[300],
+          backgroundImage: MemoryImage(bytes),
+          onBackgroundImageError: (exception, stackTrace) {
+            // If image fails to load, show default icon
+            print('Error loading profile image: $exception');
+          },
+          child: null,
+        );
+      } catch (e) {
+        print('Error decoding profile image: $e');
+        // Fallback to default icon if decoding fails
+        return CircleAvatar(
+          radius: 20,
+          backgroundColor: Colors.grey[300],
+          child: Icon(
+            Icons.person,
+            color: Colors.grey[600],
+            size: 24,
+          ),
+        );
+      }
+    }
+
+    // Default icon if no image
+    return CircleAvatar(
+      radius: 20,
+      backgroundColor: Colors.grey[300],
+      child: Icon(
+        Icons.person,
+        color: Colors.grey[600],
+        size: 24,
+      ),
+    );
   }
 
   void _showThankYouModal() {
@@ -1594,20 +1768,7 @@ class _ReviewBottomSheetState extends State<ReviewBottomSheet> {
             // User info and order number
             Row(
               children: [
-                CircleAvatar(
-                  radius: 20,
-                  backgroundColor: Colors.grey[300],
-                  backgroundImage: widget.userImage.isNotEmpty
-                      ? MemoryImage(base64Decode(widget.userImage))
-                      : null,
-                  child: widget.userImage.isEmpty
-                      ? Icon(
-                          Icons.person,
-                          color: Colors.grey[600],
-                          size: 24,
-                        )
-                      : null,
-                ),
+                _buildUserAvatar(),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(

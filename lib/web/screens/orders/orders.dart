@@ -14,11 +14,59 @@ class Orders extends StatefulWidget {
 class _OrdersState extends State<Orders> {
   final OrderController _firestore = Get.put(OrderController());
   final Set<String> _selectedOrders = {};
+  String _selectedFilter = 'Latest'; // Default filter: Latest orders
+  String? _selectedStatusFilter; // Optional status filter
 
   @override
   void initState() {
     super.initState();
     _firestore.getOrders();
+  }
+
+  // Get filtered and sorted orders
+  List<dynamic> get _filteredOrders {
+    List<dynamic> orders = List.from(_firestore.orders);
+
+    // Apply status filter
+    if (_selectedStatusFilter != null && _selectedStatusFilter!.isNotEmpty) {
+      orders = orders.where((order) {
+        final orderStatus = (order['status'] ?? '').toString().toLowerCase();
+        return orderStatus == _selectedStatusFilter!.toLowerCase();
+      }).toList();
+    }
+
+    // Apply sort filter
+    orders.sort((a, b) {
+      DateTime? dateA;
+      DateTime? dateB;
+
+      try {
+        final dateAField = a['date'] ?? a['created_at'] ?? a['updated_at'];
+        final dateBField = b['date'] ?? b['created_at'] ?? b['updated_at'];
+
+        if (dateAField is Timestamp) {
+          dateA = dateAField.toDate();
+        }
+        if (dateBField is Timestamp) {
+          dateB = dateBField.toDate();
+        }
+
+        if (dateA == null || dateB == null) return 0;
+
+        switch (_selectedFilter) {
+          case 'Latest':
+            return dateB.compareTo(dateA); // Newest first
+          case 'Oldest':
+            return dateA.compareTo(dateB); // Oldest first
+          default:
+            return dateB.compareTo(dateA); // Default to latest
+        }
+      } catch (e) {
+        return 0;
+      }
+    });
+
+    return orders;
   }
 
   @override
@@ -34,13 +82,172 @@ class _OrdersState extends State<Orders> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Orders',
-              style: TextStyle(
-                fontSize: isMobile ? 24 : (isTablet ? 26 : 28),
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Orders',
+                  style: TextStyle(
+                    fontSize: isMobile ? 24 : (isTablet ? 26 : 28),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                // Filter buttons
+                if (!isMobile)
+                  Row(
+                    children: [
+                      // Sort filter dropdown
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: DropdownButton<String>(
+                          value: _selectedFilter,
+                          underline: SizedBox(),
+                          icon: Icon(Icons.sort, size: 18),
+                          style: TextStyle(fontSize: 14, color: Colors.black87),
+                          items: ['Latest', 'Oldest'].map((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              setState(() {
+                                _selectedFilter = newValue;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      // Status filter dropdown
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: DropdownButton<String?>(
+                          value: _selectedStatusFilter,
+                          underline: SizedBox(),
+                          icon: Icon(Icons.filter_list, size: 18),
+                          hint: Text('All Status',
+                              style: TextStyle(fontSize: 14)),
+                          style: TextStyle(fontSize: 14, color: Colors.black87),
+                          items: [
+                            DropdownMenuItem<String?>(
+                                value: null, child: Text('All Status')),
+                            DropdownMenuItem<String>(
+                                value: 'pending', child: Text('Pending')),
+                            DropdownMenuItem<String>(
+                                value: 'processing', child: Text('Processing')),
+                            DropdownMenuItem<String>(
+                                value: 'out for delivery',
+                                child: Text('Out for Delivery')),
+                            DropdownMenuItem<String>(
+                                value: 'delivered', child: Text('Delivered')),
+                            DropdownMenuItem<String>(
+                                value: 'cancelled', child: Text('Cancelled')),
+                          ],
+                          onChanged: (String? newValue) {
+                            setState(() {
+                              _selectedStatusFilter = newValue;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
             ),
+            // Mobile filter buttons
+            if (isMobile) ...[
+              SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: DropdownButton<String>(
+                        value: _selectedFilter,
+                        isExpanded: true,
+                        underline: SizedBox(),
+                        icon: Icon(Icons.sort, size: 18),
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                        items: ['Latest', 'Oldest'].map((String value) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          if (newValue != null) {
+                            setState(() {
+                              _selectedFilter = newValue;
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  Expanded(
+                    child: Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: DropdownButton<String?>(
+                        value: _selectedStatusFilter,
+                        isExpanded: true,
+                        underline: SizedBox(),
+                        icon: Icon(Icons.filter_list, size: 18),
+                        hint:
+                            Text('All Status', style: TextStyle(fontSize: 14)),
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                        items: [
+                          DropdownMenuItem<String?>(
+                              value: null, child: Text('All Status')),
+                          DropdownMenuItem<String>(
+                              value: 'pending', child: Text('Pending')),
+                          DropdownMenuItem<String>(
+                              value: 'processing', child: Text('Processing')),
+                          DropdownMenuItem<String>(
+                              value: 'out for delivery',
+                              child: Text('Out for Delivery')),
+                          DropdownMenuItem<String>(
+                              value: 'delivered', child: Text('Delivered')),
+                          DropdownMenuItem<String>(
+                              value: 'cancelled', child: Text('Cancelled')),
+                        ],
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            _selectedStatusFilter = newValue;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
             SizedBox(height: isMobile ? 16 : 20),
             Expanded(
               child: Center(
@@ -77,12 +284,47 @@ class _OrdersState extends State<Orders> {
                         );
                       }
 
+                      final filteredOrders = _filteredOrders;
+
+                      if (filteredOrders.isEmpty) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.filter_alt_outlined,
+                                size: isMobile ? 64 : 80,
+                                color: Colors.grey[400],
+                              ),
+                              SizedBox(height: 16),
+                              Text(
+                                'No orders match the selected filters',
+                                style: TextStyle(
+                                  fontSize: isMobile ? 14 : 16,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _selectedStatusFilter = null;
+                                    _selectedFilter = 'Latest';
+                                  });
+                                },
+                                child: Text('Clear Filters'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
                       if (isMobile) {
                         // Mobile Card Layout
                         return ListView.builder(
-                          itemCount: _firestore.orders.length,
+                          itemCount: filteredOrders.length,
                           itemBuilder: (context, index) {
-                            final order = _firestore.orders[index];
+                            final order = filteredOrders[index];
                             return _buildOrderCard(order, context);
                           },
                         );
@@ -117,9 +359,9 @@ class _OrdersState extends State<Orders> {
 
                             Expanded(
                               child: ListView.builder(
-                                itemCount: _firestore.orders.length,
+                                itemCount: filteredOrders.length,
                                 itemBuilder: (context, index) {
-                                  final order = _firestore.orders[index];
+                                  final order = filteredOrders[index];
                                   _selectedOrders.contains(order['order_id']);
 
                                   return Container(
@@ -439,7 +681,7 @@ class _OrdersState extends State<Orders> {
       case 'delivered':
         return Color(0xFF3B82F6);
       case 'cancelled':
-        return Color(0xFF3B82F6);
+        return Colors.red;
       default:
         return const Color(0xFF3B82F6);
     }

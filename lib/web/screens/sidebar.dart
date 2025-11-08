@@ -47,10 +47,23 @@ class _SidebarState extends State<Sidebar> {
     }
   }
 
+  @override
+  void didUpdateWidget(Sidebar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Refresh store logo if role changed to seller
+    if (widget.role == 'seller' && oldWidget.role != 'seller') {
+      _fetchStoreLogo();
+    }
+  }
+
+  /// Fetch store logo from seller's application (NOT from customer profile)
+  /// This ensures sellers see their store logo, not their personal profile image
   Future<void> _fetchStoreLogo() async {
     if (user == null) return;
 
     try {
+      // Fetch store logo from sellersApplication collection
+      // This is the store logo, not the customer account profile image
       final doc = await FirebaseFirestore.instance
           .collection('sellersApplication')
           .doc(user!.uid)
@@ -59,6 +72,7 @@ class _SidebarState extends State<Sidebar> {
       if (doc.exists && mounted) {
         final data = doc.data() as Map<String, dynamic>;
         setState(() {
+          // Use store logo from seller application, not user profile image
           storeLogoBase64 = data['storeLogoBase64'];
         });
       }

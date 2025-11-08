@@ -20,6 +20,8 @@ Color _getStatusColor(String status) {
       return const Color(0xFF3E6BE0); // Blue
     case 'delivered':
       return const Color(0xFF3E6BE0); // Blue
+    case 'cancelled':
+      return Colors.red; // Red for cancelled
     default:
       return const Color(0xFF3E6BE0); // Default blue
   }
@@ -30,7 +32,7 @@ String _getValidStatus(String status) {
     case 'shipped':
       return 'Processing'; // Map shipped to processing
     case 'cancelled':
-      return 'Pending'; // Map cancelled to pending
+      return 'Cancelled'; // Keep cancelled status
     case 'returned':
       return 'Pending'; // Map returned to pending
     case 'pending':
@@ -191,7 +193,8 @@ FurniStore Team
                         children: [
                           // Customer info first on mobile
                           customerInfoCard(
-                            avatarUrl: 'assets/no_profile.webp',
+                            profileImageBase64:
+                                orderController.userInfo['image'] ?? '',
                             name: orderController.userInfo['name'] ?? '',
                             email: orderController.userInfo['email'] ?? '',
                             contactNumber:
@@ -216,8 +219,18 @@ FurniStore Team
                               'Out for Delivery',
                               'Delivered',
                             ],
-                            onStatusChanged: (value) =>
-                                _handleStatusChange(value, context),
+                            onStatusChanged: (orderController
+                                        .orderInfo['status']
+                                        ?.toString()
+                                        .toLowerCase() ==
+                                    'cancelled')
+                                ? null // Disable if cancelled
+                                : (value) =>
+                                    _handleStatusChange(value, context),
+                            isCancelled: (orderController.orderInfo['status']
+                                    ?.toString()
+                                    .toLowerCase() ==
+                                'cancelled'),
                             total:
                                 orderController.orderInfo['total'].toString(),
                             isMobile: isMobile,
@@ -276,8 +289,19 @@ FurniStore Team
                                       'Out for Delivery',
                                       'Delivered',
                                     ],
-                                    onStatusChanged: (value) =>
-                                        _handleStatusChange(value, context),
+                                    onStatusChanged: (orderController
+                                                .orderInfo['status']
+                                                ?.toString()
+                                                .toLowerCase() ==
+                                            'cancelled')
+                                        ? null // Disable if cancelled
+                                        : (value) =>
+                                            _handleStatusChange(value, context),
+                                    isCancelled: (orderController
+                                            .orderInfo['status']
+                                            ?.toString()
+                                            .toLowerCase() ==
+                                        'cancelled'),
                                     total: orderController.orderInfo['total']
                                         .toString(),
                                     isMobile: isMobile,
@@ -318,7 +342,8 @@ FurniStore Team
                           Expanded(
                             flex: 1,
                             child: customerInfoCard(
-                              avatarUrl: 'assets/no_profile.webp',
+                              profileImageBase64:
+                                  orderController.userInfo['image'] ?? '',
                               name: orderController.userInfo['name'] ?? '',
                               email: orderController.userInfo['email'] ?? '',
                               contactNumber:
@@ -341,6 +366,22 @@ FurniStore Team
   }
 
   Future<void> _handleStatusChange(String? value, BuildContext context) async {
+    // Prevent status change if order is cancelled
+    final currentStatus =
+        orderController.orderInfo['status']?.toString().toLowerCase() ?? '';
+    if (currentStatus == 'cancelled') {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Cannot change status of a cancelled order'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+
     if (value != null && value != orderController.orderInfo['status']) {
       // Show confirmation for important status changes
       if (value == 'Delivered') {
@@ -488,10 +529,11 @@ Widget orderInfoCard({
   required int items,
   required String status,
   required List<String> statusOptions,
-  required void Function(String?) onStatusChanged,
+  required void Function(String?)? onStatusChanged,
   required String total,
   bool isMobile = false,
   bool isTablet = false,
+  bool isCancelled = false,
 }) {
   return Container(
     decoration: BoxDecoration(
@@ -539,26 +581,39 @@ Widget orderInfoCard({
                         ),
                         padding:
                             EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: status,
-                            isExpanded: true,
-                            dropdownColor: Colors.white,
-                            iconEnabledColor: _getStatusColor(status),
-                            style: TextStyle(
-                              color: _getStatusColor(status),
-                              fontWeight: FontWeight.w600,
-                              fontSize: 14,
-                            ),
-                            items: statusOptions.map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                            onChanged: onStatusChanged,
-                          ),
-                        ),
+                        child: isCancelled
+                            ? Container(
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 12),
+                                child: Text(
+                                  status,
+                                  style: TextStyle(
+                                    color: _getStatusColor(status),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              )
+                            : DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: status,
+                                  isExpanded: true,
+                                  dropdownColor: Colors.white,
+                                  iconEnabledColor: _getStatusColor(status),
+                                  style: TextStyle(
+                                    color: _getStatusColor(status),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 14,
+                                  ),
+                                  items: statusOptions.map((String value) {
+                                    return DropdownMenuItem<String>(
+                                      value: value,
+                                      child: Text(value),
+                                    );
+                                  }).toList(),
+                                  onChanged: onStatusChanged,
+                                ),
+                              ),
                       ),
                     ],
                   ),
@@ -639,26 +694,40 @@ Widget orderInfoCard({
                           ),
                           padding: EdgeInsets.symmetric(
                               horizontal: isTablet ? 12 : 16, vertical: 8),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: status,
-                              dropdownColor: Colors.white,
-                              iconEnabledColor: _getStatusColor(status),
-                              iconSize: 18,
-                              style: TextStyle(
-                                color: _getStatusColor(status),
-                                fontWeight: FontWeight.w600,
-                                fontSize: isTablet ? 12 : 14,
-                              ),
-                              items: statusOptions.map((String value) {
-                                return DropdownMenuItem<String>(
-                                  value: value,
-                                  child: Text(value),
-                                );
-                              }).toList(),
-                              onChanged: onStatusChanged,
-                            ),
-                          ),
+                          child: isCancelled
+                              ? Container(
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: isTablet ? 12 : 16,
+                                      vertical: 8),
+                                  child: Text(
+                                    status,
+                                    style: TextStyle(
+                                      color: _getStatusColor(status),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: isTablet ? 12 : 14,
+                                    ),
+                                  ),
+                                )
+                              : DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: status,
+                                    dropdownColor: Colors.white,
+                                    iconEnabledColor: _getStatusColor(status),
+                                    iconSize: 18,
+                                    style: TextStyle(
+                                      color: _getStatusColor(status),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: isTablet ? 12 : 14,
+                                    ),
+                                    items: statusOptions.map((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                    onChanged: onStatusChanged,
+                                  ),
+                                ),
                         ),
                       ],
                     ),
@@ -706,13 +775,69 @@ Widget _buildInfoItem(String label, String value, bool isMobile) {
 }
 
 Widget customerInfoCard({
-  required String avatarUrl,
+  required String profileImageBase64,
   required String name,
   required String email,
   required String contactNumber,
   required String address,
   bool isMobile = false,
 }) {
+  // Build profile image widget
+  Widget buildProfileImage() {
+    if (profileImageBase64.isNotEmpty) {
+      try {
+        final bytes = base64Decode(profileImageBase64);
+        return CircleAvatar(
+          radius: isMobile ? 24 : 28,
+          backgroundColor: Colors.grey[200],
+          child: ClipOval(
+            child: Image.memory(
+              bytes,
+              width: (isMobile ? 24 : 28) * 2,
+              height: (isMobile ? 24 : 28) * 2,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              errorBuilder: (context, error, stackTrace) {
+                // Fallback to default avatar if image fails to load
+                return CircleAvatar(
+                  radius: isMobile ? 24 : 28,
+                  backgroundColor: Colors.blue[50],
+                  child: Icon(
+                    Icons.person,
+                    size: isMobile ? 24 : 28,
+                    color: Colors.blue,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      } catch (e) {
+        // Fallback to default avatar if Base64 decoding fails
+        return CircleAvatar(
+          radius: isMobile ? 24 : 28,
+          backgroundColor: Colors.blue[50],
+          child: Icon(
+            Icons.person,
+            size: isMobile ? 24 : 28,
+            color: Colors.blue,
+          ),
+        );
+      }
+    } else {
+      // Default placeholder
+      return CircleAvatar(
+        radius: isMobile ? 24 : 28,
+        backgroundColor: Colors.blue[50],
+        child: Icon(
+          Icons.person,
+          size: isMobile ? 24 : 28,
+          color: Colors.blue,
+        ),
+      );
+    }
+  }
+
   return Container(
     decoration: BoxDecoration(
       color: Colors.white,
@@ -735,10 +860,7 @@ Widget customerInfoCard({
         SizedBox(height: isMobile ? 12 : 16),
         Row(
           children: [
-            CircleAvatar(
-              radius: isMobile ? 24 : 28,
-              backgroundImage: AssetImage(avatarUrl),
-            ),
+            buildProfileImage(),
             SizedBox(width: isMobile ? 12 : 16),
             Expanded(
               child: Column(

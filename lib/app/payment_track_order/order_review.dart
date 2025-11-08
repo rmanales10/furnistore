@@ -21,7 +21,7 @@ class OrderReviewScreen extends StatefulWidget {
 }
 
 class _OrderReviewScreenState extends State<OrderReviewScreen> {
-  String selectedDeliveryOption = 'Delivery Fee'; // Default delivery option
+  String selectedDeliveryOption = ''; // Default delivery option
   String paymentMethod = 'Cash on Delivery'; // Default payment method
   int additionalFee = 100; // Default delivery fee
   final _orderController = Get.put(OrderController());
@@ -419,6 +419,85 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                   ],
                   actionsAlignment: MainAxisAlignment.center,
                 ));
+              }
+              // Validate delivery option is selected
+              if (selectedDeliveryOption.isEmpty ||
+                  selectedDeliveryOption == '') {
+                return Get.dialog(
+                  Dialog(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Warning Icon
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade50,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.warning_amber_rounded,
+                              size: 40,
+                              color: Colors.orange.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Title
+                          const Text(
+                            'Delivery Option Required',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Message
+                          Text(
+                            'Please select a delivery option before placing your order.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // OK Button
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () => Get.back(),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF3E6BE0),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                'OK',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
               }
               Get.dialog(
                 Dialog(
