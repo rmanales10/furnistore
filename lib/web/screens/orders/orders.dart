@@ -16,11 +16,25 @@ class _OrdersState extends State<Orders> {
   final Set<String> _selectedOrders = {};
   String _selectedFilter = 'Latest'; // Default filter: Latest orders
   String? _selectedStatusFilter; // Optional status filter
+  bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     _firestore.getOrders();
+  }
+
+  Future<void> _refreshOrders() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+    try {
+      await _firestore.getOrders();
+    } finally {
+      setState(() {
+        _isRefreshing = false;
+      });
+    }
   }
 
   // Get filtered and sorted orders
@@ -92,10 +106,35 @@ class _OrdersState extends State<Orders> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                // Filter buttons
+                // Filter buttons and refresh
                 if (!isMobile)
                   Row(
                     children: [
+                      // Refresh button
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: IconButton(
+                          icon: _isRefreshing
+                              ? SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        const Color(0xFF3E6BE0)),
+                                  ),
+                                )
+                              : Icon(Icons.refresh, size: 18),
+                          color: const Color(0xFF3E6BE0),
+                          onPressed: _isRefreshing ? null : _refreshOrders,
+                          tooltip: 'Refresh orders',
+                        ),
+                      ),
+                      SizedBox(width: 12),
                       // Sort filter dropdown
                       Container(
                         padding:
@@ -173,6 +212,31 @@ class _OrdersState extends State<Orders> {
               SizedBox(height: 12),
               Row(
                 children: [
+                  // Refresh button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: IconButton(
+                      icon: _isRefreshing
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    const Color(0xFF3E6BE0)),
+                              ),
+                            )
+                          : Icon(Icons.refresh, size: 18),
+                      color: const Color(0xFF3E6BE0),
+                      onPressed: _isRefreshing ? null : _refreshOrders,
+                      tooltip: 'Refresh orders',
+                    ),
+                  ),
+                  SizedBox(width: 12),
                   Expanded(
                     child: Container(
                       padding:

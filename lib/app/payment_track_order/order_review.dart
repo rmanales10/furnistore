@@ -129,8 +129,53 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                       Obx(() {
                         _orderController.getUserInfo();
                         final userInfo = _orderController.userInfo;
+
+                        // Build address string properly handling null values
+                        String addressText = '';
+                        final address = userInfo['address'];
+                        final townCity = userInfo['town_city'];
+                        final postcode = userInfo['postcode'];
+                        final phoneNumber = userInfo['phone_number'];
+
+                        // Check if address is null or empty
+                        if (address == null ||
+                            address.toString().trim().isEmpty ||
+                            address.toString().toLowerCase() == 'null') {
+                          addressText = 'Please click edit to enter details';
+                        } else {
+                          // Build address string with available fields
+                          List<String> addressParts = [];
+
+                          if (address != null &&
+                              address.toString().trim().isNotEmpty &&
+                              address.toString().toLowerCase() != 'null') {
+                            addressParts.add(address.toString().trim());
+                          }
+                          if (townCity != null &&
+                              townCity.toString().trim().isNotEmpty &&
+                              townCity.toString().toLowerCase() != 'null') {
+                            addressParts.add(townCity.toString().trim());
+                          }
+                          if (postcode != null &&
+                              postcode.toString().trim().isNotEmpty &&
+                              postcode.toString().toLowerCase() != 'null') {
+                            addressParts.add(postcode.toString().trim());
+                          }
+                          if (phoneNumber != null &&
+                              phoneNumber.toString().trim().isNotEmpty &&
+                              phoneNumber.toString().toLowerCase() != 'null') {
+                            addressParts.add(phoneNumber.toString().trim());
+                          }
+
+                          if (addressParts.isEmpty) {
+                            addressText = 'Please click edit to enter details';
+                          } else {
+                            addressText = addressParts.join('\n');
+                          }
+                        }
+
                         return _buildEditableRow(
-                          '${userInfo['address'] ?? 'Please click edit to enter details '} \n${userInfo['town_city'] ?? ''} \n${userInfo['postcode'] ?? ''} \n${userInfo['phone_number']}',
+                          addressText,
                           () => Get.to(() => const DeliveryAddressScreen()),
                         );
                       }),
@@ -396,29 +441,122 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (_orderController.userInfo['address'] == null) {
-                return Get.dialog(AlertDialog(
-                  backgroundColor: Colors.transparent,
-                  content: Text(
-                    'Please enter your details to proceed',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
+              // Check if address is null, empty, or the string "null"
+              final address = _orderController.userInfo['address'];
+              final isAddressValid = address != null &&
+                  address.toString().trim().isNotEmpty &&
+                  address.toString().toLowerCase() != 'null';
+
+              if (!isAddressValid) {
+                return Get.dialog(
+                  Dialog(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Info Icon
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF3E6BE0).withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.location_on_outlined,
+                              size: 40,
+                              color: const Color(0xFF3E6BE0),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          // Title
+                          const Text(
+                            'Delivery Address Required',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          // Message
+                          Text(
+                            'Please enter your delivery address details to proceed with your order.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade700,
+                              height: 1.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          // Buttons
+                          Row(
+                            children: [
+                              // Cancel Button
+                              Expanded(
+                                child: TextButton(
+                                  onPressed: () => Get.back(),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      side: BorderSide(
+                                        color: Colors.grey.shade300,
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              // Go to Address Button
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    Get.back();
+                                    Get.to(() => const DeliveryAddressScreen());
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF3E6BE0),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 14),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    elevation: 0,
+                                  ),
+                                  child: const Text(
+                                    'Enter Address',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                  actions: [
-                    ElevatedButton(
-                      onPressed: () => Get.back(),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey.withOpacity(.2)),
-                      child: Text(
-                        'continue',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    )
-                  ],
-                  actionsAlignment: MainAxisAlignment.center,
-                ));
+                );
               }
               // Validate delivery option is selected
               if (selectedDeliveryOption.isEmpty ||

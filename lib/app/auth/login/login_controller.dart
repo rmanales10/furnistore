@@ -9,14 +9,30 @@ class LoginController extends GetxController {
   final _firestore = FirebaseFirestore.instance;
   RxBool isSuccess = false.obs;
 
-  Future<void> loginWithEmailAndPassword(String email, String password) async {
+  Future<Map<String, dynamic>> loginWithEmailAndPassword(
+      String email, String password) async {
     try {
       final userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      final userId = userCredential.user?.uid;
+      final user = userCredential.user;
+
+      // Check if email is verified
+      if (user != null && !user.emailVerified) {
+        // Sign out the user since email is not verified
+        await _auth.signOut();
+        log('❌ Email not verified for user: ${user.email}');
+        return {
+          'success': false,
+          'error': 'email_not_verified',
+          'message':
+              'Please verify your email before signing in. A verification email has been sent to your email address.',
+        };
+      }
+
+      final userId = user?.uid;
 
       // Set user status to online
       if (userId != null) {
@@ -25,13 +41,36 @@ class LoginController extends GetxController {
         });
       }
       isSuccess.value = true;
-      return;
+      return {
+        'success': true,
+        'message': 'Login successful',
+      };
     } on FirebaseAuthException catch (e) {
-      log(e.code);
+      log('Firebase Auth Error: ${e.code}');
+      String errorMessage = 'Invalid email or password';
+      if (e.code == 'user-not-found') {
+        errorMessage = 'No account found with this email address';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'Incorrect password';
+      } else if (e.code == 'invalid-email') {
+        errorMessage = 'Invalid email address';
+      } else if (e.code == 'user-disabled') {
+        errorMessage = 'This account has been disabled';
+      }
       isSuccess.value = false;
+      return {
+        'success': false,
+        'error': e.code,
+        'message': errorMessage,
+      };
     } catch (e) {
-      log(e.toString());
+      log('Login Error: $e');
       isSuccess.value = false;
+      return {
+        'success': false,
+        'error': 'unknown',
+        'message': 'An error occurred. Please try again.',
+      };
     }
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:furnistore/app/auth/login/login_controller.dart';
+import 'package:furnistore/app/auth/verification/verification.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -165,18 +167,124 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _handleLogin() async {
-    await controller.loginWithEmailAndPassword(
-      _email.text,
+    final result = await controller.loginWithEmailAndPassword(
+      _email.text.trim(),
       _password.text,
     );
     setState(() {
       isSubmitting = false;
     });
-    if (controller.isSuccess.value) {
+
+    if (result['success'] == true) {
       Get.offAllNamed('/home');
       Get.snackbar('Success', 'Login Successfully');
     } else {
-      Get.snackbar('Error', 'Invalid email or password');
+      final error = result['error'];
+      final message = result['message'] ?? 'Invalid email or password';
+
+      if (error == 'email_not_verified') {
+        // Show dialog to resend verification email
+        _showEmailVerificationDialog();
+      } else {
+        Get.snackbar('Error', message);
+      }
     }
+  }
+
+  void _showEmailVerificationDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text(
+          'Email Not Verified',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Please verify your email address before signing in.',
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Email: ${_email.text.trim()}',
+              style: TextStyle(
+                color: Colors.blue[700],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'A verification email has been sent to your email address. Please check your inbox and click the verification link.',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              // Navigate to email verification screen
+              Get.to(() => EmailVerificationScreen(email: _email.text.trim()));
+            },
+            child: const Text(
+              'Go to Verification',
+              style: TextStyle(
+                color: Color(0xFF3E6BE0),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              try {
+                // Resend verification email
+                final user = FirebaseAuth.instance.currentUser;
+                if (user != null && !user.emailVerified) {
+                  await user.sendEmailVerification();
+                  Get.snackbar(
+                    'Success',
+                    'Verification email sent! Please check your inbox.',
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                  );
+                } else {
+                  // If user is null, try to sign in again to get the user
+                  final credential =
+                      await FirebaseAuth.instance.signInWithEmailAndPassword(
+                    email: _email.text.trim(),
+                    password: _password.text,
+                  );
+                  await credential.user?.sendEmailVerification();
+                  await FirebaseAuth.instance.signOut();
+                  Get.snackbar(
+                    'Success',
+                    'Verification email sent! Please check your inbox.',
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                  );
+                }
+                Navigator.of(context).pop();
+              } catch (e) {
+                Get.snackbar(
+                  'Error',
+                  'Failed to send verification email. Please try again.',
+                  backgroundColor: Colors.red,
+                  colorText: Colors.white,
+                );
+              }
+            },
+            child: const Text(
+              'Resend Email',
+              style: TextStyle(
+                color: Color(0xFF3E6BE0),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

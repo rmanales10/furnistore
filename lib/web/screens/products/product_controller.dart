@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
@@ -32,14 +33,63 @@ class ProductController extends GetxController {
     }
   }
 
-  // Delete a product from Firestore
+  // Delete a product from Firestore and all orders containing it
   Future<void> deleteProduct(String productId) async {
     try {
+      // First, find all orders that contain this product
+      final ordersSnapshot = await _firestore.collection('orders').get();
+      final ordersToDelete = <String>[];
+
+      for (var orderDoc in ordersSnapshot.docs) {
+        final orderData = orderDoc.data();
+        final products = orderData['products'] as List<dynamic>?;
+
+        if (products != null && products.isNotEmpty) {
+          // Check if any product in the order matches the deleted product
+          bool containsProduct = false;
+          for (var product in products) {
+            if (product is Map<String, dynamic>) {
+              // Check both 'product_id' and 'id' fields
+              final orderProductId = product['product_id'] ?? product['id'];
+              if (orderProductId != null &&
+                  orderProductId.toString() == productId) {
+                containsProduct = true;
+                break;
+              }
+            }
+          }
+
+          if (containsProduct) {
+            // Use order_id if available, otherwise use document ID
+            final orderId = orderData['order_id'] ?? orderDoc.id;
+            ordersToDelete.add(orderDoc.id); // Use document ID for deletion
+            log('🗑️ Found order containing deleted product: $orderId');
+          }
+        }
+      }
+
+      // Delete all orders containing this product
+      if (ordersToDelete.isNotEmpty) {
+        log('🗑️ Deleting ${ordersToDelete.length} order(s) containing product: $productId');
+        for (var orderDocId in ordersToDelete) {
+          try {
+            await _firestore.collection('orders').doc(orderDocId).delete();
+            log('✅ Deleted order: $orderDocId');
+          } catch (e) {
+            log('❌ Error deleting order $orderDocId: $e');
+          }
+        }
+      } else {
+        log('ℹ️ No orders found containing product: $productId');
+      }
+
+      // Now delete the product itself
       await _firestore.collection('products').doc(productId).delete();
       products.removeWhere((product) => product['id'] == productId);
-      // log('Product $productId deleted successfully');
+      log('✅ Product $productId deleted successfully');
     } catch (e) {
-      // log('Error deleting product: $e');
+      log('❌ Error deleting product: $e');
+      rethrow;
     }
   }
 

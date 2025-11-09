@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:furnistore/web/auth_screen/login_controller.dart';
 import 'package:get/get.dart';
 
@@ -130,15 +131,69 @@ class _LoginFormState extends State<LoginForm> {
   bool isSubmitting = false;
 
   Future<void> loginUser() async {
-    await _controller.login(_emailController.text, _passwordController.text);
-    if (_controller.role.value == 'admin') {
-      Get.offAllNamed('/admin-dashboard');
-      Get.snackbar('Success', 'Admin Logged in successfully!');
-    } else if (_controller.role.value == 'seller') {
-      Get.offAllNamed('/seller-dashboard');
-      Get.snackbar('Success', 'Seller Logged in successfully!');
+    final result = await _controller.login(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+
+    if (result['success'] == true) {
+      final role = result['role'];
+      if (role == 'admin') {
+        Get.offAllNamed('/admin-dashboard');
+        Get.snackbar('Success', 'Admin Logged in successfully!');
+      } else if (role == 'seller') {
+        Get.offAllNamed('/seller-dashboard');
+        Get.snackbar('Success', 'Seller Logged in successfully!');
+      }
     } else {
-      Get.snackbar('Error', 'You are not authorized to access this page');
+      final error = result['error'];
+      final message = result['message'] ?? 'Login failed';
+
+      if (error == 'email_not_verified') {
+        Get.dialog(
+          AlertDialog(
+            title: const Text('Email Not Verified'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  try {
+                    // Try to sign in to get user, then send verification
+                    final credential =
+                        await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: _emailController.text.trim(),
+                      password: _passwordController.text,
+                    );
+                    await credential.user?.sendEmailVerification();
+                    await FirebaseAuth.instance.signOut();
+                    Get.snackbar(
+                      'Success',
+                      'Verification email sent! Please check your inbox.',
+                      backgroundColor: Colors.green,
+                      colorText: Colors.white,
+                    );
+                  } catch (e) {
+                    Get.snackbar(
+                      'Error',
+                      'Failed to send verification email. Please try again.',
+                      backgroundColor: Colors.red,
+                      colorText: Colors.white,
+                    );
+                  }
+                  Get.back();
+                },
+                child: const Text('Resend Verification Email'),
+              ),
+              TextButton(
+                onPressed: () => Get.back(),
+                child: const Text('Close'),
+              ),
+            ],
+          ),
+        );
+      } else {
+        Get.snackbar('Error', message);
+      }
     }
   }
 

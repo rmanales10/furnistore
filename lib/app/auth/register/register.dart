@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:furnistore/app/auth/register/register_controller.dart';
-import 'package:furnistore/app/auth/otp_verification/otp_verification.dart';
+import 'package:furnistore/app/auth/verification/verification.dart';
 import 'package:get/get.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -17,28 +16,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _name = TextEditingController();
-  final _phoneNumber = TextEditingController();
   final _controller = Get.put(RegisterController());
   bool isSubmitting = false;
   final _formKey = GlobalKey<FormState>();
-  String? _phoneError;
-
-  // Phone number validation
-  String? _validatePhoneNumber(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Phone number is required';
-    }
-
-    // Remove any non-digit characters
-    String cleanNumber = value.replaceAll(RegExp(r'[^\d]'), '');
-
-    // Check if it starts with 9 and has 10 digits total (since +63 is the prefix)
-    if (!cleanNumber.startsWith('9') || cleanNumber.length != 10) {
-      return 'Please enter a valid Philippine phone number (9xxxxxxxxx)';
-    }
-
-    return null;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +53,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _name,
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Name is required';
+                    }
+                    if (value.trim().length < 2) {
+                      return 'Name must be at least 2 characters';
+                    }
+                    return null;
+                  },
                   decoration: InputDecoration(
                     labelText: 'Name',
                     border: OutlineInputBorder(
@@ -86,6 +75,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _email,
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Email is required';
+                    }
+                    if (!value.contains('@') || !value.contains('.')) {
+                      return 'Please enter a valid email address';
+                    }
+                    return null;
+                  },
                   decoration: InputDecoration(
                     labelText: 'Email',
                     border: OutlineInputBorder(
@@ -98,39 +97,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
-                  controller: _phoneNumber,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  validator: _validatePhoneNumber,
-                  onChanged: (value) {
-                    setState(() {
-                      _phoneError = _validatePhoneNumber(value);
-                    });
-                  },
-                  decoration: InputDecoration(
-                    labelText: 'Phone Number',
-                    hintText: '9xxxxxxxxx',
-                    errorText: _phoneError,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Colors.grey[100],
-                    prefixText: '+63 ',
-                    prefixStyle: TextStyle(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
                   controller: _password,
                   obscureText: obs,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Password is required';
+                    }
+                    if (value.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
                   decoration: InputDecoration(
                     labelText: 'Password',
                     border: OutlineInputBorder(
@@ -283,26 +260,33 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       await _controller.registerUser(
-        name: _name.text,
-        email: _email.text,
-        phoneNumber: _phoneNumber.text,
+        name: _name.text.trim(),
+        email: _email.text.trim(),
         status: 'active',
         password: _password.text,
       );
 
       if (_controller.isSuccess.value) {
-        Get.offAll(() => OTPVerificationScreen(
-              phoneNumber: _phoneNumber.text,
-              userId: _controller.userId ?? '',
-              name: _name.text,
-              email: _email.text,
-              password: _password.text,
+        // Navigate to email verification screen
+        Get.offAll(() => EmailVerificationScreen(
+              email: _email.text.trim(),
             ));
       } else {
         Get.snackbar('Error', 'Failed to register user');
       }
     } catch (e) {
-      Get.snackbar('Error', 'Registration failed: ${e.toString()}');
+      String errorMessage = 'Registration failed';
+      if (e.toString().contains('email-already-in-use')) {
+        errorMessage =
+            'This email is already registered. Please use a different email or sign in.';
+      } else if (e.toString().contains('weak-password')) {
+        errorMessage = 'Password is too weak. Please use a stronger password.';
+      } else if (e.toString().contains('invalid-email')) {
+        errorMessage = 'Please enter a valid email address.';
+      } else {
+        errorMessage = 'Registration failed: ${e.toString()}';
+      }
+      Get.snackbar('Error', errorMessage);
     } finally {
       setState(() {
         isSubmitting = false;

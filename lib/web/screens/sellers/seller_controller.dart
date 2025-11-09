@@ -117,6 +117,70 @@ class SellerController extends GetxController {
           log('⚠️ Available fields: ${sellerData.keys.join(', ')}');
           log('⚠️ Please check if the seller provided an email address during registration');
         }
+
+        // Get phone number for SMS
+        String phoneNumber = '';
+        String ownersContact = sellerData['ownersEmail'] ?? '';
+        if (ownersContact.isNotEmpty && !ownersContact.contains('@')) {
+          // It's a phone number, not an email
+          phoneNumber = ownersContact;
+        } else {
+          // Try to get phone number from users collection
+          try {
+            final userDoc = await _firebase.collection('users').doc(id).get();
+            if (userDoc.exists) {
+              final userData = userDoc.data()!;
+              phoneNumber =
+                  userData['phoneNumber'] ?? userData['phone_number'] ?? '';
+            }
+          } catch (e) {
+            log('❌ Error fetching user phone number: $e');
+          }
+        }
+
+        // Format phone number for SMS (needs to be 639xxxxxxxxx format)
+        String formattedPhone = '';
+        if (phoneNumber.isNotEmpty) {
+          // Remove any non-digit characters
+          String digitsOnly = phoneNumber.replaceAll(RegExp(r'[^\d]'), '');
+
+          // If it starts with 0, remove it
+          if (digitsOnly.startsWith('0')) {
+            digitsOnly = digitsOnly.substring(1);
+          }
+
+          // If it doesn't start with 63, add it
+          if (!digitsOnly.startsWith('63')) {
+            formattedPhone = '63$digitsOnly';
+          } else {
+            formattedPhone = digitsOnly;
+          }
+        }
+
+        // Send SMS notification
+        if (formattedPhone.isNotEmpty) {
+          final smsMessage = 'Hello $sellerName,\n\n'
+              'Congratulations! Your seller application for "$storeName" has been approved.\n\n'
+              'You can now start listing and selling your products on FurniStore.\n\n'
+              'If you have any questions, please contact us at furnistoreofficial@gmail.com\n\n'
+              'Welcome to FurniStore!\n'
+              '- FurniStore Team';
+
+          log('📱 Sending approval SMS to: $formattedPhone');
+          final smsResult = await SemaphoreService.sendSMS(
+            phoneNumber: formattedPhone,
+            message: smsMessage,
+          );
+
+          if (smsResult['success']) {
+            log('✅ Approval SMS sent successfully');
+          } else {
+            log('❌ Failed to send approval SMS: ${smsResult['error']}');
+          }
+        } else {
+          log('⚠️ No phone number found for seller: $id');
+          log('⚠️ Available fields: ${sellerData.keys.join(', ')}');
+        }
       } else if (status.toLowerCase() == 'rejected') {
         // Get phone number for SMS
         String phoneNumber = '';

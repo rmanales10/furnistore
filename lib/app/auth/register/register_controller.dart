@@ -27,7 +27,6 @@ class RegisterController extends GetxController {
   Future<void> registerUser({
     required String name,
     required String email,
-    required String phoneNumber,
     required String status,
     required String password,
   }) async {
@@ -36,18 +35,23 @@ class RegisterController extends GetxController {
           email: email, password: password);
       userId = userCredential.user?.uid;
       log('User created successfully: $userId');
+
+      // Send email verification
+      if (userCredential.user != null) {
+        await userCredential.user!.sendEmailVerification();
+        log('✅ Email verification sent successfully');
+      }
+
       await _firestore.collection('users').doc(userId).set({
         'name': name,
         'email': email,
-        'phoneNumber': phoneNumber,
         'country': await getCountry(),
         'status': status,
-        'phoneVerified': false, // Phone verification status
+        'emailVerified': false, // Email verification status
         'createdAt': FieldValue.serverTimestamp(),
         'password': encryptText(password),
       });
       log('User data saved successfully.');
-      // No email verification - using phone verification instead
       isSuccess.value = true;
     } catch (e) {
       log('Error saving user data to Firestore: $e');

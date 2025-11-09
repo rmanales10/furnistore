@@ -16,11 +16,25 @@ class _SellerDashboardState extends State<SellerDashboard> {
   final _controller = Get.put(DashboardController());
   final _incomeController = Get.put(IncomeController());
   bool _isGeneratingPDF = false;
+  bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     _controller.fetchDataFromFirestore();
+  }
+
+  Future<void> _refreshDashboard() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+    try {
+      await _controller.fetchDataFromFirestore();
+    } finally {
+      setState(() {
+        _isRefreshing = false;
+      });
+    }
   }
 
   Future<void> _generatePDF() async {
@@ -82,12 +96,41 @@ class _SellerDashboardState extends State<SellerDashboard> {
               ? Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "General Dashboard",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "General Dashboard",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        // Refresh button
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: IconButton(
+                            icon: _isRefreshing
+                                ? SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          const Color(0xFF3E6BE0)),
+                                    ),
+                                  )
+                                : Icon(Icons.refresh, size: 18),
+                            color: const Color(0xFF3E6BE0),
+                            onPressed: _isRefreshing ? null : _refreshDashboard,
+                            tooltip: 'Refresh dashboard',
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 12),
                     SizedBox(
@@ -138,38 +181,67 @@ class _SellerDashboardState extends State<SellerDashboard> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    ElevatedButton.icon(
-                      onPressed: _isGeneratingPDF ? null : _generatePDF,
-                      icon: _isGeneratingPDF
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
-                              ),
-                            )
-                          : const Icon(Icons.picture_as_pdf, size: 20),
-                      label: Text(
-                        _isGeneratingPDF ? 'Generating...' : 'Export PDF',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                    Row(
+                      children: [
+                        // Refresh button
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: IconButton(
+                            icon: _isRefreshing
+                                ? SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          const Color(0xFF3E6BE0)),
+                                    ),
+                                  )
+                                : Icon(Icons.refresh, size: 18),
+                            color: const Color(0xFF3E6BE0),
+                            onPressed: _isRefreshing ? null : _refreshDashboard,
+                            tooltip: 'Refresh dashboard',
+                          ),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF3E6BE0),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 16,
+                        SizedBox(width: 12),
+                        ElevatedButton.icon(
+                          onPressed: _isGeneratingPDF ? null : _generatePDF,
+                          icon: _isGeneratingPDF
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white),
+                                  ),
+                                )
+                              : const Icon(Icons.picture_as_pdf, size: 20),
+                          label: Text(
+                            _isGeneratingPDF ? 'Generating...' : 'Export PDF',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF3E6BE0),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24,
+                              vertical: 16,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 2,
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
+                      ],
                     ),
                   ],
                 ),

@@ -18,11 +18,25 @@ class _ProductPageState extends State<ProductPage> {
   int? editingIndex; // Track the index of the row being edited
   final Map<int, Map<String, dynamic>> editedProducts =
       {}; // Store edited product details
+  bool _isRefreshing = false;
 
   @override
   void initState() {
     super.initState();
     productController.fetchProducts();
+  }
+
+  Future<void> _refreshProducts() async {
+    setState(() {
+      _isRefreshing = true;
+    });
+    try {
+      await productController.fetchProducts();
+    } finally {
+      setState(() {
+        _isRefreshing = false;
+      });
+    }
   }
 
   @override
@@ -42,12 +56,41 @@ class _ProductPageState extends State<ProductPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Products",
-                style: TextStyle(
-                  fontSize: isMobile ? 24 : (isTablet ? 26 : 30),
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    "Products",
+                    style: TextStyle(
+                      fontSize: isMobile ? 24 : (isTablet ? 26 : 30),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  // Refresh button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.grey.shade300),
+                    ),
+                    child: IconButton(
+                      icon: _isRefreshing
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    const Color(0xFF3E6BE0)),
+                              ),
+                            )
+                          : Icon(Icons.refresh, size: 18),
+                      color: const Color(0xFF3E6BE0),
+                      onPressed: _isRefreshing ? null : _refreshProducts,
+                      tooltip: 'Refresh products',
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: isMobile ? 16 : 20),
               Container(
