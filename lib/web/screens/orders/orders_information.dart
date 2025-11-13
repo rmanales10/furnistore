@@ -220,17 +220,25 @@ FurniStore Team
                               'Delivered',
                             ],
                             onStatusChanged: (orderController
-                                        .orderInfo['status']
-                                        ?.toString()
-                                        .toLowerCase() ==
-                                    'cancelled')
-                                ? null // Disable if cancelled
+                                            .orderInfo['status']
+                                            ?.toString()
+                                            .toLowerCase() ==
+                                        'cancelled' ||
+                                    orderController.orderInfo['status']
+                                            ?.toString()
+                                            .toLowerCase() ==
+                                        'delivered')
+                                ? null // Disable if cancelled or delivered
                                 : (value) =>
                                     _handleStatusChange(value, context),
                             isCancelled: (orderController.orderInfo['status']
                                     ?.toString()
                                     .toLowerCase() ==
                                 'cancelled'),
+                            isDelivered: (orderController.orderInfo['status']
+                                    ?.toString()
+                                    .toLowerCase() ==
+                                'delivered'),
                             total:
                                 orderController.orderInfo['total'].toString(),
                             isMobile: isMobile,
@@ -290,11 +298,15 @@ FurniStore Team
                                       'Delivered',
                                     ],
                                     onStatusChanged: (orderController
-                                                .orderInfo['status']
-                                                ?.toString()
-                                                .toLowerCase() ==
-                                            'cancelled')
-                                        ? null // Disable if cancelled
+                                                    .orderInfo['status']
+                                                    ?.toString()
+                                                    .toLowerCase() ==
+                                                'cancelled' ||
+                                            orderController.orderInfo['status']
+                                                    ?.toString()
+                                                    .toLowerCase() ==
+                                                'delivered')
+                                        ? null // Disable if cancelled or delivered
                                         : (value) =>
                                             _handleStatusChange(value, context),
                                     isCancelled: (orderController
@@ -302,6 +314,11 @@ FurniStore Team
                                             ?.toString()
                                             .toLowerCase() ==
                                         'cancelled'),
+                                    isDelivered: (orderController
+                                            .orderInfo['status']
+                                            ?.toString()
+                                            .toLowerCase() ==
+                                        'delivered'),
                                     total: orderController.orderInfo['total']
                                         .toString(),
                                     isMobile: isMobile,
@@ -366,7 +383,7 @@ FurniStore Team
   }
 
   Future<void> _handleStatusChange(String? value, BuildContext context) async {
-    // Prevent status change if order is cancelled
+    // Prevent status change if order is cancelled or delivered
     final currentStatus =
         orderController.orderInfo['status']?.toString().toLowerCase() ?? '';
     if (currentStatus == 'cancelled') {
@@ -374,6 +391,18 @@ FurniStore Team
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Cannot change status of a cancelled order'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      return;
+    }
+    if (currentStatus == 'delivered') {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Cannot change status of a delivered order'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
           ),
@@ -534,6 +563,7 @@ Widget orderInfoCard({
   bool isMobile = false,
   bool isTablet = false,
   bool isCancelled = false,
+  bool isDelivered = false,
 }) {
   return Container(
     decoration: BoxDecoration(
@@ -581,7 +611,7 @@ Widget orderInfoCard({
                         ),
                         padding:
                             EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        child: isCancelled
+                        child: (isCancelled || isDelivered)
                             ? Container(
                                 padding: EdgeInsets.symmetric(
                                     horizontal: 16, vertical: 12),
@@ -694,7 +724,7 @@ Widget orderInfoCard({
                           ),
                           padding: EdgeInsets.symmetric(
                               horizontal: isTablet ? 12 : 16, vertical: 8),
-                          child: isCancelled
+                          child: (isCancelled || isDelivered)
                               ? Container(
                                   padding: EdgeInsets.symmetric(
                                       horizontal: isTablet ? 12 : 16,

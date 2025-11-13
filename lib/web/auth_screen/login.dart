@@ -62,7 +62,7 @@ class _MyLoginState extends State<MyLogin> {
                     LogoWidget(isMobile: isMobile),
                     SizedBox(height: isMobile ? 24 : 32),
                     Text(
-                      'Welcome Back Admin',
+                      'Welcome to FurniStore',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: isMobile ? 22 : (isTablet ? 24 : 28),

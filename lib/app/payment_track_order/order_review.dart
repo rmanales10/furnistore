@@ -29,6 +29,7 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
   final _auth = FirebaseAuth.instance;
   final totalItem = 0.obs;
   final subtotal = 0.obs;
+  bool _isPlacingOrder = false; // Loading state for order placement
 
   // Helper method to display peso symbol with FontAwesome
   Widget _buildPesoText(String amount, {TextStyle? style}) {
@@ -50,7 +51,17 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
   }
 
   // Method to place the order
-  Future<void> _placeOrder() async {
+  Future<void> _placeOrder({VoidCallback? onLoadingStateChanged}) async {
+    if (_isPlacingOrder) return; // Prevent multiple calls
+
+    // Set loading state
+    setState(() {
+      _isPlacingOrder = true;
+    });
+    if (onLoadingStateChanged != null) {
+      onLoadingStateChanged();
+    }
+
     try {
       await _firestore.storeOrderData(
         date: DateTime.now(),
@@ -65,16 +76,35 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
         deliveryFee: additionalFee,
       );
       await _firestore.deleteCartForCheckout();
-      Get.back();
-      _showSuccessDialog(context);
+
+      if (mounted) {
+        // Reset loading state
+        setState(() {
+          _isPlacingOrder = false;
+        });
+        if (onLoadingStateChanged != null) {
+          onLoadingStateChanged();
+        }
+        Get.back(); // Close the modal
+        _showSuccessDialog(context);
+      }
     } catch (e) {
       log('❌ Error placing order: $e');
-      Get.snackbar(
-        'Error',
-        'Failed to place order. Please try again.',
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      if (mounted) {
+        // Reset loading state on error
+        setState(() {
+          _isPlacingOrder = false;
+        });
+        if (onLoadingStateChanged != null) {
+          onLoadingStateChanged();
+        }
+        Get.snackbar(
+          'Error',
+          'Failed to place order. Please try again.',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
+      }
     }
   }
 
@@ -638,348 +668,529 @@ class _OrderReviewScreenState extends State<OrderReviewScreen> {
                 );
               }
               Get.dialog(
-                Dialog(
-                  backgroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Title
-                        const Text(
-                          'Place Order',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Total Amount
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                StatefulBuilder(
+                  builder: (context, setModalState) {
+                    return Dialog(
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
+                            // Title
                             const Text(
-                              'Total:',
+                              'Place Order',
                               style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                            _buildPesoText(
-                              total.toString(),
-                              style: const TextStyle(
-                                fontSize: 18,
+                                fontSize: 20,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
+                            const SizedBox(height: 16),
 
-                        // Buttons
-                        Row(
-                          children: [
-                            // Cancel Button
-                            Expanded(
-                              child: TextButton(
-                                onPressed: () => Get.back(),
-                                style: TextButton.styleFrom(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    side: BorderSide(color: Colors.grey[300]!),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'Cancel',
+                            // Total Amount
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Total:',
                                   style: TextStyle(
-                                    color: Colors.grey,
                                     fontSize: 16,
+                                    color: Colors.grey,
                                   ),
                                 ),
-                              ),
+                                _buildPesoText(
+                                  total.toString(),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(height: 24),
 
-                            // Place Order Button
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: () async {
-                                  // Validate stock availability before placing order
-                                  final stockValidation = await _firestore
-                                      .validateStockAvailability(
-                                          widget.productList);
-
-                                  if (!stockValidation['isValid']) {
-                                    // Show error dialog if stock validation fails
-                                    Get.dialog(
-                                      AlertDialog(
-                                        title: Text('Stock Unavailable'),
-                                        content: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                                'The following items are not available:'),
-                                            SizedBox(height: 10),
-                                            ...stockValidation['errors']
-                                                .map<Widget>((error) => Padding(
-                                                      padding: EdgeInsets.only(
-                                                          bottom: 5),
-                                                      child: Text('• $error',
-                                                          style: TextStyle(
-                                                              color:
-                                                                  Colors.red)),
-                                                    ))
-                                                .toList(),
-                                          ],
-                                        ),
-                                        actions: [
-                                          TextButton(
-                                            onPressed: () => Get.back(),
-                                            child: Text('OK'),
-                                          ),
-                                        ],
+                            // Buttons
+                            Row(
+                              children: [
+                                // Cancel Button
+                                Expanded(
+                                  child: TextButton(
+                                    onPressed: _isPlacingOrder
+                                        ? null
+                                        : () => Get.back(),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                        side: BorderSide(
+                                            color: Colors.grey[300]!),
                                       ),
-                                    );
-                                    return;
-                                  }
+                                    ),
+                                    child: Text(
+                                      'Cancel',
+                                      style: TextStyle(
+                                        color: _isPlacingOrder
+                                            ? Colors.grey.shade400
+                                            : Colors.grey,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
 
-                                  // Show warnings if any
-                                  if (stockValidation['warnings'].isNotEmpty) {
-                                    Get.dialog(
-                                      Dialog(
-                                        backgroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                        ),
-                                        child: Container(
-                                          padding: const EdgeInsets.all(24),
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              // Warning Icon
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.all(12),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.orange.shade50,
-                                                  shape: BoxShape.circle,
-                                                ),
-                                                child: Icon(
-                                                  Icons.warning_amber_rounded,
-                                                  size: 40,
-                                                  color: Colors.orange.shade700,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 16),
-                                              // Title
-                                              const Text(
-                                                'Stock Warning',
-                                                style: TextStyle(
-                                                  fontSize: 20,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Colors.black87,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 8),
-                                              // Subtitle
-                                              Text(
-                                                'Please note:',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  color: Colors.grey.shade600,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 16),
-                                              // Warning List Container
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.all(12),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.orange.shade50,
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  border: Border.all(
-                                                    color:
-                                                        Colors.orange.shade200,
-                                                    width: 1,
-                                                  ),
-                                                ),
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    ...stockValidation[
-                                                            'warnings']
-                                                        .map<Widget>(
-                                                            (warning) =>
-                                                                Padding(
-                                                                  padding:
-                                                                      const EdgeInsets
-                                                                          .only(
-                                                                          bottom:
-                                                                              8),
-                                                                  child: Row(
-                                                                    crossAxisAlignment:
-                                                                        CrossAxisAlignment
-                                                                            .start,
-                                                                    children: [
-                                                                      Icon(
-                                                                        Icons
-                                                                            .info_outline,
-                                                                        size:
-                                                                            18,
-                                                                        color: Colors
-                                                                            .orange
-                                                                            .shade700,
-                                                                      ),
-                                                                      const SizedBox(
-                                                                          width:
-                                                                              8),
-                                                                      Expanded(
-                                                                        child:
-                                                                            Text(
-                                                                          warning,
-                                                                          style:
-                                                                              TextStyle(
-                                                                            fontSize:
-                                                                                13,
+                                // Place Order Button
+                                Expanded(
+                                  child: ElevatedButton(
+                                    onPressed: _isPlacingOrder
+                                        ? null
+                                        : () async {
+                                            // Validate stock availability before placing order
+                                            final stockValidation =
+                                                await _firestore
+                                                    .validateStockAvailability(
+                                                        widget.productList);
+
+                                            if (!stockValidation['isValid']) {
+                                              // Show error dialog if stock validation fails
+                                              Get.dialog(
+                                                AlertDialog(
+                                                  title: const Text(
+                                                      'Stock Unavailable'),
+                                                  content: Column(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      const Text(
+                                                          'The following items are not available:'),
+                                                      const SizedBox(
+                                                          height: 10),
+                                                      ...stockValidation[
+                                                              'errors']
+                                                          .map<Widget>(
+                                                              (error) =>
+                                                                  Padding(
+                                                                    padding: const EdgeInsets
+                                                                        .only(
+                                                                        bottom:
+                                                                            5),
+                                                                    child: Text(
+                                                                        '• $error',
+                                                                        style: const TextStyle(
                                                                             color:
-                                                                                Colors.orange.shade900,
-                                                                            fontWeight:
-                                                                                FontWeight.w500,
-                                                                            height:
-                                                                                1.4,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    ],
-                                                                  ),
-                                                                ))
-                                                        .toList(),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 24),
-                                              // Buttons
-                                              Row(
-                                                children: [
-                                                  // Cancel Button
-                                                  Expanded(
-                                                    child: TextButton(
+                                                                                Colors.red)),
+                                                                  ))
+                                                          .toList(),
+                                                    ],
+                                                  ),
+                                                  actions: [
+                                                    TextButton(
                                                       onPressed: () =>
                                                           Get.back(),
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                                vertical: 14),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                          side: BorderSide(
+                                                      child: const Text('OK'),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                              return;
+                                            }
+
+                                            // Show warnings if any
+                                            if (stockValidation['warnings']
+                                                .isNotEmpty) {
+                                              Get.dialog(
+                                                Dialog(
+                                                  backgroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                  ),
+                                                  child: Container(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            24),
+                                                    child: Column(
+                                                      mainAxisSize:
+                                                          MainAxisSize.min,
+                                                      children: [
+                                                        // Warning Icon
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(12),
+                                                          decoration:
+                                                              BoxDecoration(
                                                             color: Colors
-                                                                .grey.shade300,
-                                                            width: 1.5,
+                                                                .orange.shade50,
+                                                            shape:
+                                                                BoxShape.circle,
+                                                          ),
+                                                          child: Icon(
+                                                            Icons
+                                                                .warning_amber_rounded,
+                                                            size: 40,
+                                                            color: Colors.orange
+                                                                .shade700,
                                                           ),
                                                         ),
-                                                      ),
-                                                      child: const Text(
-                                                        'Cancel',
-                                                        style: TextStyle(
-                                                          color: Colors.black87,
-                                                          fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.w600,
+                                                        const SizedBox(
+                                                            height: 16),
+                                                        // Title
+                                                        const Text(
+                                                          'Stock Warning',
+                                                          style: TextStyle(
+                                                            fontSize: 20,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color:
+                                                                Colors.black87,
+                                                          ),
                                                         ),
-                                                      ),
+                                                        const SizedBox(
+                                                            height: 8),
+                                                        // Subtitle
+                                                        Text(
+                                                          'Please note:',
+                                                          style: TextStyle(
+                                                            fontSize: 14,
+                                                            color: Colors
+                                                                .grey.shade600,
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 16),
+                                                        // Warning List Container
+                                                        Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(12),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Colors
+                                                                .orange.shade50,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                            border: Border.all(
+                                                              color: Colors
+                                                                  .orange
+                                                                  .shade200,
+                                                              width: 1,
+                                                            ),
+                                                          ),
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
+                                                            children: [
+                                                              ...stockValidation[
+                                                                      'warnings']
+                                                                  .map<Widget>(
+                                                                      (warning) =>
+                                                                          Padding(
+                                                                            padding:
+                                                                                const EdgeInsets.only(bottom: 8),
+                                                                            child:
+                                                                                Row(
+                                                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                                                              children: [
+                                                                                Icon(
+                                                                                  Icons.info_outline,
+                                                                                  size: 18,
+                                                                                  color: Colors.orange.shade700,
+                                                                                ),
+                                                                                const SizedBox(width: 8),
+                                                                                Expanded(
+                                                                                  child: Text(
+                                                                                    warning,
+                                                                                    style: TextStyle(
+                                                                                      fontSize: 13,
+                                                                                      color: Colors.orange.shade900,
+                                                                                      fontWeight: FontWeight.w500,
+                                                                                      height: 1.4,
+                                                                                    ),
+                                                                                  ),
+                                                                                ),
+                                                                              ],
+                                                                            ),
+                                                                          ))
+                                                                  .toList(),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 24),
+                                                        // Buttons
+                                                        Row(
+                                                          children: [
+                                                            // Cancel Button
+                                                            Expanded(
+                                                              child: TextButton(
+                                                                onPressed: () =>
+                                                                    Get.back(),
+                                                                style: TextButton
+                                                                    .styleFrom(
+                                                                  padding: const EdgeInsets
+                                                                      .symmetric(
+                                                                      vertical:
+                                                                          14),
+                                                                  shape:
+                                                                      RoundedRectangleBorder(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            10),
+                                                                    side:
+                                                                        BorderSide(
+                                                                      color: Colors
+                                                                          .grey
+                                                                          .shade300,
+                                                                      width:
+                                                                          1.5,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                child:
+                                                                    const Text(
+                                                                  'Cancel',
+                                                                  style:
+                                                                      TextStyle(
+                                                                    color: Colors
+                                                                        .black87,
+                                                                    fontSize:
+                                                                        16,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            const SizedBox(
+                                                                width: 12),
+                                                            // Continue Button
+                                                            Expanded(
+                                                              child:
+                                                                  ElevatedButton(
+                                                                onPressed: () {
+                                                                  Get.back();
+                                                                  // Re-open place order dialog and place order
+                                                                  Get.dialog(
+                                                                    StatefulBuilder(
+                                                                      builder:
+                                                                          (context,
+                                                                              setModalState2) {
+                                                                        return Dialog(
+                                                                          backgroundColor:
+                                                                              Colors.white,
+                                                                          shape:
+                                                                              RoundedRectangleBorder(
+                                                                            borderRadius:
+                                                                                BorderRadius.circular(16),
+                                                                          ),
+                                                                          child:
+                                                                              Container(
+                                                                            padding:
+                                                                                const EdgeInsets.all(24),
+                                                                            child:
+                                                                                Column(
+                                                                              mainAxisSize: MainAxisSize.min,
+                                                                              children: [
+                                                                                const Text(
+                                                                                  'Place Order',
+                                                                                  style: TextStyle(
+                                                                                    fontSize: 20,
+                                                                                    fontWeight: FontWeight.bold,
+                                                                                    color: Colors.black87,
+                                                                                  ),
+                                                                                ),
+                                                                                const SizedBox(height: 16),
+                                                                                Row(
+                                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                                                  children: [
+                                                                                    const Text(
+                                                                                      'Total:',
+                                                                                      style: TextStyle(
+                                                                                        fontSize: 16,
+                                                                                        color: Colors.grey,
+                                                                                      ),
+                                                                                    ),
+                                                                                    _buildPesoText(
+                                                                                      total.toString(),
+                                                                                      style: const TextStyle(
+                                                                                        fontSize: 18,
+                                                                                        fontWeight: FontWeight.bold,
+                                                                                        color: Colors.black87,
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                                const SizedBox(height: 24),
+                                                                                Row(
+                                                                                  children: [
+                                                                                    Expanded(
+                                                                                      child: TextButton(
+                                                                                        onPressed: _isPlacingOrder ? null : () => Get.back(),
+                                                                                        style: TextButton.styleFrom(
+                                                                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                                                                          shape: RoundedRectangleBorder(
+                                                                                            borderRadius: BorderRadius.circular(8),
+                                                                                            side: BorderSide(color: Colors.grey[300]!),
+                                                                                          ),
+                                                                                        ),
+                                                                                        child: Text(
+                                                                                          'Cancel',
+                                                                                          style: TextStyle(
+                                                                                            color: _isPlacingOrder ? Colors.grey.shade400 : Colors.grey,
+                                                                                            fontSize: 16,
+                                                                                          ),
+                                                                                        ),
+                                                                                      ),
+                                                                                    ),
+                                                                                    const SizedBox(width: 12),
+                                                                                    Expanded(
+                                                                                      child: ElevatedButton(
+                                                                                        onPressed: _isPlacingOrder
+                                                                                            ? null
+                                                                                            : () async {
+                                                                                                await _placeOrder(
+                                                                                                  onLoadingStateChanged: () {
+                                                                                                    setModalState2(() {});
+                                                                                                  },
+                                                                                                );
+                                                                                              },
+                                                                                        style: ElevatedButton.styleFrom(
+                                                                                          backgroundColor: const Color(0xFF3E6BE0),
+                                                                                          padding: const EdgeInsets.symmetric(vertical: 12),
+                                                                                          shape: RoundedRectangleBorder(
+                                                                                            borderRadius: BorderRadius.circular(8),
+                                                                                          ),
+                                                                                        ),
+                                                                                        child: _isPlacingOrder
+                                                                                            ? const SizedBox(
+                                                                                                width: 20,
+                                                                                                height: 20,
+                                                                                                child: CircularProgressIndicator(
+                                                                                                  strokeWidth: 2,
+                                                                                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                                                                                ),
+                                                                                              )
+                                                                                            : const Text(
+                                                                                                'Place Order',
+                                                                                                style: TextStyle(
+                                                                                                  color: Colors.white,
+                                                                                                  fontSize: 16,
+                                                                                                  fontWeight: FontWeight.w600,
+                                                                                                ),
+                                                                                              ),
+                                                                                      ),
+                                                                                    ),
+                                                                                  ],
+                                                                                ),
+                                                                              ],
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      },
+                                                                    ),
+                                                                  );
+                                                                },
+                                                                style: ElevatedButton
+                                                                    .styleFrom(
+                                                                  backgroundColor:
+                                                                      const Color(
+                                                                          0xFF3E6BE0),
+                                                                  padding: const EdgeInsets
+                                                                      .symmetric(
+                                                                      vertical:
+                                                                          14),
+                                                                  shape:
+                                                                      RoundedRectangleBorder(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            10),
+                                                                  ),
+                                                                  elevation: 0,
+                                                                ),
+                                                                child:
+                                                                    const Text(
+                                                                  'Continue',
+                                                                  style:
+                                                                      TextStyle(
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontSize:
+                                                                        16,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 12),
-                                                  // Continue Button
-                                                  Expanded(
-                                                    child: ElevatedButton(
-                                                      onPressed: () {
-                                                        Get.back();
-                                                        _placeOrder();
-                                                      },
-                                                      style: ElevatedButton
-                                                          .styleFrom(
-                                                        backgroundColor:
-                                                            const Color(
-                                                                0xFF3E6BE0),
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .symmetric(
-                                                                vertical: 14),
-                                                        shape:
-                                                            RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(10),
-                                                        ),
-                                                        elevation: 0,
-                                                      ),
-                                                      child: const Text(
-                                                        'Continue',
-                                                        style: TextStyle(
-                                                          color: Colors.white,
-                                                          fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                    return;
-                                  }
+                                                ),
+                                              );
+                                              return;
+                                            }
 
-                                  // Place order if no warnings
-                                  _placeOrder();
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF3E6BE0),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
+                                            // Place order if no warnings
+                                            await _placeOrder(
+                                              onLoadingStateChanged: () {
+                                                setModalState(() {});
+                                              },
+                                            );
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF3E6BE0),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 12),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: _isPlacingOrder
+                                        ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                      Colors.white),
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Place Order',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
                                   ),
                                 ),
-                                child: const Text(
-                                  'Place Order',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 ),
               );
             },

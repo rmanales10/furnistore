@@ -61,6 +61,13 @@ class IncomeController extends GetxController {
         Map<String, dynamic> orderData = doc.data() as Map<String, dynamic>;
         final products = orderData['products'] as List<dynamic>?;
 
+        // Only count income from delivered orders
+        final orderStatus =
+            (orderData['status'] ?? '').toString().toLowerCase();
+        if (orderStatus != 'delivered') {
+          continue; // Skip orders that are not delivered
+        }
+
         // Check if any product in the order belongs to this seller
         bool hasSellerProduct = false;
         if (products != null && products.isNotEmpty) {

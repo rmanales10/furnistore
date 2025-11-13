@@ -53,31 +53,49 @@ class DashboardController extends GetxController {
         final orderData = doc.data() as Map<String, dynamic>;
         final products = orderData['products'] as List<dynamic>?;
 
-        if (products != null && products.isNotEmpty) {
-          // Check if any product in the order belongs to this seller
-          bool hasSellerProduct = false;
-          for (var product in products) {
-            if (product is Map<String, dynamic>) {
-              // Check both 'product_id' and 'id' fields
-              final productId = product['product_id'] ?? product['id'];
-              if (productId != null &&
-                  sellerProductIds.contains(productId.toString())) {
-                hasSellerProduct = true;
-                break;
-              }
+        if (products == null || products.isEmpty) {
+          continue; // Skip orders with no products
+        }
+
+        // Check if any product in the order belongs to this seller
+        bool hasSellerProduct = false;
+        for (var product in products) {
+          if (product is Map<String, dynamic>) {
+            // Check both 'product_id' and 'id' fields
+            final productId = product['product_id'] ?? product['id'];
+            if (productId != null &&
+                sellerProductIds.contains(productId.toString())) {
+              hasSellerProduct = true;
+              break;
             }
           }
+        }
 
-          if (hasSellerProduct) {
-            revenue += (orderData['total'] ?? 0).toDouble();
-            orderCount++;
-          }
+        if (!hasSellerProduct) {
+          continue; // Skip orders that don't contain seller's products
+        }
+
+        // Get order status
+        final orderStatus =
+            (orderData['status'] ?? '').toString().toLowerCase();
+
+        // Skip cancelled orders for order count
+        if (orderStatus == 'cancelled') {
+          continue; // Don't count cancelled orders
+        }
+
+        // Count order (all non-cancelled orders: pending, processing, out for delivery, delivered)
+        orderCount++;
+
+        // Only count revenue from delivered orders
+        if (orderStatus == 'delivered') {
+          revenue += (orderData['total'] ?? 0).toDouble();
         }
       }
 
       totalRevenue.value = revenue;
       totalOrders.value = orderCount;
-      log('Seller dashboard - Revenue: $revenue, Orders: $orderCount');
+      log('Seller dashboard - Revenue: $revenue (delivered only), Orders: $orderCount (excluding cancelled)');
     } catch (e) {
       log("Failed to fetch data: $e");
       totalRevenue.value = 0.0;

@@ -745,7 +745,7 @@ class _OrdersState extends State<Orders> {
       case 'delivered':
         return Color(0xFF3B82F6);
       case 'cancelled':
-        return Colors.red;
+        return Colors.black;
       default:
         return const Color(0xFF3B82F6);
     }
