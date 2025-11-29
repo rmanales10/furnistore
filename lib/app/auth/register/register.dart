@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:furnistore/app/auth/register/register_controller.dart';
-import 'package:furnistore/app/auth/verification/verification.dart';
 import 'package:get/get.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -267,10 +266,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (_controller.isSuccess.value) {
-        // Navigate to email verification screen
-        Get.offAll(() => EmailVerificationScreen(
-              email: _email.text.trim(),
-            ));
+        // Navigate to identity verification screen
+        Navigator.pushReplacementNamed(
+          context,
+          '/identity-verification/form',
+        );
       } else {
         Get.snackbar('Error', 'Failed to register user');
       }

@@ -14,6 +14,11 @@ import 'package:furnistore/app/auth/forgot/new_pass.dart';
 import 'package:furnistore/app/auth/splash/page1.dart';
 import 'package:furnistore/app/auth/splash/page2.dart';
 import 'package:furnistore/app/auth/register/register.dart';
+import 'package:furnistore/app/auth/identity_verification/identity_verification_form.dart';
+import 'package:furnistore/app/auth/identity_verification/document_scan_screen.dart';
+import 'package:furnistore/app/auth/identity_verification/face_detection_instructions.dart';
+import 'package:furnistore/app/auth/identity_verification/face_scanning_screen.dart';
+import 'package:furnistore/app/auth/identity_verification/verification_success_screen.dart';
 import 'package:furnistore/app/payment_track_order/payment_successful.dart';
 import 'package:furnistore/app/payment_track_order/track_order.dart';
 import 'package:furnistore/app/profile/about.dart';
@@ -62,6 +67,16 @@ class MyApp extends StatelessWidget {
         '/2': (context) => const Onboard2(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/identity-verification/form': (context) =>
+            const IdentityVerificationFormScreen(),
+        '/identity-verification/document-scan': (context) =>
+            const DocumentScanScreen(),
+        '/identity-verification/face-detection-instructions': (context) =>
+            const FaceDetectionInstructionsScreen(),
+        '/identity-verification/face-scanning': (context) =>
+            const FaceScanningScreen(),
+        '/identity-verification/success': (context) =>
+            const VerificationSuccessScreen(),
         // '/verify': (context) => EmailVerificationScreen(),
         '/forgot': (context) => ForgetPasswordScreen(),
         '/newpass': (context) => const NewPasswordScreen(),
