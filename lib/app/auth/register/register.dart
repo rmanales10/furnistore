@@ -266,10 +266,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (_controller.isSuccess.value) {
-        // Navigate to identity verification screen
+        // Navigate to identity verification prompt screen
         Navigator.pushReplacementNamed(
           context,
-          '/identity-verification/form',
+          '/verify-identity-prompt',
         );
       } else {
         Get.snackbar('Error', 'Failed to register user');

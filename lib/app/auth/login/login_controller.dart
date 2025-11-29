@@ -73,4 +73,32 @@ class LoginController extends GetxController {
       };
     }
   }
+
+  // Check if user has verified their identity
+  Future<bool> checkIdentityVerificationStatus() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) {
+        return false;
+      }
+
+      final verificationDoc = await _firestore
+          .collection('identityVerifications')
+          .doc(user.uid)
+          .get();
+
+      if (!verificationDoc.exists) {
+        return false;
+      }
+
+      final data = verificationDoc.data();
+      final status = data?['status'] as String?;
+
+      // Return true if status is 'approved'
+      return status == 'approved';
+    } catch (e) {
+      log('Error checking identity verification: $e');
+      return false;
+    }
+  }
 }

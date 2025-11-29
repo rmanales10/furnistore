@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:get/get.dart';
 
 class Onboard1 extends StatefulWidget {
@@ -12,6 +13,7 @@ class Onboard1 extends StatefulWidget {
 
 class _Onboard1State extends State<Onboard1> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   @override
   void initState() {
@@ -19,18 +21,51 @@ class _Onboard1State extends State<Onboard1> {
     _checkAuthState();
   }
 
-  void _checkAuthState() {
-    Timer(const Duration(seconds: 3), () {
-      // Check if user is already logged in
-      User? user = _auth.currentUser;
-      if (user != null) {
-        // User is logged in, navigate to home
-        Get.offAllNamed('/home');
+  Future<void> _checkAuthState() async {
+    await Future.delayed(const Duration(seconds: 3));
+
+    if (!mounted) return;
+
+    // Check if user is already logged in
+    User? user = _auth.currentUser;
+    if (user != null) {
+      // User is logged in, check identity verification status
+      final hasVerified = await _checkIdentityVerificationStatus(user.uid);
+      if (!hasVerified) {
+        // User is not verified, navigate to verification prompt
+        Get.offAllNamed('/verify-identity-prompt');
       } else {
-        // User is not logged in, navigate to onboarding
+        // User is verified, navigate to home
+        Get.offAllNamed('/home');
+      }
+    } else {
+      // User is not logged in, navigate to onboarding
+      if (mounted) {
         Navigator.pushNamed(context, '/2');
       }
-    });
+    }
+  }
+
+  Future<bool> _checkIdentityVerificationStatus(String userId) async {
+    try {
+      final verificationDoc = await _firestore
+          .collection('identityVerifications')
+          .doc(userId)
+          .get();
+
+      if (!verificationDoc.exists) {
+        return false;
+      }
+
+      final data = verificationDoc.data();
+      final status = data?['status'] as String?;
+
+      // Return true if status is 'approved'
+      return status == 'approved';
+    } catch (e) {
+      // If there's an error, assume not verified
+      return false;
+    }
   }
 
   @override

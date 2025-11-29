@@ -176,8 +176,15 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (result['success'] == true) {
-      Get.offAllNamed('/home');
-      Get.snackbar('Success', 'Login Successfully');
+      // Check if user has verified identity
+      final hasVerified = await controller.checkIdentityVerificationStatus();
+      if (!hasVerified) {
+        // Navigate to identity verification prompt
+        Get.offAllNamed('/verify-identity-prompt');
+      } else {
+        Get.offAllNamed('/home');
+        Get.snackbar('Success', 'Login Successfully');
+      }
     } else {
       final error = result['error'];
       final message = result['message'] ?? 'Invalid email or password';

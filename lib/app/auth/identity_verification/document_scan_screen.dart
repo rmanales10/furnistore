@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:furnistore/app/auth/identity_verification/identity_verification_controller.dart';
+import 'package:get/get.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class DocumentScanScreen extends StatefulWidget {
   const DocumentScanScreen({super.key});
@@ -8,11 +11,32 @@ class DocumentScanScreen extends StatefulWidget {
 }
 
 class _DocumentScanScreenState extends State<DocumentScanScreen> {
+  final _controller = Get.put(IdentityVerificationController());
+
+  Future<void> _captureDocument() async {
+    // Request camera permission
+    final status = await Permission.camera.request();
+    if (!status.isGranted) {
+      Get.snackbar('Error', 'Camera permission is required');
+      return;
+    }
+
+    // Capture document image
+    final success = await _controller.captureDocumentImage();
+
+    if (success && mounted) {
+      final args =
+          ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
+      Navigator.pushNamed(
+        context,
+        '/identity-verification/face-detection-instructions',
+        arguments: args,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -135,23 +159,29 @@ class _DocumentScanScreenState extends State<DocumentScanScreen> {
                 color: const Color(0xFF3E6BE0),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/identity-verification/face-detection-instructions',
-                    arguments: args,
-                  );
-                },
-                child: const Text(
-                  'Capture',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+              child: Obx(() => TextButton(
+                    onPressed: _controller.isProcessing.value
+                        ? null
+                        : _captureDocument,
+                    child: _controller.isProcessing.value
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : const Text(
+                            'Capture',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                  )),
             ),
           ),
         ],

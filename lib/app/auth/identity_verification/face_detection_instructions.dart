@@ -1,8 +1,70 @@
 import 'dart:math' as math;
+import 'dart:ui';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-class FaceDetectionInstructionsScreen extends StatelessWidget {
+class FaceDetectionInstructionsScreen extends StatefulWidget {
   const FaceDetectionInstructionsScreen({super.key});
+
+  @override
+  State<FaceDetectionInstructionsScreen> createState() =>
+      _FaceDetectionInstructionsScreenState();
+}
+
+class _FaceDetectionInstructionsScreenState
+    extends State<FaceDetectionInstructionsScreen> {
+  CameraController? _cameraController;
+  bool _isInitialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCamera();
+  }
+
+  Future<void> _initializeCamera() async {
+    // Request camera permission
+    final status = await Permission.camera.request();
+    if (!status.isGranted) {
+      return;
+    }
+
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        return;
+      }
+
+      // Use front camera for face detection
+      final frontCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+
+      _cameraController = CameraController(
+        frontCamera,
+        ResolutionPreset.high,
+        enableAudio: false,
+      );
+
+      await _cameraController!.initialize();
+
+      if (mounted) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+    } catch (e) {
+      // Handle error silently or show message
+    }
+  }
+
+  @override
+  void dispose() {
+    _cameraController?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,49 +104,95 @@ class FaceDetectionInstructionsScreen extends StatelessWidget {
                 color: Colors.grey[600],
               ),
             ),
-            const SizedBox(height: 60),
-            // Face detection icon
+            const SizedBox(height: 40),
+            // Face detection camera preview with round border
             Container(
-              width: 200,
-              height: 200,
+              width: 250,
+              height: 250,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: Colors.grey[300]!,
                   width: 3,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.3),
+                    spreadRadius: 2,
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Stack(
-                alignment: Alignment.center,
                 children: [
-                  // Hexagonal outline
-                  CustomPaint(
-                    size: const Size(150, 150),
-                    painter: HexagonPainter(),
+                  // Camera preview (clipped to circle, mirrored, actual size)
+                  ClipOval(
+                    child: _isInitialized && _cameraController != null
+                        ? Transform(
+                            alignment: Alignment.center,
+                            transform: Matrix4.rotationY(
+                                math.pi), // Mirror horizontally
+                            child: SizedBox(
+                              width: 250,
+                              height: 250,
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: _cameraController!.value.aspectRatio *
+                                      250,
+                                  height: 250,
+                                  child: CameraPreview(_cameraController!),
+                                ),
+                              ),
+                            ),
+                          )
+                        : Container(
+                            width: 250,
+                            height: 250,
+                            color: Colors.grey[100],
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                // Hexagonal outline
+                                CustomPaint(
+                                  size: const Size(200, 200),
+                                  painter: HexagonPainter(),
+                                ),
+                                // Face icon with wavy line
+                                Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.face,
+                                      size: 60,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Container(
+                                      width: 80,
+                                      height: 2,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[400],
+                                        borderRadius: BorderRadius.circular(1),
+                                      ),
+                                      child: CustomPaint(
+                                        painter: WavyLinePainter(),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                   ),
-                  // Face icon with wavy line
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.face,
-                        size: 60,
-                        color: Colors.grey[400],
+                  // Hexagonal overlay on top (only when camera is active)
+                  if (_isInitialized && _cameraController != null)
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: HexagonOverlayPainter(),
                       ),
-                      const SizedBox(height: 10),
-                      Container(
-                        width: 80,
-                        height: 2,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[400],
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                        child: CustomPaint(
-                          painter: WavyLinePainter(),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
                 ],
               ),
             ),
@@ -167,6 +275,38 @@ class FaceDetectionInstructionsScreen extends StatelessWidget {
       ],
     );
   }
+}
+
+// Custom painter for hexagonal overlay on camera preview
+class HexagonOverlayPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.grey[300]!
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 3.5; // Slightly smaller to fit inside circle
+
+    // Create a simple hexagon shape
+    final path = Path();
+    for (int i = 0; i < 6; i++) {
+      final angle = (i * 60 - 30) * math.pi / 180;
+      final x = center.dx + radius * math.cos(angle);
+      final y = center.dy + radius * math.sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // Custom painter for hexagonal outline

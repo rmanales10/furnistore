@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'dart:io' show Platform;
 import 'package:furnistore/web/auth_screen/login.dart';
 import 'package:furnistore/web/screens/sidebar.dart';
 import 'services/firebase_options.dart';
@@ -16,9 +17,11 @@ import 'package:furnistore/app/auth/splash/page2.dart';
 import 'package:furnistore/app/auth/register/register.dart';
 import 'package:furnistore/app/auth/identity_verification/identity_verification_form.dart';
 import 'package:furnistore/app/auth/identity_verification/document_scan_screen.dart';
+import 'package:furnistore/app/auth/identity_verification/document_camera_screen.dart';
 import 'package:furnistore/app/auth/identity_verification/face_detection_instructions.dart';
 import 'package:furnistore/app/auth/identity_verification/face_scanning_screen.dart';
 import 'package:furnistore/app/auth/identity_verification/verification_success_screen.dart';
+import 'package:furnistore/app/auth/identity_verification/verify_identity_prompt_screen.dart';
 import 'package:furnistore/app/payment_track_order/payment_successful.dart';
 import 'package:furnistore/app/payment_track_order/track_order.dart';
 import 'package:furnistore/app/profile/about.dart';
@@ -26,6 +29,7 @@ import 'package:furnistore/app/profile/delivery/delivery_address.dart';
 import 'package:furnistore/app/profile/edit_profile/edit_profile.dart';
 import 'package:furnistore/app/profile/profile_settings.dart';
 import 'package:get/get.dart';
+import 'package:flutter_face_api/flutter_face_api.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,6 +40,19 @@ void main() async {
   await GlbStorageService.init();
   // Initialize EmailJS for email notifications
   await EmailService.initialize();
+  // Initialize Regula Face SDK (Android only)
+  // Note: Verify the actual initialization method name in the package documentation
+  if (!kIsWeb && Platform.isAndroid) {
+    try {
+      // Uncomment and verify the correct initialization method:
+      // await FaceSDK.init();
+      // OR
+      // await FaceSDK.initialize();
+      // OR check package documentation for correct method
+    } catch (e) {
+      debugPrint('Face SDK initialization error: $e');
+    }
+  }
   runApp(kIsWeb ? MyAdmin() : MyApp());
 }
 
@@ -62,15 +79,23 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'FurniStore',
       initialRoute: '/',
+      // initialRoute: '/identity-verification/form', // For testing only
       routes: {
         '/': (context) => const Onboard1(),
         '/2': (context) => const Onboard2(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/verify-identity-prompt': (context) =>
+            const VerifyIdentityPromptScreen(),
         '/identity-verification/form': (context) =>
             const IdentityVerificationFormScreen(),
         '/identity-verification/document-scan': (context) =>
             const DocumentScanScreen(),
+        '/identity-verification/document-camera': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>?;
+          return DocumentCameraScreen(arguments: args);
+        },
         '/identity-verification/face-detection-instructions': (context) =>
             const FaceDetectionInstructionsScreen(),
         '/identity-verification/face-scanning': (context) =>

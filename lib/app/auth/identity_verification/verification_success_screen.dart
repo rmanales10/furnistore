@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:furnistore/app/auth/login/login.dart';
+import 'package:get/get.dart';
 
 class VerificationSuccessScreen extends StatelessWidget {
   const VerificationSuccessScreen({super.key});
@@ -60,13 +60,8 @@ class VerificationSuccessScreen extends StatelessWidget {
               ),
               child: TextButton(
                 onPressed: () {
-                  // Navigate to login screen
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
-                    (route) => false,
-                  );
+                  // Navigate to home screen (user is already authenticated)
+                  Get.offAllNamed('/home');
                 },
                 child: const Text(
                   'Continue',
