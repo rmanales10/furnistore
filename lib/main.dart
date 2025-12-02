@@ -22,6 +22,9 @@ import 'package:furnistore/app/auth/identity_verification/face_detection_instruc
 import 'package:furnistore/app/auth/identity_verification/face_scanning_screen.dart';
 import 'package:furnistore/app/auth/identity_verification/verification_success_screen.dart';
 import 'package:furnistore/app/auth/identity_verification/verify_identity_prompt_screen.dart';
+import 'package:furnistore/app/auth/identity_verification/verification_processing_screen.dart';
+import 'package:furnistore/app/auth/identity_verification/verification_error_screen.dart';
+import 'package:furnistore/app/auth/email_verification/email_verification_prompt_screen.dart';
 import 'package:furnistore/app/payment_track_order/payment_successful.dart';
 import 'package:furnistore/app/payment_track_order/track_order.dart';
 import 'package:furnistore/app/profile/about.dart';
@@ -85,6 +88,8 @@ class MyApp extends StatelessWidget {
         '/2': (context) => const Onboard2(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/email-verification-prompt': (context) =>
+            const EmailVerificationPromptScreen(),
         '/verify-identity-prompt': (context) =>
             const VerifyIdentityPromptScreen(),
         '/identity-verification/form': (context) =>
@@ -94,12 +99,25 @@ class MyApp extends StatelessWidget {
         '/identity-verification/document-camera': (context) {
           final args = ModalRoute.of(context)!.settings.arguments
               as Map<String, dynamic>?;
-          return DocumentCameraScreen(arguments: args);
+          final isBackCapture = args?['isBackCapture'] as bool? ?? false;
+          return DocumentCameraScreen(
+            arguments: args,
+            isBackCapture: isBackCapture,
+          );
         },
         '/identity-verification/face-detection-instructions': (context) =>
             const FaceDetectionInstructionsScreen(),
         '/identity-verification/face-scanning': (context) =>
             const FaceScanningScreen(),
+        '/identity-verification/processing': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments
+              as Map<String, dynamic>?;
+          return VerificationProcessingScreen(
+            verificationData: args ?? {},
+          );
+        },
+        '/identity-verification/error': (context) =>
+            const VerificationErrorScreen(),
         '/identity-verification/success': (context) =>
             const VerificationSuccessScreen(),
         // '/verify': (context) => EmailVerificationScreen(),

@@ -77,8 +77,25 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: TextButton(
-                onPressed: () => Navigator.pushReplacement(context,
-                    MaterialPageRoute(builder: (context) => LoginScreen())),
+                onPressed: () async {
+                  // Reload user to check verification status
+                  await _auth.currentUser?.reload();
+                  final user = _auth.currentUser;
+
+                  if (user != null && user.emailVerified) {
+                    // Email verified, navigate to identity verification
+                    Navigator.pushReplacementNamed(
+                      context,
+                      '/verify-identity-prompt',
+                    );
+                  } else {
+                    // Email not verified, go back to login
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (context) => LoginScreen()),
+                    );
+                  }
+                },
                 child: const Text(
                   'Continue',
                   style: TextStyle(

@@ -29,10 +29,21 @@ class _Onboard1State extends State<Onboard1> {
     // Check if user is already logged in
     User? user = _auth.currentUser;
     if (user != null) {
-      // User is logged in, check identity verification status
-      final hasVerified = await _checkIdentityVerificationStatus(user.uid);
+      // Reload user to get latest email verification status
+      await user.reload();
+      user = _auth.currentUser;
+
+      // First check if email is verified
+      if (user != null && !user.emailVerified) {
+        // Email not verified, navigate to email verification prompt
+        Get.offAllNamed('/email-verification-prompt');
+        return;
+      }
+
+      // Email is verified, check identity verification status
+      final hasVerified = await _checkIdentityVerificationStatus(user!.uid);
       if (!hasVerified) {
-        // User is not verified, navigate to verification prompt
+        // User is not verified, navigate to identity verification prompt
         Get.offAllNamed('/verify-identity-prompt');
       } else {
         // User is verified, navigate to home

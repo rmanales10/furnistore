@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:furnistore/app/auth/identity_verification/identity_verification_controller.dart';
 import 'package:get/get.dart';
@@ -139,8 +140,27 @@ class _FaceScanningScreenState extends State<FaceScanningScreen>
       final image = await _cameraController!.takePicture();
       final imageBytes = await image.readAsBytes();
 
-      // Store the captured image
-      _controller.faceImage.value = imageBytes;
+      // Compress the image before storing
+      _controller.processingStatus.value = 'Compressing image...';
+      final compressedBytes = await _compressImage(imageBytes);
+
+      if (compressedBytes == null) {
+        if (mounted) {
+          Get.snackbar('Error', 'Failed to compress image');
+          setState(() {
+            _isCapturing = false;
+          });
+          // Restart image stream if capture failed
+          if (_cameraController != null &&
+              _cameraController!.value.isInitialized) {
+            await _startFaceDetection();
+          }
+        }
+        return;
+      }
+
+      // Store the compressed image
+      _controller.faceImage.value = compressedBytes;
 
       setState(() {
         _hasCaptured = true;
@@ -267,6 +287,26 @@ class _FaceScanningScreenState extends State<FaceScanningScreen>
     });
   }
 
+  Future<Uint8List?> _compressImage(Uint8List imageBytes) async {
+    try {
+      // Compress the image directly from bytes
+      final compressedBytes = await FlutterImageCompress.compressWithList(
+        imageBytes,
+        minWidth: 800,
+        minHeight: 800,
+        quality: 70,
+      );
+
+      if (compressedBytes.isEmpty) {
+        return null;
+      }
+
+      return Uint8List.fromList(compressedBytes);
+    } catch (e) {
+      return null;
+    }
+  }
+
   @override
   void dispose() {
     _pulseController.dispose();
@@ -286,33 +326,13 @@ class _FaceScanningScreenState extends State<FaceScanningScreen>
       return;
     }
 
-    final dateOfBirth = args['dateOfBirth'] as DateTime;
-    final gender = args['gender'] as String;
-    final idCardType = args['idCardType'] as String;
-    final idCardNumber = args['idCardNumber'] as String;
-
-    // Complete verification
-    final success = await _controller.completeVerification(
-      dateOfBirth: dateOfBirth,
-      gender: gender,
-      idCardType: idCardType,
-      idCardNumber: idCardNumber,
-    );
-
+    // Navigate to processing screen
     if (mounted) {
-      if (success) {
-        Navigator.pushReplacementNamed(
-          context,
-          '/identity-verification/success',
-        );
-      } else {
-        Get.snackbar(
-          'Verification Failed',
-          'Face verification did not match. Please try again.',
-          duration: const Duration(seconds: 5),
-        );
-        Navigator.pop(context);
-      }
+      Navigator.pushReplacementNamed(
+        context,
+        '/identity-verification/processing',
+        arguments: args,
+      );
     }
   }
 
@@ -336,22 +356,13 @@ class _FaceScanningScreenState extends State<FaceScanningScreen>
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
       body: Stack(
         children: [
           // Full screen camera preview (background) - mirrored for front camera
           Positioned.fill(
-            child: Transform.flip(
-              flipX: true, // Mirror horizontally for front camera
+            child: Transform.scale(
+              scaleX: -1.0, // Mirror horizontally for front camera
+              alignment: Alignment.center,
               child: CameraPreview(_cameraController!),
             ),
           ),

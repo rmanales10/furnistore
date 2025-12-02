@@ -2,8 +2,36 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 
-class VerifyIdentityPromptScreen extends StatelessWidget {
+class VerifyIdentityPromptScreen extends StatefulWidget {
   const VerifyIdentityPromptScreen({super.key});
+
+  @override
+  State<VerifyIdentityPromptScreen> createState() =>
+      _VerifyIdentityPromptScreenState();
+}
+
+class _VerifyIdentityPromptScreenState
+    extends State<VerifyIdentityPromptScreen> {
+  final _auth = FirebaseAuth.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkEmailVerification();
+  }
+
+  Future<void> _checkEmailVerification() async {
+    // Reload user to get latest email verification status
+    await _auth.currentUser?.reload();
+    final user = _auth.currentUser;
+
+    if (user != null && !user.emailVerified) {
+      // Email not verified, redirect to email verification prompt
+      if (mounted) {
+        Get.offAllNamed('/email-verification-prompt');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -1,6 +1,8 @@
+import 'dart:typed_data';
 import 'dart:ui';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:furnistore/app/auth/identity_verification/identity_verification_controller.dart';
 import 'package:get/get.dart';
@@ -10,8 +12,13 @@ const double _idCardBorderRadius = 12.0;
 
 class DocumentCameraScreen extends StatefulWidget {
   final Map<String, dynamic>? arguments;
+  final bool isBackCapture; // true if capturing back, false if front
 
-  const DocumentCameraScreen({super.key, this.arguments});
+  const DocumentCameraScreen({
+    super.key,
+    this.arguments,
+    this.isBackCapture = false,
+  });
 
   @override
   State<DocumentCameraScreen> createState() => _DocumentCameraScreenState();
@@ -26,10 +33,21 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeCamera();
+    // Add a small delay to ensure previous camera is fully disposed
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        _initializeCamera();
+      }
+    });
   }
 
   Future<void> _initializeCamera() async {
+    // Dispose existing controller if any
+    if (_cameraController != null) {
+      await _cameraController!.dispose();
+      _cameraController = null;
+    }
+
     // Request camera permission
     final status = await Permission.camera.request();
     if (!status.isGranted) {
@@ -50,12 +68,14 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
         return;
       }
 
+      // Create new camera controller
       _cameraController = CameraController(
         cameras.first,
         ResolutionPreset.high,
         enableAudio: false,
       );
 
+      // Initialize camera
       await _cameraController!.initialize();
 
       if (mounted) {
@@ -66,7 +86,10 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
     } catch (e) {
       if (mounted) {
         Get.snackbar('Error', 'Failed to initialize camera: $e');
-        Navigator.pop(context);
+        // Don't pop, just show error and let user retry
+        setState(() {
+          _isInitialized = false;
+        });
       }
     }
   }
@@ -86,16 +109,51 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
       final image = await _cameraController!.takePicture();
       final imageBytes = await image.readAsBytes();
 
-      // Store the captured image
-      _controller.documentImage.value = imageBytes;
+      // Compress the image before storing
+      _controller.processingStatus.value = 'Compressing image...';
+      final compressedBytes = await _compressImage(imageBytes);
 
-      if (mounted) {
-        // Navigate to next screen
-        Navigator.pushReplacementNamed(
-          context,
-          '/identity-verification/face-detection-instructions',
-          arguments: widget.arguments,
-        );
+      if (compressedBytes == null) {
+        if (mounted) {
+          Get.snackbar('Error', 'Failed to compress image');
+          setState(() {
+            _isCapturing = false;
+          });
+        }
+        return;
+      }
+
+      // Store the compressed image based on which side is being captured
+      if (widget.isBackCapture) {
+        // Store back image
+        _controller.documentBackImage.value = compressedBytes;
+
+        if (mounted) {
+          // Navigate to face detection instructions after back capture
+          Navigator.pushReplacementNamed(
+            context,
+            '/identity-verification/face-detection-instructions',
+            arguments: widget.arguments,
+          );
+        }
+      } else {
+        // Store front image
+        _controller.documentImage.value = compressedBytes;
+
+        if (mounted) {
+          // Dispose camera before navigating
+          await _cameraController?.dispose();
+
+          // Navigate to back capture screen
+          Navigator.pushReplacementNamed(
+            context,
+            '/identity-verification/document-camera',
+            arguments: {
+              ...?widget.arguments,
+              'isBackCapture': true,
+            },
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -110,6 +168,26 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
     }
   }
 
+  Future<Uint8List?> _compressImage(Uint8List imageBytes) async {
+    try {
+      // Compress the image directly from bytes
+      final compressedBytes = await FlutterImageCompress.compressWithList(
+        imageBytes,
+        minWidth: 800,
+        minHeight: 800,
+        quality: 70,
+      );
+
+      if (compressedBytes.isEmpty) {
+        return null;
+      }
+
+      return Uint8List.fromList(compressedBytes);
+    } catch (e) {
+      return null;
+    }
+  }
+
   @override
   void dispose() {
     _cameraController?.dispose();
@@ -118,7 +196,10 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!_isInitialized || _cameraController == null) {
+    // Check if camera is initialized
+    if (!_isInitialized ||
+        _cameraController == null ||
+        !_cameraController!.value.isInitialized) {
       return Scaffold(
         backgroundColor: Colors.black,
         body: const Center(
@@ -140,14 +221,6 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: Stack(
         children: [
           // Camera preview
@@ -201,9 +274,11 @@ class _DocumentCameraScreenState extends State<DocumentCameraScreen> {
                   color: Colors.black.withOpacity(0.6),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: const Text(
-                  'Position your ID card within the frame',
-                  style: TextStyle(
+                child: Text(
+                  widget.isBackCapture
+                      ? 'Position the back of your ID card within the frame'
+                      : 'Position your front ID within the frame',
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,

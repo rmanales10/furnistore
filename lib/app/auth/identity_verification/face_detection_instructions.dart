@@ -73,24 +73,14 @@ class _FaceDetectionInstructionsScreenState
 
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const SizedBox(height: 40),
+            const SizedBox(height: 100),
             const Text(
-              'Life face detection',
+              'Face Liveness',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -129,10 +119,10 @@ class _FaceDetectionInstructionsScreenState
                   // Camera preview (clipped to circle, mirrored, actual size)
                   ClipOval(
                     child: _isInitialized && _cameraController != null
-                        ? Transform(
+                        ? Transform.scale(
+                            scaleX:
+                                -1.0, // Mirror horizontally for front camera
                             alignment: Alignment.center,
-                            transform: Matrix4.rotationY(
-                                math.pi), // Mirror horizontally
                             child: SizedBox(
                               width: 250,
                               height: 250,
@@ -196,7 +186,52 @@ class _FaceDetectionInstructionsScreenState
                 ],
               ),
             ),
-            const SizedBox(height: 60),
+            const SizedBox(height: 40),
+            // Guide text explaining the circle
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: Colors.blue.withOpacity(0.2),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: Colors.blue[700],
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Why the circle?',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.blue[900],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'The circular frame helps you position your face correctly. Make sure your entire face fits within the circle for the best verification results.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[700],
+                      height: 1.4,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 30),
             // Status indicators
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
